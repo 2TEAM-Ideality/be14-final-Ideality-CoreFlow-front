@@ -15,6 +15,8 @@
     "@vue-flow/core": "^1.43.1",
     "@vue-flow/minimap": "^1.5.3",
     "@vue-flow/node-resizer": "^1.4.0",
+    "pinia": "^3.0.2",
+    "vuetify": "^3.8.0-beta.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1"
   },
