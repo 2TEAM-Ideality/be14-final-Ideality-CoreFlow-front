@@ -6,7 +6,8 @@ import Icon from './Icon.vue'
 import CustomNode from './CustomNode.vue'
 import '@/assets/vue-flow-style.css'
 
-import { initialEdges, initialNodes } from './initial-elements.js'
+// import { initialEdges, initialNodes } from './initial-elements.js'
+import { initialEdges, initialNodes } from './test-elements.js'
 import { useLayout } from './useLayout'
 
 const nodes = ref(initialNodes)
@@ -18,6 +19,18 @@ const showModal = ref(false)
 
 const { layout } = useLayout()
 const { fitView } = useVueFlow()
+
+function onConnect({ source, target }) {
+  if (!source || !target) return
+
+  const id = `e-${source}-${target}-${Date.now()}`
+  edges.value.push({
+    id,
+    source,
+    target,
+    type: 'default'
+  })
+}
 
 // 노드 위치 재배치
 async function layoutGraph(direction) {
@@ -100,6 +113,7 @@ function saveNodeData() {
 
 // 전체 저장
 function exportTemplateData() {
+  // 현재 노드 목록에서 deptListString은 제외하고 저장
   const nodeList = nodes.value.map(n => ({
     ...n,
     data: {
@@ -107,13 +121,34 @@ function exportTemplateData() {
       deptListString: undefined
     }
   }))
+
   const edgeList = edges.value
 
   const payload = { nodeList, edgeList }
 
-  // 예시로 로그 출력 (→ axios.post 가능)
+  // ✅ 콘솔에 현재 상태 출력
+  console.log('%c📦 현재 저장되는 노드/엣지 상태:', 'color: #10b981; font-weight: bold;')
   console.log(JSON.stringify(payload, null, 2))
 }
+
+// 노드 삭제 시 엣지 삭제
+function deleteNode(nodeId) {
+  // 1. 해당 노드를 삭제
+  nodes.value = nodes.value.filter(n => n.id !== nodeId)
+
+  // 2. 해당 노드와 연결된 엣지를 삭제
+  edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
+}
+
+// 노드 연결 정보 업데이트 
+function updateEdge(edgeId, newTargetId) {
+  const index = edges.value.findIndex(e => e.id === edgeId)
+  if (index !== -1) {
+    edges.value[index].target = newTargetId
+  }
+}
+
+
 
 </script>
 
@@ -125,6 +160,8 @@ function exportTemplateData() {
         :nodes="nodes"
         :edges="edges"
         :node-types="nodeTypes"
+        :connectable="true"
+        @connect="onConnect"
         @nodes-initialized="layoutGraph('LR')"
       >
         <template #node-custom="{ id, data }">
@@ -151,58 +188,46 @@ function exportTemplateData() {
       <!-- 편집 모달 -->
       <div v-if="showModal" class="modal-backdrop">
         <div class="modal">
-          <h3>노드 정보 수정</h3>
-            <input v-model="selectedNode.data.label" placeholder="Label" />
-            <input v-model="selectedNode.data.description" placeholder="설명" />
-            <input v-model.number="selectedNode.data.duration" placeholder="소요일 (숫자)" type="number" />
-            <input v-model.number="selectedNode.data.slackTime" placeholder="슬랙 타임 (숫자)" type="number" />
-            <input v-model="selectedNode.data.deptListString" placeholder="담당 부서 (쉼표 구분)" />
+            <h3 class="modal-title">노드 정보 수정</h3>
 
-  
-          <div class="modal-actions">
+            <div class="input-group">
+            <label for="label">Label</label>
+            <input id="label" v-model="selectedNode.data.label" placeholder="Label" />
+            </div>
+
+            <div class="input-group">
+            <label for="description">설명</label>
+            <input id="description" v-model="selectedNode.data.description" placeholder="설명" />
+            </div>
+
+            <div class="input-group">
+            <label for="duration">소요일 (일)</label>
+            <input id="duration" v-model.number="selectedNode.data.duration" type="number" placeholder="소요일 (숫자)" />
+            </div>
+
+            <div class="input-group">
+            <label for="slackTime">슬랙 타임 (일)</label>
+            <input id="slackTime" v-model.number="selectedNode.data.slackTime" type="number" placeholder="슬랙 타임 (숫자)" />
+            </div>
+
+            <div class="input-group">
+            <label for="deptList">담당 부서</label>
+            <input id="deptList" v-model="selectedNode.data.deptListString" placeholder="담당 부서 (쉼표 구분)" />
+            </div>
+
+            <div class="modal-actions">
             <button @click="saveNodeData">저장</button>
             <button @click="showModal = false">취소</button>
-          </div>
+            </div>
         </div>
-      </div>
+        </div>
+
     </div>
   </template>
   
-  <style scoped>
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 100;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    width: 300px;
-  }
-  .modal input {
-    margin-bottom: 10px;
-    width: 100%;
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
-  </style>
-  
+<style scoped>
 
-<style>
+
 .layout-flow {
   background-color: #ffffff;
   height: 100%;
@@ -258,9 +283,9 @@ function exportTemplateData() {
 }
 .modal {
   background: white;
-  padding: 20px;
+  padding: 30px 60px;
   border-radius: 8px;
-  width: 300px;
+  width: 500px;
 }
 .modal input {
   margin-bottom: 10px;
@@ -273,5 +298,25 @@ function exportTemplateData() {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+.modal-title {
+    font-weight: 20px;
+}
+.input-group {
+  margin-bottom: 12px;
+}
+.input-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+  text-align: left;
+}
+.input-group input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 </style>

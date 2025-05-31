@@ -7,5 +7,7 @@
 </template>
 
 <style>
-
+* {
+  font-family: 'Noto Sans KR', sans-serif;
+}
 </style>
