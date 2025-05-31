@@ -4,6 +4,8 @@ import router from './router/index.js'
 import { createPinia } from 'pinia' 
 import vuetify from './plugins/vuetify'
 
+
+
 const app = createApp(App)
 
 app.use(createPinia())  

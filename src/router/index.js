@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import PipePage from '@/views/test/PipePage.vue'
+import Home from '@/views/Home.vue'
 
 const routes = [
 //   {
@@ -7,6 +8,11 @@ const routes = [
 //     name: 'Login',
 //     component: LoginPage
 //   },
+  {
+    path: '/',
+    name: 'Home',
+    component : Home
+  },
   {
     path: '/test/pipe',
     name: 'Pipe',
