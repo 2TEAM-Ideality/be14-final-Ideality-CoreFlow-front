@@ -10,7 +10,10 @@ import '@/assets/vue-flow-style.css'
 import { initialEdges, initialNodes } from './test-elements.js'
 import { useLayout } from './useLayout'
 
-const nodes = ref(initialNodes)
+const nodes = ref(initialNodes.map(n => ({
+  ...n,
+  position: { x: 0, y: 0 }  // ❗ 모든 노드에 기본값 주기
+})))
 const edges = ref(initialEdges)
 const nodeTypes = { custom: CustomNode }
 
@@ -114,12 +117,18 @@ function saveNodeData() {
 // 전체 저장
 function exportTemplateData() {
   // 현재 노드 목록에서 deptListString은 제외하고 저장
-  const nodeList = nodes.value.map(n => ({
-    ...n,
-    data: {
-      ...n.data,
-      deptListString: undefined
-    }
+  // const nodeList = nodes.value.map(n => ({
+  //   ...n,
+  //   data: {
+  //     ...n.data,
+  //     deptListString: undefined
+  //   }
+  // }))
+  const nodeList = nodes.value.map(({ data, id, type, position }) => ({
+    id,
+    type,
+    position, // 자동 계산된 위치
+    data: { ...data }
   }))
 
   const edgeList = edges.value
@@ -149,6 +158,13 @@ function updateEdge(edgeId, newTargetId) {
 }
 
 
+async function handleNodesInitialized() {
+  // 1. 렌더링 이후 한 프레임 기다리기
+  await nextTick()
+  requestAnimationFrame(() => {
+    layoutGraph('LR')  // 정확한 dimensions 기준으로 layout 적용
+  })
+}
 
 </script>
 
@@ -162,7 +178,7 @@ function updateEdge(edgeId, newTargetId) {
         :node-types="nodeTypes"
         :connectable="true"
         @connect="onConnect"
-        @nodes-initialized="layoutGraph('LR')"
+        @nodes-initialized="handleNodesInitialized"
       >
         <template #node-custom="{ id, data }">
         <CustomNode :id="id" :data="data" @addNode="onAddNode" @click="() => onNodeClick(id)" />
