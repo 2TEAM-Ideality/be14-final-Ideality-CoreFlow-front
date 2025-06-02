@@ -1,8 +1,7 @@
 <template>
-    <ListLayout title="템플릿 목록" />
-    <div class="content-box">
-    템플릿 목록
-    </div>
+    <ListLayout title="템플릿 목록" >
+        템플릿 목록
+    </ListLayout>
 
 </template>
 

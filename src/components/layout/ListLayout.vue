@@ -9,12 +9,15 @@ defineProps({
 
 <template>
   <div class="list-layout">
-    <div class="breadcrumb">프로젝트 &gt; {{ title }}</div>
-
+    
     <h1 class="page-title">{{ title }}</h1>
 
     <v-divider class="my-6" />
-
+    <div class="content-box">
+        <slot>
+            <router-view />
+        </slot>
+    </div>
 
   </div>
 </template>
@@ -23,13 +26,8 @@ defineProps({
 
 <style scoped>
 .list-layout {
-  padding: 40px 60px;
-}
-.breadcrumb {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 16px;
-  text-align: left;
+  padding: 40px 200px;
+
 }
 .page-title {
   font-size: 24px;

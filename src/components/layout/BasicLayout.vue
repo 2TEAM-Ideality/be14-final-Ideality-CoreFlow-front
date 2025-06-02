@@ -18,11 +18,12 @@
   grid-template-columns: 7fr 3fr; /* 7:3 비율 */
   /* gap: 40px; */
   /* padding: 40px 60px; */
+  padding: 40px 0;
 }
 
 .template-main {
   min-width: 0;
-  background-color: yellow;
+  /* background-color: yellow; */
 }
 
 .template-sidebar {

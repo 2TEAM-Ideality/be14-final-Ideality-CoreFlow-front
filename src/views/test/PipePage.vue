@@ -5,10 +5,22 @@ import { Background } from '@vue-flow/background'
 import Icon from './Icon.vue'
 import CustomNode from './CustomNode.vue'
 import '@/assets/vue-flow-style.css'
+import { useRouter} from 'vue-router';
 
 // import { initialEdges, initialNodes } from './initial-elements.js'
 import { initialEdges, initialNodes } from './test-elements.js'
 import { useLayout } from './useLayout'
+
+const props = defineProps({
+  templateName: {
+    type: String,
+    required: true
+  }
+})
+
+
+
+const router = useRouter() 
 
 const nodes = ref(initialNodes.map(n => ({
   ...n,
@@ -185,17 +197,35 @@ async function handleNodesInitialized() {
         </template>
   
         <Background />
-  
+        <Panel position="top-left" class="left-panel">
+
+            <v-text-field
+              label="템플릿 이름"
+              v-model="props.templateName"
+              variant="outlined"
+              hide-details
+              density="comfortable"
+              class="w-100"
+               style="min-width: 280px; max-width: 400px;"
+            />
+        </Panel>
+
         <Panel class="process-panel" position="top-right">
           <div class="layout-panel">
-            <button title="set horizontal layout" @click="layoutGraph('LR')">
-              <Icon name="horizontal" />
-            </button>
-            <button title="set vertical layout" @click="layoutGraph('TB')">
-              <Icon name="vertical" />
+            <button title="새로운 태스크 생성" @click="layoutGraph('LR')">
+              ➕ 새로운 태스크 생성
             </button>
             <button title="전체 저장" @click="exportTemplateData">
-            💾
+            💾 편집 완료
+            </button>
+            <!-- <button title="set vertical layout" @click="layoutGraph('LR')"></button>
+              <Icon name="vertical" />
+            </button> -->
+            <!-- <button title="set vertical layout" @click="layoutGraph('TB')">
+              <Icon name="vertical" />
+            </button> -->
+             <button title="편집 취소" @click="router.back()">
+            ↙️
             </button>
           </div>
         </Panel>
@@ -249,7 +279,10 @@ async function handleNodesInitialized() {
   height: 100%;
   width: 100%;
 }
-
+/* 패널 관련 */
+.left-panel  {
+  width: fit-content;
+}
 .process-panel,
 .layout-panel {
   display: flex;
@@ -257,10 +290,10 @@ async function handleNodesInitialized() {
 }
 
 .process-panel {
-  background-color: #2d3748;
+  /* background-color: #2d3748; */
   padding: 10px;
   border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); */
   flex-direction: column;
 }
 
@@ -271,7 +304,8 @@ async function handleNodesInitialized() {
   border-radius: 8px;
   color: white;
   font-size: 16px;
-  width: 40px;
+  /* width: 40px; */
+  padding: 10px;
   height: 40px;
   display: flex;
   align-items: center;

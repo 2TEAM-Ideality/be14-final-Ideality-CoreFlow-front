@@ -8,16 +8,16 @@ const routes = [
   },
   {
     path: '/',
-    name: 'Home',
-    component: () => import('@/views/Home.vue')
-  },
-
-  // 프로젝트
-  {
-    path: '/project',
     name: 'Project',
     component: () => import('@/views/project/ProjectList.vue')
   },
+
+  // 프로젝트
+  // {
+  //   path: '/project',
+  //   name: 'Project',
+  //   component: () => import('@/views/project/ProjectList.vue')
+  // },
   {
     path: '/project/detail',
     component: () => import('@/views/project/ProjectDetail.vue'),
@@ -76,6 +76,11 @@ const routes = [
     component: () => import('@/views/template/EditTemplate.vue')
   },
   {
+    path: '/template/edit/task',
+    name: 'EditTemplateTask',
+    component: () => import('@/views/template/EditTemplateTask.vue')
+  },
+  {
     path: '/template/create',
     name: 'CreateTemplate',
     component: () => import('@/views/template/CreateTemplate.vue')
@@ -96,11 +101,11 @@ const routes = [
   },
 
   // -----------------------------------------------테스트용
-  {
-    path: '/test/pipe',
-    name: 'Pipe',
-    component: () => import('@/views/test/PipePage.vue')
-  }
+  // {
+  //   path: '/test/pipe',
+  //   name: 'Pipe',
+  //   component: () => import('@/views/test/PipePage.vue')
+  // }
 ]
 
 const router = createRouter({

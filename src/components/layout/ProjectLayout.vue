@@ -1,7 +1,5 @@
 <template>
   <div class="project-detail-layout">
-    <!-- 상단 경로 -->
-    <div class="breadcrumb">프로젝트 &gt; 프로젝트명</div>
 
     <!-- 페이지 타이틀 -->
     <h1 class="page-title">📁 프로젝트 이름</h1>
@@ -39,13 +37,7 @@ const tabs = [
 
 <style scoped>
 .project-detail-layout {
-  padding: 40px 60px;
-}
-
-.breadcrumb {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 16px;
+  padding: 40px 200px;
 }
 
 .page-title {

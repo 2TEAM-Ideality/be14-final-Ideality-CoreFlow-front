@@ -1,6 +1,7 @@
 <script setup>
-import TheHeader from './components/common/TheHeader.vue';
+import TheHeader from '@/components/common/TheHeader.vue';
 import { useRoute } from 'vue-router'
+import Breadcrumb from '@/components/common/BreadCrumb.vue'
 
 const route = useRoute()
 
@@ -8,7 +9,8 @@ const route = useRoute()
 
 <template>
   <VApp>
-    <TheHeader v-if="route.path !== '/'" />
+    <TheHeader v-if="route.path !== '/login'" />
+
     <VMain class="main-content">
       <RouterView />
     </VMain>
