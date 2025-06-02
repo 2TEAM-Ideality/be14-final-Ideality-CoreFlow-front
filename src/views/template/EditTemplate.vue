@@ -12,8 +12,11 @@ function goToEditPage() {
 <template>
     <BasicLayout>
         <template #main >
-           템플릿 수정 <br>
-           <button @click="goToEditPage">템플릿 편집</button>
+           <div style="height: 100vh">
+            <h3>템플릿 이름</h3>
+            <button @click="goToEditPage">템플릿 편집</button>
+           </div>
+           
         </template>
 
         <!-- 오른쪽 영역 -->

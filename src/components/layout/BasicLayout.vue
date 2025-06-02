@@ -16,14 +16,11 @@
 .template-layout {
   display: grid;
   grid-template-columns: 7fr 3fr; /* 7:3 비율 */
-  /* gap: 40px; */
-  /* padding: 40px 60px; */
-  padding: 40px 0;
+  padding: 40px 60px;
 }
 
 .template-main {
   min-width: 0;
-  /* background-color: yellow; */
 }
 
 .template-sidebar {

@@ -18,7 +18,7 @@
     </div>
 
     <!-- 콘텐츠 영역 -->
-    <div class="content-box">
+    <div class="content-box"  :class="{ 'pipeline-active': $route.name === 'ProjectPipeline' }">
       <router-view />
     </div>
   </div>
@@ -76,5 +76,17 @@ const tabs = [
   min-height: 600px;
   border-radius: 8px;
   padding: 20px;
+  height: 100%;
+  width: 100%;
+  max-width: 1200px; /* 일반 탭에서는 가로 제한 */
+  margin: 0 auto;
 }
+
+.pipeline-active {
+  max-width: none;
+  width: 100%;
+  padding: 0; /* 여백 제거 */
+  background-color: transparent; /* 배경 제거 */
+}
+
 </style>

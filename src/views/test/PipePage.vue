@@ -2,7 +2,6 @@
 import { nextTick, ref } from 'vue'
 import { Panel, VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
-import Icon from './Icon.vue'
 import CustomNode from './CustomNode.vue'
 import '@/assets/vue-flow-style.css'
 import { useRouter} from 'vue-router';
@@ -17,8 +16,6 @@ const props = defineProps({
     required: true
   }
 })
-
-
 
 const router = useRouter() 
 
