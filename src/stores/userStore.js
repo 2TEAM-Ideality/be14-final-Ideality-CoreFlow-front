@@ -13,11 +13,11 @@ export const useUserStore = defineStore('user', () => {
     const hireDate = ref(null)
     const isResign = ref(false)
     const resignDate = ref(null)
-    const profileImage = ref(null)
+    const profileImage = ref('/images/profile/defaultProfile.png')
     const deptName = ref('')
     const jobRankName = ref('')
     const jobRoleName = ref('')
-    const userOfRoles = ref([])
+    const roles = ref([])
 
     const forcedLogout = ref(false)
 
@@ -35,11 +35,11 @@ export const useUserStore = defineStore('user', () => {
         hireDate.value = data.hireDate
         isResign.value = data.isResign
         resignDate.value = data.resignDate
-        profileImage.value = data.profileImage || '/images/profile/defaultProfile.png'
+        profileImage.value = data.profileImage || '/images/profile/defaultProfile.png',
         deptName.value = data.deptName
         jobRankName.value = data.jobRankName
         jobRoleName.value = data.jobRoleName
-        userOfRoles.value = data.userOfRoles
+        roles.value = data.roles
     }
 
     async function login(responseLogin) {
@@ -63,7 +63,7 @@ export const useUserStore = defineStore('user', () => {
             deptName: deptName.value,
             jobRankName: jobRankName.value,
             jobRoleName: jobRoleName.value,
-            userOfRoles: userOfRoles.value
+            roles: roles.value
         }))
         localStorage.setItem('refreshToken', refreshToken.value)
         localStorage.setItem('schemaName', schemaName.value)
@@ -98,16 +98,16 @@ export const useUserStore = defineStore('user', () => {
         hireDate.value = null
         isResign.value = false
         resignDate.value = null
-        profileImage.value = null
+        profileImage.value = '/images/profile/defaultProfile.png'
         deptName.value = ''
         jobRankName.value = ''
         jobRoleName.value = ''
-        userOfRoles.value = []
+        roles.value = []
 
-        forcedLogout = false
+        forcedLogout.value = false
 
-        refreshToken = null
-        schemaName = null
+        refreshToken.value = null
+        schemaName.value = null
 
         localStorage.removeItem('user')
         localStorage.removeItem('refreshToken')
@@ -124,7 +124,7 @@ export const useUserStore = defineStore('user', () => {
         if (!savedUser || !refreshToken) return
 
         try {
-            const response = await axios.post('/api/member/reissue', {
+            const response = await axios.post('/api/auth/reissue', {
                 'refreshToken': refreshToken,
                 'userId': parsedUser.id,
                 'companySchema': schemaName
@@ -157,13 +157,32 @@ export const useUserStore = defineStore('user', () => {
                 deptName: deptName.value,
                 jobRankName: jobRankName.value,
                 jobRoleName: jobRoleName.value,
-                userOfRoles: userOfRoles.value
+                roles: roles.value
             }))
             return true
         } catch (e) {
             forcedLogout.value = true
             logout()
             return false
+        }
+    }
+
+    async function restoreFromStorage() {
+        const savedUser = localStorage.getItem('user')
+        const savedRefreshToken = localStorage.getItem('refreshToken')
+        const savedSchemaName = localStorage.getItem('schemaName')
+        const savedAccessToken = sessionStorage.getItem('accessToken') // 저장되어 있다면 복원
+
+        if (savedUser && savedRefreshToken) {
+            const parsedUser = JSON.parse(savedUser)
+
+            setUserData(parsedUser)
+
+            refreshToken.value = savedRefreshToken
+            schemaName.value = savedSchemaName
+            accessToken.value = savedAccessToken
+        } else {
+            throw new Error('No user data found in storage')
         }
     }
 
@@ -181,10 +200,10 @@ export const useUserStore = defineStore('user', () => {
         deptName,
         jobRankName,
         jobRoleName,
-        userOfRoles,
+        roles,
 
         forcedLogout,
-
+        restoreFromStorage,
         isLoggedIn,
 
         refreshToken,
