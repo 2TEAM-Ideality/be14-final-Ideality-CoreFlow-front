@@ -3,6 +3,35 @@
 import Breadcrumb from '@/components/common/BreadCrumb.vue';
 import ListLayout from '@/components/layout/ListLayout.vue';
 
+const downloadPdf = async () => {
+  try {
+    const response = await fetch('/api/pdf/report/test', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/pdf'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('PDF 생성 실패');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '프로젝트_분석_리포트.pdf';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('PDF 다운로드 오류:', error);
+    alert('PDF 생성에 실패했습니다.');
+  }
+};
+
+
+
 </script>
 
 <template>
@@ -11,6 +40,8 @@ import ListLayout from '@/components/layout/ListLayout.vue';
     <ListLayout title="프로젝트 목록" >
 
         프로젝트 목록
+
+        <button @click="downloadPdf">PDF 다운로드</button>
     </ListLayout>
 
 
