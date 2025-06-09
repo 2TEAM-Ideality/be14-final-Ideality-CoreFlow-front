@@ -9,6 +9,7 @@
             <div class="mb-2 input-box">
                 <label class="block text-gray-700 text-sm mb-1">회사 코드</label>
                 <input
+                    ref="companyCodeInput"
                     v-model="companyCode"
                     placeholder="회사 코드를 입력해주세요"
                     class="px-2 py-2 border border-gray-300 box"
@@ -80,11 +81,12 @@
 </template>
 
 <script setup>
-    import { ref } from 'vue'
+    import { ref, nextTick, onMounted } from 'vue'
     import axios from 'axios'
     import LoadingModal from '@/components/common/LoadingModal.vue'
 
     const emit = defineEmits(['close'])
+    const companyCodeInput = ref(null)
 
     const companyCode = ref('')
     const employeeNum = ref('')
@@ -94,6 +96,12 @@
     const codeRequested = ref(false)
 
     const isLoading = ref(false)
+
+    onMounted(() => {
+        nextTick(() => {
+            companyCodeInput.value?.focus()
+        })
+    })
 
     async function requestVerificationCode() {
         if (!companyCode.value || !employeeNum.value || !name.value || !email.value) {
