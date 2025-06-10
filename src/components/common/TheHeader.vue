@@ -1,14 +1,3 @@
-<script setup>
-import { inject } from 'vue'
-
-const notificationSidebarOpen = inject('notificationSidebarOpen')
-
-function openNotificationSidebar() {
-  notificationSidebarOpen.value = true
-}
-</script>
-
-
 <template>
   <header class="header">
     <div class="logo">
@@ -26,7 +15,6 @@ function openNotificationSidebar() {
       <button @click="openNotificationSidebar" class="ring-btn">
         <img src="@/assets/icons/ring.png" alt="알림" />
       </button>
-      <span>홍길동 님</span>
   <img class="profile-img mr-3" :src="profileImage" @click="toggleProfile"/>
       <div v-if="showProfileOption" class="dropdown-menu" ref="profileRef" @click.stop>
         <div class="dropdown-item">프로필 변경</div>
@@ -55,7 +43,9 @@ function openNotificationSidebar() {
   import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
   import { useUserStore } from '@/stores/userStore'
   import { useRouter } from 'vue-router'
+  import { inject } from 'vue'
 
+  const notificationSidebarOpen = inject('notificationSidebarOpen')
   const userStore = useUserStore()
   const showDropdown = ref(false)
   const showProfileOption = ref(false)
@@ -68,6 +58,10 @@ function openNotificationSidebar() {
 
   const dropdownRef = ref(null)
   const profileRef = ref(null)
+
+  function openNotificationSidebar() {
+  notificationSidebarOpen.value = true
+}
 
   onMounted(() => {
     name.value = userStore.name

@@ -20,9 +20,7 @@ export const useUserStore = defineStore('user', () => {
     const roles = ref([])
 
     const forcedLogout = ref(false)
-
     const isLoggedIn = computed(() => !!id.value)
-
     const refreshToken = ref(null)
     const schemaName = ref(null)
 
