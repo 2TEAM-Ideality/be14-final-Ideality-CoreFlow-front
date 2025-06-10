@@ -2,13 +2,19 @@
 <script setup>
 import Breadcrumb from '@/components/common/BreadCrumb.vue';
 import ListLayout from '@/components/layout/ListLayout.vue';
+import { useUserStore } from '@/stores/userStore.js'
+
+const userStore = useUserStore()
+const token = userStore.accessToken
+
 
 const downloadPdf = async () => {
   try {
-    const response = await fetch('/api/pdf/report/test', {
+    const response = await fetch('/api/project/report/2', {
       method: 'GET',
       headers: {
-        'Accept': 'application/pdf'
+        'Accept': 'application/pdf',
+        'Authorization': `Bearer ${token}`
       }
     });
 
