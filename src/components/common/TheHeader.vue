@@ -27,12 +27,13 @@
 
       <!-- 드롭다운 메뉴 -->
       <div v-if="showDropdown" class="dropdown-menu" ref="dropdownRef" @click.stop>
-        <div class="dropdown-item">비밀번호 변경</div>
+        <div class="dropdown-item" @click="showChangePwdModal = true">비밀번호 변경</div>
         <!-- 관리자는 구성원 관리 표시 -->
         <div v-if="isAdmin" class="dropdown-item">구성원 관리</div>
         <div class="dropdown-item deleted" @click="logout">로그아웃</div>
       </div>
     </div>
+    <ChangePwdModal v-if="showChangePwdModal" @close="showChangePwdModal = false" />
   </header>
 </template>
 
@@ -40,6 +41,9 @@
   import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
   import { useUserStore } from '@/stores/userStore'
   import { useRouter } from 'vue-router'
+  import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
+
+  const showChangePwdModal = ref(false)
 
   const userStore = useUserStore()
   const showDropdown = ref(false)
