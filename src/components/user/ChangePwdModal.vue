@@ -100,7 +100,8 @@
                 prevPassword: currentPassword.value,
                 newPassword: newPassword.value
             })
-            console.alert('비밀번호가 변경되었습니다.')
+            alert('비밀번호가 변경되었습니다.')
+            emit('close')
         } catch (e) {
             if (e.response) {
                 console.error('에러 응답:', e.response.data);
@@ -109,7 +110,6 @@
                 console.error('요청 실패:', e.message);
             }
         }
-        emit('close')
     }
 
 </script>
