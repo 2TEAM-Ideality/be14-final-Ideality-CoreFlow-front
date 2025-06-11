@@ -15,23 +15,29 @@
       <button @click="openNotificationSidebar" class="ring-btn">
         <img src="@/assets/icons/ring.png" alt="알림" />
       </button>
-  <img class="profile-img mr-3" :src="profileImage" @click="toggleProfile"/>
+      <img class="profile-img mr-3" :src="profileImage" @click="toggleProfile" />
       <div v-if="showProfileOption" class="dropdown-menu" ref="profileRef" @click.stop>
         <div class="dropdown-item">프로필 변경</div>
         <div class="dropdown-item deleted">프로필 삭제</div>
       </div>
 
-      <div class="user-info"  @click="toggleDropdown">
+      <div class="user-info" @click="toggleDropdown">
         <div class="position">{{ userStore.deptName }} {{ userStore.jobRankName }}</div>
         <div class="name-role">
           <strong>{{ userStore.name }} 님</strong>
         </div>
       </div>
 
+      <!-- 알림 사이드바 -->
+      <NotificationSidebar 
+        :notifications="notifications" 
+        :isOpen="notificationSidebarOpen"
+        @closeSidebar="closeSidebar" 
+      />
+
       <!-- 드롭다운 메뉴 -->
       <div v-if="showDropdown" class="dropdown-menu" ref="dropdownRef" @click.stop>
         <div class="dropdown-item">비밀번호 변경</div>
-        <!-- 관리자는 구성원 관리 표시 -->
         <div v-if="isAdmin" class="dropdown-item">구성원 관리</div>
         <div class="dropdown-item deleted" @click="logout">로그아웃</div>
       </div>
@@ -40,78 +46,83 @@
 </template>
 
 <script setup>
-  import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
-  import { useUserStore } from '@/stores/userStore'
-  import { useRouter } from 'vue-router'
-  import { inject } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useUserStore } from '@/stores/userStore'
+import { useRouter } from 'vue-router'
+import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
+import { useNotifications } from '@/components/common/useNotifications.js'
 
-  const notificationSidebarOpen = inject('notificationSidebarOpen')
-  const userStore = useUserStore()
-  const showDropdown = ref(false)
-  const showProfileOption = ref(false)
-  const router = useRouter()
+const userStore = useUserStore()
 
-  const name = ref(null)
-  const profileImage = ref(null)
-  const deptName = ref(null)
-  const jobRankName = ref(null)
+const notificationSidebarOpen = ref(false) // 사이드바 상태 관리
+const notifications = ref([]) // 알림 상태 관리
+const { connectToSSE } = useNotifications()
 
-  const dropdownRef = ref(null)
-  const profileRef = ref(null)
-
-  function openNotificationSidebar() {
+const openNotificationSidebar = () => {
   notificationSidebarOpen.value = true
+  fetchNotifications() // 사이드바가 열릴 때 알림 조회
 }
 
-  onMounted(() => {
-    name.value = userStore.name
-    profileImage.value = userStore.profileImage
-    deptName.value = userStore.deptName
-    jobRankName.value = userStore.jobRankName
+const closeSidebar = () => {
+  notificationSidebarOpen.value = false
+}
 
-    document.addEventListener('click', handleClickDropdownOutside)
-    document.addEventListener('click', handleClickProfileOptionOutside)
-  })
-
-  const isAdmin = computed(() => {
-     return userStore.roles.includes('ADMIN')
-  })
-
-  const toggleProfile = (event) => {
-    event.stopPropagation() // 클릭 이벤트 전파 막기
-    showProfileOption.value = !showProfileOption.value
-    showDropdown.value = false
+const fetchNotifications = async () => {
+  const token = userStore.accessToken
+  if (!token) {
+    console.error('토큰이 존재하지 않습니다. 로그인 상태를 확인하세요.')
+    return
   }
 
-  const toggleDropdown = (event) => {
-    event.stopPropagation() // 클릭 이벤트 전파 막기
-    showDropdown.value = !showDropdown.value
-    showProfileOption.value = false
-  }
-
-  const logout = async () => {
-    await userStore.logout()
-    // 로그아웃 후 라우팅 이동 등 처리 가능
-    router.push('/login')
-  }
-
-  function handleClickDropdownOutside(event) {
-    if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
-      showDropdown.value = false
+  try {
+    const response = await fetch('/api/notifications', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    const data = await response.json()
+    console.log('알림 데이터:', data); // API 응답 데이터 확인
+    if (data && data.data) {
+      notifications.value = data.data // 알림 데이터를 상태에 저장
+    } else {
+      console.warn('알림 데이터가 비어있거나 잘못된 형식입니다.');
     }
+  } catch (error) {
+    console.error('알림 조회 오류:', error)
   }
+}
 
-  function handleClickProfileOptionOutside(event) {
-    if (profileRef.value && !profileRef.value.contains(event.target)) {
-      showProfileOption.value = false
-    }
+
+onMounted(() => {
+  const token = userStore.accessToken
+  if (token) {
+    connectToSSE(token)  // 로그인 시 실시간 알림 연결
   }
+})
 
-  onBeforeUnmount(() => {
-    document.removeEventListener('click', handleClickDropdownOutside)
-    document.removeEventListener('click', handleClickProfileOptionOutside)
-  })
+const profileImage = ref(userStore.profileImage)
+const showProfileOption = ref(false)
+const showDropdown = ref(false)
+
+const isAdmin = ref(userStore.roles.includes('ADMIN'))
+
+const toggleProfile = () => {
+  showProfileOption.value = !showProfileOption.value
+}
+
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value
+}
+
+const logout = () => {
+  userStore.logout()
+  useRouter().push('/login')
+}
 </script>
+
 
 <style scoped>
 .header {

@@ -1,7 +1,6 @@
 <template>
   <transition name="slide">
     <div v-if="isOpen" class="sidebar">
-      <!-- 상단 헤더 -->
       <div class="sidebar-header">
         <div class="title">
           <img class="icon" src="@/assets/icons/ring.png" alt="알림 아이콘" />
@@ -10,12 +9,11 @@
         <button class="close-btn" @click="closeSidebar">×</button>
       </div>
 
-      <!-- 알림 리스트 -->
       <div class="notification-list">
         <div v-for="(notice, index) in notifications" :key="index" class="notification-item">
           <div class="message">
-            <span v-if="notice.status === 'error'" class="error-icon">❗</span>
-            {{ notice.message }}
+            <span v-if="notice.status === 'SENT'" class="new-icon">⚡</span> 
+            {{ notice.content }}
           </div>
           <div class="date">{{ notice.date }}</div>
         </div>
@@ -25,65 +23,27 @@
 </template>
 
 <script setup>
-import { inject, ref, onBeforeUnmount, watch } from 'vue';
-import { useUserStore } from '@/stores/userStore';
+import { defineProps,defineEmits } from 'vue'
 
-// `isOpen`은 알림 사이드바의 열림 상태를 관리합니다.
-const isOpen = inject('notificationSidebarOpen');
+const props = defineProps({
+  notifications: {
+    type: Array,
+    required: true,
+    default: () => [] // 기본값 빈 배열로 설정
+  },
+  isOpen: {
+    type: Boolean,
+    required: true,
+    default: false // 기본값 false로 설정
+  }
+})
 
-// 알림 데이터를 저장할 배열
-const notifications = ref([]);
+const emit = defineEmits(['closeSidebar'])
 
-// 알림 사이드바 닫기
 const closeSidebar = () => {
-  isOpen.value = false;
-};
+  emit('closeSidebar')  // 부모 컴포넌트에 closeSidebar 이벤트를 전달
+}
 
-// SSE 연결을 통해 실시간 알림 받기
-const connectToSSE = () => {
-  const userStore = useUserStore();  // userStore를 사용하여 accessToken 가져오기
-  const token = userStore.accessToken;  // accessToken 값을 가져옵니다.
-
-  if (!token) {
-    console.error('No access token available.');
-    return;
-  }
-
-  const url = `http://localhost:5000/api/notifications/stream?token=${token}`;  // URL에 token 추가
-
-  // EventSource로 SSE 연결
-  const eventSource = new EventSource(url);
-
-  eventSource.onmessage = (event) => {
-    try {
-      const apiResponse = JSON.parse(event.data); // JSON 파싱
-
-      // 알림 데이터 처리
-      const notificationsData = apiResponse.data;  // 서버에서 받은 알림 배열
-
-      // 각 알림 처리
-      notificationsData.forEach(notification => {
-        notifications.value.push(notification);  // 알림을 notifications 배열에 추가
-      });
-    } catch (parseError) {
-      console.error('알림 데이터 파싱 오류:', parseError); // JSON 파싱 오류 처리
-    }
-  };
-
-  eventSource.onerror = (error) => {
-    console.error('SSE 연결 오류:', error);
-    eventSource.close();  // 오류 발생 시 연결 종료
-  };
-
-  console.log('SSE 연결 시작됨');
-};
-
-// 로그인 상태가 바뀔 때마다 SSE 연결을 시도하도록 설정
-watch(() => useUserStore().accessToken, (newToken) => {
-  if (newToken) {
-    connectToSSE(); // 로그인 상태일 때 자동으로 연결
-  }
-}, { immediate: true });
 </script>
 
 <style scoped>
@@ -144,6 +104,18 @@ watch(() => useUserStore().accessToken, (newToken) => {
   align-items: center;
   gap: 6px;
   margin-bottom: 6px;
+}
+
+/* SENT 상태일 경우 강조 색 */
+.notification-item.sent {
+  background-color: #e0f7fa; /* 파란색 계열 강조 색 */
+  font-weight: bold;
+}
+
+/* READ 상태일 경우 기본 흰색 배경 */
+.notification-item.read {
+  background-color: white;
+  color: #555;
 }
 
 .notification-item .error-icon {
