@@ -23,14 +23,13 @@
 </template>
 
 <script setup>
-import { defineProps,defineEmits } from 'vue'
+import { defineProps, defineEmits, onMounted } from 'vue'
+import { useNotifications } from '@/components/common/useNotifications.js'
+import { useUserStore } from '@/stores/userStore'
+
+const userStore = useUserStore()
 
 const props = defineProps({
-  notifications: {
-    type: Array,
-    required: true,
-    default: () => [] // 기본값 빈 배열로 설정
-  },
   isOpen: {
     type: Boolean,
     required: true,
@@ -39,11 +38,24 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['closeSidebar'])
+const { notifications, connectToWebSocket } = useNotifications()
 
+
+
+// 사이드바 닫기
 const closeSidebar = () => {
-  emit('closeSidebar')  // 부모 컴포넌트에 closeSidebar 이벤트를 전달
+  emit('closeSidebar')
 }
 
+// 로그인 시 WebSocket 연결
+onMounted(() => {
+  const token = userStore.token; 
+  if (token) {
+    connectToWebSocket(token);  // WebSocket 연결
+  }else {
+    console.error('토큰이 존재하지 않습니다. 로그인 상태를 확인하세요.');
+  }
+})
 </script>
 
 <style scoped>

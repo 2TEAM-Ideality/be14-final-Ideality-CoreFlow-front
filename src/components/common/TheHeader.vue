@@ -16,6 +16,7 @@
         <img src="@/assets/icons/ring.png" alt="알림" />
       </button>
       <img class="profile-img mr-3" :src="profileImage" @click="toggleProfile" />
+      
       <div v-if="showProfileOption" class="dropdown-menu" ref="profileRef" @click.stop>
         <div class="dropdown-item">프로필 변경</div>
         <div class="dropdown-item deleted">프로필 삭제</div>
@@ -28,14 +29,12 @@
         </div>
       </div>
 
-      <!-- 알림 사이드바 -->
-      <NotificationSidebar 
-        :notifications="notifications" 
+      <NotificationSidebar
+        :notifications="notifications"
         :isOpen="notificationSidebarOpen"
-        @closeSidebar="closeSidebar" 
+        @closeSidebar="closeSidebar"
       />
-
-      <!-- 드롭다운 메뉴 -->
+    <!-- 드롭다운 메뉴 -->
       <div v-if="showDropdown" class="dropdown-menu" ref="dropdownRef" @click.stop>
         <div class="dropdown-item">비밀번호 변경</div>
         <div v-if="isAdmin" class="dropdown-item">구성원 관리</div>
@@ -48,66 +47,35 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/userStore'
-import { useRouter } from 'vue-router'
 import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
 import { useNotifications } from '@/components/common/useNotifications.js'
 
 const userStore = useUserStore()
-
-const notificationSidebarOpen = ref(false) // 사이드바 상태 관리
-const notifications = ref([]) // 알림 상태 관리
-const { connectToSSE } = useNotifications()
+const notificationSidebarOpen = ref(false)
+const notifications = ref([])
+const { connectToWebSocket,fetchNotifications } = useNotifications()
 
 const openNotificationSidebar = () => {
   notificationSidebarOpen.value = true
-  fetchNotifications() // 사이드바가 열릴 때 알림 조회
 }
 
 const closeSidebar = () => {
   notificationSidebarOpen.value = false
 }
 
-const fetchNotifications = async () => {
-  const token = userStore.accessToken
-  if (!token) {
-    console.error('토큰이 존재하지 않습니다. 로그인 상태를 확인하세요.')
-    return
-  }
-
-  try {
-    const response = await fetch('/api/notifications', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    const data = await response.json()
-    console.log('알림 데이터:', data); // API 응답 데이터 확인
-    if (data && data.data) {
-      notifications.value = data.data // 알림 데이터를 상태에 저장
-    } else {
-      console.warn('알림 데이터가 비어있거나 잘못된 형식입니다.');
-    }
-  } catch (error) {
-    console.error('알림 조회 오류:', error)
-  }
-}
-
+const isAdmin = ref(userStore.roles.includes('ADMIN'))
 
 onMounted(() => {
   const token = userStore.accessToken
   if (token) {
-    connectToSSE(token)  // 로그인 시 실시간 알림 연결
+    connectToWebSocket(token) // WebSocket 연결
+    fetchNotifications(token)
   }
 })
 
 const profileImage = ref(userStore.profileImage)
 const showProfileOption = ref(false)
 const showDropdown = ref(false)
-
-const isAdmin = ref(userStore.roles.includes('ADMIN'))
 
 const toggleProfile = () => {
   showProfileOption.value = !showProfileOption.value
@@ -122,7 +90,6 @@ const logout = () => {
   useRouter().push('/login')
 }
 </script>
-
 
 <style scoped>
 .header {

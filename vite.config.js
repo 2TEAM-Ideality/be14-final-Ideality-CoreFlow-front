@@ -15,6 +15,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+    define: {
+    global: 'globalThis', // <- 여기 추가
+  },
   server: {
     proxy: {
       '/api': {
