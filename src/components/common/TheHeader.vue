@@ -29,7 +29,7 @@
       <div v-if="showDropdown" class="dropdown-menu" ref="dropdownRef" @click.stop>
         <div class="dropdown-item" @click="showChangePwdModal = true">비밀번호 변경</div>
         <!-- 관리자는 구성원 관리 표시 -->
-        <div v-if="isAdmin" class="dropdown-item">구성원 관리</div>
+        <routerLink to="/admin" v-if="isAdmin" class="dropdown-item">구성원 관리</routerLink>
         <div class="dropdown-item deleted" @click="logout">로그아웃</div>
       </div>
     </div>
@@ -117,6 +117,7 @@
   border-bottom: 1px solid #eee;
   background-color: #fff;
   height: 50px;
+  z-index: 100;
 }
 
 .logo img {
@@ -143,6 +144,11 @@
   display: flex;
   align-items: center;
   position: relative;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .profile-img {
   width: 36px;

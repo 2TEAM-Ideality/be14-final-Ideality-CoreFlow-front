@@ -35,8 +35,6 @@ import { decodeJwt } from 'jose'
   watch(() => userStore.isLoggedIn, (isLoggedIn) => {
     if (!isLoggedIn) {
       router.push('/login')
-    } else {
-      router.push('/')
     }
     { immediate: true}
   })
