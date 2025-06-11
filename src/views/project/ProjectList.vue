@@ -10,13 +10,14 @@ const token = userStore.accessToken
 
 const downloadPdf = async () => {
   try {
-    const response = await fetch('/api/project/report/2', {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/pdf',
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const response = await api.get('/api/project/report/2');
+    // const response = await fetch('/api/project/report/2', {
+    //   method: 'GET',
+    //   headers: {
+    //     'Accept': 'application/pdf',
+    //     'Authorization': `Bearer ${token}`
+    //   }
+    // });
 
     if (!response.ok) {
       throw new Error('PDF 생성 실패');

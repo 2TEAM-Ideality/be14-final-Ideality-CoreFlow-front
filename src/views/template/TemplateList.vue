@@ -1,40 +1,42 @@
 <template>
-    <ListLayout title="템플릿 목록" >
-        템플릿 목록
-
-            <v-container fluid>
-              <v-row dense>
-                <v-col
-                  v-for="template in templates"
-                  :key="template.id"
-                  cols="12" sm="6" md="4"
-                >
-                  <TemplateCard
-                    v-bind="template"
-                    @delete="handleDelete"
-                  />
-                </v-col>
-              </v-row>
-            </v-container>
-    </ListLayout>
-
- 
-
+  <ListLayout title="템플릿 목록">
+    <v-container fluid>
+      <v-row dense>
+        <template v-for="(template, index) in templates.slice(0, 6)" :key="template.id">
+          <v-col cols="12" sm="6" md="6">
+            <TemplateCard
+              v-bind="template"
+              @delete="handleDelete"
+            />
+          </v-col>
+        </template>
+      </v-row>
+    </v-container>
+  </ListLayout>
 </template>
 
 <script setup>
 import ListLayout from '@/components/layout/ListLayout.vue';
 import TemplateCard from '@/components/template/TemplateCard.vue';
-
+import api from '@/util/api.js'
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 
 const templates = ref([])
 
 onMounted(async () => {
-  const res = await axios.get('/api/template/list')
-  templates.value = res.data.data
-})
+  try {
+    const res = await fetchTemplates();
+    templates.value = res.data.data;
+  } catch (error) {
+    console.error('템플릿 목록 불러오기 실패:', error);
+  }
+});
+
+const fetchTemplates = async () => {
+  const res = await api.get('/api/template/list')
+  console.log(res.data)
+  return res;
+}
 
 const handleDelete = (id) => {
   templates.value = templates.value.filter(t => t.id !== id)
@@ -42,11 +44,7 @@ const handleDelete = (id) => {
 </script>
 
 <style scoped>
-.content-box {
-  background-color: #ddd;
+.v-container {
   min-height: 600px;
-  border-radius: 8px;
-  padding: 20px;
 }
 </style>
-

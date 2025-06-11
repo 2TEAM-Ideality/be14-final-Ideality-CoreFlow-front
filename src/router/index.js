@@ -66,7 +66,7 @@ const routes = [
       component: () => import('@/views/template/TemplateList.vue')
     },
     {
-      path: '/template/detail',
+      path: '/template/detail/:id',
       name: 'TemplateDetail',
       component: () => import('@/views/template/TemplateDetail.vue')
     },
