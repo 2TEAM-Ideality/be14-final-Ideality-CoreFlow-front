@@ -12,12 +12,25 @@ export function useNotifications() {
 
     const eventSource = new EventSource(`/api/notifications/stream?token=${token}`)
 
-    eventSource.onmessage = (event) => {
-      const newNotifications = JSON.parse(event.data)
-      newNotifications.forEach((notification) => {
-        notifications.value.push(notification)
-      })
-    }
+      eventSource.addEventListener("open", () => {
+    console.log("✅ SSE 연결 성공")
+  })
+
+    // 백엔드에서 .name("notification")으로 보냈기 때문에 이벤트 이름에 맞게 리스너 등록
+    eventSource.addEventListener("notification", (event) => {
+      try {
+        const newNotifications = JSON.parse(event.data)
+        newNotifications.forEach((notification) => {
+          notifications.value.push(notification)
+        })
+      } catch (e) {
+        console.error("알림 파싱 오류", e)
+      }
+    })
+
+      eventSource.addEventListener("heartbeat", () => {
+    console.debug("💓 SSE heartbeat 수신")
+  })
 
     eventSource.onerror = (error) => {
       console.error('SSE 연결 오류:', error)
