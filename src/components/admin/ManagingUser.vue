@@ -178,7 +178,7 @@
     const jobRoleList = ref([])
 
     const userList = ref([])
-    const pageInput = ref(1)
+    const pageInput = ref(null)
 
     const deptFilter = ref([]);
     const jobRankFilter = ref(null);
@@ -492,14 +492,11 @@
     function goToInputPage() {
         if (pageInput.value >= 1 && pageInput.value <= totalPages.value) {
             changePage(Number(pageInput.value))
+            pageInput.value = null
         } else {
             alert('올바르지 않은 페이지 입력입니다.')
         }
     }
-
-    watch(currentPage, (newVal) => {
-        pageInput.value = newVal
-    })
 </script>
 
 <style scoped>
