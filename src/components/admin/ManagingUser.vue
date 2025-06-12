@@ -77,7 +77,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(user, index) in filteredUserList" :key="index" @click="handelUserClick(user.id)">
+                        <tr v-for="(user, index) in paginatedUsers" :key="index" @click="handelUserClick(user.id)">
                             <td>{{ user.name }}</td>
                             <td>{{ user.deptName }}</td>
                             <td>{{ user.jobRankName }}</td>
@@ -99,13 +99,20 @@
                 </table>
 
                 <div class="pagination">
-                    <button disabled>← 이전</button>
-                    <button class="current">1</button>
-                    <button>2</button>
-                    <button>3</button>
-                    <span>…</span>
-                    <button>68</button>
-                    <button>다음 →</button>
+                    <button :disabled="currentPage===1" @click="currentPage=1">맨 앞</button>
+                    <button :disabled="currentPage === 1" @click="currentPage--">← 이전</button>
+
+                    <button
+                        v-for="page in visiblePages"
+                        :key="page"
+                        @click="changePage(page)"
+                        :class="{ current: currentPage === page}"
+                    >
+                        {{ page }}
+                    </button>
+                    
+                    <button :disabled="currentPage === totalPages" @click="currentPage++">다음 →</button>
+                    <button :disabled="currentPage === totalPages" @click="currentPage=totalPages">마지막</button>
                 </div>
             </section>
         </div>
@@ -209,6 +216,8 @@
         jobRoleFilter.value = null
         isResignFilter.value = null;
         isCreationFilter.value = null;
+        searchDept.value = ''
+        searchUser.value = ''
     }
 
     const filterBox = ref(null)
@@ -437,6 +446,47 @@
         })
         expandedIds.value = Array.from(matchedDeptIds)
     })
+
+    const usersPerPage = 6
+    const currentPage = ref(1)
+    const totalPages = computed(() => Math.ceil(filteredUserList.value.length / usersPerPage))
+
+    const paginatedUsers = computed(() => {
+        const start = (currentPage.value - 1) * usersPerPage
+        return filteredUserList.value.slice(start, start + usersPerPage)
+    })
+    
+    // 페이지 그룹
+    const visiblePages = computed(() => {
+        const total = totalPages.value
+        const cur = currentPage.value
+        const pages = []
+
+        const range = 10
+        let start = Math.max(1, cur - 1)
+        let end = Math.min(total, start + range - 1)
+
+        if (end - start < range - 1) start = Math.max(1, end - range + 1)
+
+        for (let i = start; i <= end; i++) {
+            pages.push(i)
+        }
+        return pages
+    })
+
+    function changePage(page) {
+        if (page >= 1 && page <= totalPages.value) {
+            currentPage.value = page
+        }
+    }
+
+    function goToInputPage() {
+        if (goToInputPage.value >= 1 && goToInputPage.value <= totalPages.value) {
+            currentPage.value = goToInputPage.value
+            showPageInput.value = false
+        }
+    }
+
 </script>
 
 <style scoped>
