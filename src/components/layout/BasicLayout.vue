@@ -16,11 +16,12 @@
 .template-layout {
   display: grid;
   grid-template-columns: 7fr 3fr; /* 7:3 비율 */
-  padding: 40px 60px;
+  padding: 80px 60px;
 }
 
 .template-main {
   min-width: 0;
+  padding: 40px 60px;
 }
 
 .template-sidebar {

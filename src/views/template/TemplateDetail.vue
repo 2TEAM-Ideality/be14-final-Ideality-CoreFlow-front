@@ -1,14 +1,54 @@
 <template>
   <BasicLayout>
     <template #main>
-      <h2 class="page-title">📁 {{ templateInfo?.name }}</h2>
+      <div class="page-title">
+        📁 {{ templateInfo?.name }}
+      </div>
+
+      <div class="button-section">
+        <v-btn
+          variant="outlined"
+          color="grey-darken-2"
+          size="small"
+          class="basic-button"
+          @click="deleteTemplate"
+        >
+          <v-icon icon="mdi-delete-outline" class="mr-1" />
+          템플릿 삭제
+        </v-btn>
+
+        <v-btn
+          size="small"
+          class="color-button"
+          @click="editTemplate"
+          elevation = '0'
+        >
+          <v-icon icon="mdi-pencil-outline" class="mr-1" />
+          템플릿 수정
+        </v-btn>
+      </div>
+      
 
       
-      <span>템플릿 설명</span>
+      <div class="section-label">템플릿 설명</div>
       <v-text-field variant="outlined" readonly>{{ templateInfo?.description }}</v-text-field>  
       
-      <span>프로세스 구조도</span>
+      <div class="d-flex align-center justify-space-between mb-2">
+        <span class="section-label">프로세스 구조도</span>
+        <v-btn
+          variant="outlined"
+          color="grey-darken-2"
+          size="small"
+          class="basic-button"
+          @click="fitToView"
+        >
+          전체 보기
+          <v-icon end icon="mdi-arrow-top-right" />
+        </v-btn>
+      </div>
+
       <VueFlow
+        ref="vueFlowRef" 
         v-model:nodes="flowNodes"
         v-model:edges="flowEdges"
         fit-view
@@ -23,12 +63,25 @@
     </template>
 
     <template #sidebar>
-      <p><strong>작성자:</strong> {{ templateInfo?.createdBy }}</p>
-      <p><strong>소요 기간:</strong> {{ templateInfo?.duration }}일</p>
-      <p><strong>사용 중인 프로젝트:</strong> {{ templateInfo?.usingProjects }}</p>
-      <p><strong>참여 부서:</strong> 
-        {{ templateInfo?.deptList.map(dept => dept.name).join(', ') }}
-      </p>
+      <div class="sidebar-section">
+        <div class="section-label">작성자</div>
+        <v-text-field variant="outlined" readonly class="sidebar-input" density="compact" hide-details  style="border-radius : 15px;">
+          {{ templateInfo?.createdBy }}
+        </v-text-field>  
+        <div class="section-label">소요 기간</div>
+        <v-text-field variant="outlined" readonly class="sidebar-input" density="compact" hide-details >
+          {{ templateInfo?.duration }}일
+        </v-text-field>  
+        <div class="section-label">사용 중인 프로젝트</div>
+        <v-text-field variant="outlined" readonly class="sidebar-input" density="compact" hide-details >
+          {{ templateInfo?.usingProjects }}
+        </v-text-field>  
+        <div class="section-label">참여 부서</div>
+        <v-text-field variant="outlined" readonly class="sidebar-input" density="compact" hide-details >
+          {{ templateInfo?.deptList.map(dept => dept.name).join(', ') }}
+        </v-text-field>  
+      </div>
+     
     </template>
   </BasicLayout>
 </template>
@@ -39,6 +92,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/util/api.js'
 import { VueFlow } from '@vue-flow/core'
+import { useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import '@vue-flow/core/dist/style.css'
@@ -50,6 +104,8 @@ import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 const nodeTypes = {
   custom: TemplateViewNode
 }
+
+const vueFlowRef = ref(null)
 
 const route = useRoute()
 const templateId = ref(route.params.id)
@@ -74,7 +130,11 @@ const fetchTemplate = async () => {
 
 onMounted(fetchTemplate)
 
-
+const fitToView = () => {
+  if (vueFlowRef.value?.fitView) {
+    vueFlowRef.value.fitView()
+  }
+}
 
 const convertToFlowData = () => {
   const g = new dagre.graphlib.Graph()
@@ -136,8 +196,9 @@ watch(() => route.params.id, async (newId) => {
 
 <style scoped>
 .page-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
+  margin-bottom : 20px;
 
 }
 .template-flow {
@@ -147,5 +208,44 @@ watch(() => route.params.id, async (newId) => {
   margin-top: 16px;
   border-radius: 10px;
 }
+.section-label {
+  font-weight: 500;
+  font-size: 15px;
+  margin-bottom : 10px;
+}
+
+.button-section {
+  width :100%;
+  display:flex;
+  flex-direction : row;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.basic-button{
+  color :#757575;
+  border-radius: 5px;
+  border : solid 1px #D9D9D9;
+  font-weight: 300;
+  height: 30px;
+  /* text-transform: none; */
+  /* padding : 10px 20px 10px 20px; */
+}
+.color-button{
+  background-color: #25BEAD;
+  color: white;
+  font-weight: 300;
+}
+.sidebar-input .v-input__control {
+  font-size: 13px !important; /* 원하는 크기로 */
+  padding: 4px 8px !important;
+  min-height: 32px !important;
+}
+
+.sidebar-section {
+  display:flex;
+  flex-direction : column;
+  gap: 10px;
+}
+
 </style>
 
