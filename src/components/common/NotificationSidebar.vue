@@ -12,10 +12,12 @@
       <div class="notification-list">
         <div v-for="(notice, index) in notifications" :key="index" class="notification-item">
           <div class="message">
-            <span v-if="notice.status === 'SENT'" class="new-icon">⚡</span> 
+            <span v-if="notice.status === 'SENT'" class="new-icon"></span> 
             {{ notice.content }}
           </div>
-          <div class="date">{{ notice.date }}</div>
+          <div class="date">{{ notice.date }} <!-- 삭제 버튼 추가 -->
+          <button @click="deleteNotification(notice.id)" class="delete-btn">  삭제</button>
+        </div>
         </div>
       </div>
     </div>
@@ -23,7 +25,7 @@
 </template>
 
 <script setup>
-import { defineProps,defineEmits } from 'vue'
+import { defineProps,defineEmits,watch } from 'vue'
 
 const props = defineProps({
   notifications: {
@@ -43,6 +45,44 @@ const emit = defineEmits(['closeSidebar'])
 const closeSidebar = () => {
   emit('closeSidebar')  // 부모 컴포넌트에 closeSidebar 이벤트를 전달
 }
+
+// 알림 삭제 함수
+const deleteNotification = async (notificationId) => {
+  try {
+    // API 요청: 알림의 isAutoDelete를 true로 설정
+    const response = await axios.patch(`/api/notifications/${notificationId}`, {
+      isAutoDelete: true
+    })
+
+    if (response.data.success) {
+      // UI에서 해당 알림 삭제
+      const index = props.notifications.findIndex(notice => notice.id === notificationId)
+      if (index !== -1) {
+        props.notifications.splice(index, 1)
+      }
+    } else {
+      console.error("알림 삭제 실패")
+    }
+  } catch (error) {
+    console.error('알림 삭제 오류:', error)
+  }
+}
+
+
+// 현재 알림 목록에서 가장 최신 알림 ID 추적
+const getLastNotificationId = () => {
+  if (props.notifications.length > 0) {
+    return props.notifications[0].id
+  }
+  return 0
+}
+
+// 알림이 갱신될 때마다, 가장 최근 알림 ID를 추적합니다.
+watch(() => props.notifications, () => {
+  const lastNotificationId = getLastNotificationId()
+  console.log("현재 알림 목록에서 가장 최신 알림 ID:", lastNotificationId)
+})
+
 
 </script>
 

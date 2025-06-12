@@ -86,7 +86,14 @@ const fetchNotifications = async () => {
     const data = await response.json()
     console.log('알림 데이터:', data); // API 응답 데이터 확인
     if (data && data.data) {
-      notifications.value = data.data // 알림 데이터를 상태에 저장
+        notifications.value = data.data // 알림 데이터를 상태에 저장
+      
+      // 마지막 알림 ID 추출 (가장 최근의 알림 ID)
+      const lastNotification = data.data[data.data.length - 1]
+      if (lastNotification) {
+        // `lastNotificationId_${userStore.id}`에 저장
+        localStorage.setItem(`lastNotificationId_${userStore.id}`, lastNotification.id)
+      }
     } else {
       console.warn('알림 데이터가 비어있거나 잘못된 형식입니다.');
     }
