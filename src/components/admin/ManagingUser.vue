@@ -19,7 +19,7 @@
             <section class="main">
                 <div class="sub-title">구성원</div>
                 <div class="filters">
-                    <div class="dropdown">
+                    <div ref="deptFilterBox" class="dropdown">
                         <button class="filter-btn" @click="toggleDropdown('dept')">
                             부서 : {{ selectedDeptName || '전체' }}
                         </button>
@@ -30,7 +30,7 @@
                             </li>
                         </ul>
                     </div>
-                    <div class="dropdown">
+                    <div ref="rankFilterBox" class="dropdown">
                         <button class="filter-btn" @click="toggleDropdown('rank')">
                             직급 : {{ jobRankFilter || '전체' }}
                         </button>
@@ -41,7 +41,7 @@
                             </li>
                         </ul>
                     </div>
-                    <div class="dropdown">
+                    <div ref="roleFilterBox" class="dropdown">
                         <button class="filter-btn" @click="toggleDropdown('role')">
                             직책 : {{ jobRoleFilter || '전체' }}
                         </button>
@@ -229,10 +229,16 @@
         searchUser.value = ''
     }
 
-    const filterBox = ref(null)
+    const deptFilterBox = ref(null)
+    const rankFilterBox = ref(null)
+    const roleFilterBox = ref(null)
 
     function handleClickOutside(e) {
-        if (filterBox.value && !filterBox.value.contains(e.target)) {
+        const clickedEl = e.target
+        if (!deptFilterBox.value.contains(clickedEl) &&
+            !rankFilterBox.value.contains(clickedEl) &&
+            !roleFilterBox.value.contains(clickedEl)
+        ) {
             showDropdown.value = { dept: false, rank: false, role: false }
         }
     }
@@ -396,11 +402,11 @@
         tree.value = buildDeptTree(deptList.value)
         userList.value = props.list
         schemaName.value = localStorage.getItem('schemaName')
-        document.addEventListener('click', handleClickOutside)
+        window.addEventListener('click', handleClickOutside)
     })
 
     onBeforeUnmount(() => {
-        document.removeEventListener('click', handleClickOutside)
+        window.removeEventListener('click', handleClickOutside)
     })
 
     function buildDeptTree(flatList, parentId = null) {

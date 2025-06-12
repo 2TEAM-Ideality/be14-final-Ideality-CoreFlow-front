@@ -15,14 +15,14 @@
       <button @click="openNotificationSidebar" class="ring-btn">
         <img src="@/assets/icons/ring.png" alt="알림" />
       </button>
-      <img class="profile-img mr-3" :src="profileImage" @click="toggleProfile" />
-      <div v-if="showProfileOption" class="dropdown-menu" ref="profileRef" @click.stop>
+      <img class="profile-img mr-3" ref="profileBox" :src="profileImage" @click="toggleDropdown('profile')" />
+      <div v-if="showDropdown.profile" class="dropdown-menu" ref="profileRef" @click.stop>
         <div class="dropdown-item" @click="triggerFileInput">프로필 변경</div>
         <input type="file" accept="image/*" @change="handleFileChange" ref="fileInput" style="display:none"/>
         <div class="dropdown-item deleted" @click="deleteProfile">프로필 삭제</div>
       </div>
 
-      <div class="user-info" @click="toggleDropdown">
+      <div class="user-info" ref="userBox" @click="toggleDropdown('user')">
         <div class="position">{{ userStore.deptName }} {{ userStore.jobRankName }}</div>
         <div class="name-role">
           <strong>{{ userStore.name }} 님</strong>
@@ -37,7 +37,7 @@
       />
 
       <!-- 드롭다운 메뉴 -->
-      <div v-if="showDropdown" class="dropdown-menu" ref="dropdownRef" @click.stop>
+      <div v-if="showDropdown.user" class="dropdown-menu" ref="dropdownRef" @click.stop>
         <div class="dropdown-item" @click="showChangePwdModal = true">비밀번호 변경</div>
         <!-- 관리자는 구성원 관리 표시 -->
         <routerLink to="/admin" v-if="isAdmin" class="dropdown-item">구성원 관리</routerLink>
@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-  import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
+  import { ref, onMounted,onBeforeUnmount } from 'vue'
   import { useUserStore } from '@/stores/userStore'
   import { useRouter } from 'vue-router'
   import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
@@ -152,20 +152,38 @@ onMounted(() => {
   if (token) {
     connectToSSE(token)  // 로그인 시 실시간 알림 연결
   }
+  window.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutside)
+})
+
+const profileBox = ref(null)
+const userBox = ref(null)
+
+function handleClickOutside(e) {
+  const clickedEl = e.target
+  if (!profileBox.value.contains(clickedEl) && !userBox.value.contains(clickedEl)) {
+    showDropdown.value = { users: false, profile: false }
+  }
+}
+const showDropdown = ref({
+  user: false,
+  profile: false
 })
 
 const profileImage = ref(userStore.profileImage)
 const showProfileOption = ref(false)
-const showDropdown = ref(false)
 
 const isAdmin = ref(userStore.roles.includes('ADMIN'))
 
-const toggleProfile = () => {
-  showProfileOption.value = !showProfileOption.value
-}
-
-const toggleDropdown = () => {
-  showDropdown.value = !showDropdown.value
+const toggleDropdown = (type) => {
+  showDropdown.value = {
+    user: false,
+    profile: false,
+    [type]: !showDropdown.value[type]
+  }
 }
 
 const logout = () => {
