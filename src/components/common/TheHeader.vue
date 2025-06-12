@@ -17,8 +17,9 @@
       </button>
       <img class="profile-img mr-3" :src="profileImage" @click="toggleProfile" />
       <div v-if="showProfileOption" class="dropdown-menu" ref="profileRef" @click.stop>
-        <div class="dropdown-item">프로필 변경</div>
-        <div class="dropdown-item deleted">프로필 삭제</div>
+        <div class="dropdown-item" @click="triggerFileInput">프로필 변경</div>
+        <input type="file" accept="image/*" @change="handleFileChange" ref="fileInput" style="display:none"/>
+        <div class="dropdown-item deleted" @click="deleteProfile">프로필 삭제</div>
       </div>
 
       <div class="user-info" @click="toggleDropdown">
@@ -52,10 +53,48 @@
   import { useUserStore } from '@/stores/userStore'
   import { useRouter } from 'vue-router'
   import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
+  import api from '@/api'
 
   const showChangePwdModal = ref(false)
 import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
 import { useNotifications } from '@/components/common/useNotifications.js'
+
+const imageUrl = ref(null)
+const fileInput = ref(null)
+
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
+async function handleFileChange(event) {
+  const file = event.target.files[0]
+  if (!file && file.type.statsWith('image/')) {
+    alert('이미지 파일만 선택해주세요.')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    imageUrl.value = reader.result // base64 문자열
+  }
+  reader.readAsDataURL(file)
+  confirm('프로필 사진을 등록하시겠습니까')
+  try {
+    const response = await api.patch('/api/user/update-profile',{
+      profileImage: imageUrl.value
+    })
+    alert(response.data.message)
+    userStore.profileImage = imageUrl.value
+    console.log(userStore.profileImage)
+    profileImage.value = imageUrl.value
+  } catch(error) {
+    if (error.message) {
+      error(error.message)
+    } else {
+      error('알 수 없는 에러가 발생했습니다.')
+    }
+  }
+}
 
 const userStore = useUserStore()
 
@@ -132,6 +171,25 @@ const toggleDropdown = () => {
 const logout = () => {
   userStore.logout()
   useRouter().push('/login')
+}
+
+async function deleteProfile() {
+  confirm('프로필 사진을 삭제하시겠습니까?')
+  try{
+    const response = await api.patch('/api/user/update-profile', {
+      profileImage: null
+    })
+    alert(response.data.message)
+  } catch (error) {
+    if (error.message) {
+      error(error.message)
+    } else {
+      error('알 수 없는 에러가 발생했습니다.')
+    }
+  }
+}
+async function updateProfile() {
+
 }
 </script>
 
