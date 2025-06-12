@@ -10,6 +10,7 @@ import { decodeJwt } from 'jose'
 
   const userStore = useUserStore()
   const router = useRouter()
+  const isRestored = ref(false)
 
   const route = useRoute()
 
@@ -25,6 +26,7 @@ import { decodeJwt } from 'jose'
   onMounted(async () => {
     try {
       await userStore.restoreFromStorage() // 사용자 확인
+      isRestored.value = true
     } catch (e) {
       console.error('복원 중 오류: ', e)
     }
@@ -38,7 +40,7 @@ import { decodeJwt } from 'jose'
     if (!isLoggedIn) {
       router.push('/login')
     }
-    { immediate: true}
+    { immediate: true }
   })
 
   // 토큰 감시 함수
@@ -80,7 +82,7 @@ provide('closeNotificationSidebar', closeNotificationSidebar)
 
 <template>
   <VApp>
-    <TheHeader v-if="route.path !== '/login'" />
+    <TheHeader v-if="route.path !== '/login' && isRestored" />
     <NotificationSidebar />
     <VMain class="main-content">
       <RouterView />

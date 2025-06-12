@@ -61,6 +61,7 @@ import { useNotifications } from '@/components/common/useNotifications.js'
 
 const imageUrl = ref(null)
 const fileInput = ref(null)
+const router = useRouter()
 
 function triggerFileInput() {
   fileInput.value?.click()
@@ -74,26 +75,29 @@ async function handleFileChange(event) {
   }
 
   const reader = new FileReader()
-  reader.onload = () => {
+  reader.onload = async () => {
     imageUrl.value = reader.result // base64 문자열
-  }
-  reader.readAsDataURL(file)
-  confirm('프로필 사진을 등록하시겠습니까')
-  try {
-    const response = await api.patch('/api/user/update-profile',{
-      profileImage: imageUrl.value
-    })
-    alert(response.data.message)
-    userStore.profileImage = imageUrl.value
-    console.log(userStore.profileImage)
-    profileImage.value = imageUrl.value
-  } catch(error) {
-    if (error.message) {
-      error(error.message)
-    } else {
-      error('알 수 없는 에러가 발생했습니다.')
+    const confirmed = confirm('프로필 사진을 등록하시겠습니까')
+    if(!confirmed) return
+
+    try {
+      const response = await api.patch('/api/user/update-profile',{
+        id: userStore.id,
+        profileImage: imageUrl.value
+      })
+      alert(response.data.message)
+      await userStore.updateUserInfo(userStore.id)
+      profileImage.value = userStore.profileImage
+      profileImage.value = imageUrl.value
+    } catch(error) {
+      if (error.message) {
+        error(error.message)
+      } else {
+        error('알 수 없는 에러가 발생했습니다.')
+      }
     }
   }
+  reader.readAsDataURL(file)
 }
 
 const userStore = useUserStore()
@@ -153,6 +157,9 @@ onMounted(() => {
     connectToSSE(token)  // 로그인 시 실시간 알림 연결
   }
   window.addEventListener('click', handleClickOutside)
+  console.log("mounted 프로필", profileImage.value)
+  profileImage.value = userStore.profileImage
+  isAdmin.value = userStore.roles.includes('ADMIN')
 })
 
 onBeforeUnmount(() => {
@@ -175,7 +182,7 @@ const showDropdown = ref({
 
 const profileImage = ref(userStore.profileImage)
 
-const isAdmin = ref(userStore.roles.includes('ADMIN'))
+const isAdmin = ref(userStore.roles?.includes('ADMIN'))
 
 const toggleDropdown = (type) => {
   showDropdown.value = {
@@ -187,16 +194,17 @@ const toggleDropdown = (type) => {
 
 const logout = () => {
   userStore.logout()
-  useRouter().push('/login')
+  router.push('/login')
 }
 
 async function deleteProfile() {
   confirm('프로필 사진을 삭제하시겠습니까?')
   try{
-    const response = await api.patch('/api/user/update-profile', {
-      profileImage: null
-    })
+    const response = await api.delete(`/api/user/delete-profile/${userStore.id}`)
     alert(response.data.message)
+    await userStore.updateUserInfo(userStore.id)
+    profileImage.value = userStore.profileImage
+    console.log(profileImage.value)
   } catch (error) {
     if (error.message) {
       error(error.message)
@@ -204,9 +212,6 @@ async function deleteProfile() {
       error('알 수 없는 에러가 발생했습니다.')
     }
   }
-}
-async function updateProfile() {
-
 }
 </script>
 

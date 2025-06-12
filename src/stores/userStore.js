@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
+import api from '@/api'
 
 export const useUserStore = defineStore('user', () => {
     const id = ref(null)
@@ -13,14 +14,14 @@ export const useUserStore = defineStore('user', () => {
     const hireDate = ref(null)
     const isResign = ref(false)
     const resignDate = ref(null)
-    const profileImage = ref('/images/profile/defaultProfile.png')
+    const profileImage = ref(null)
     const deptName = ref('')
     const jobRankName = ref('')
     const jobRoleName = ref('')
     const roles = ref([])
 
     const forcedLogout = ref(false)
-    const isLoggedIn = computed(() => !!id.value)
+    // const isLoggedIn = computed(() => !!id.value)
     const refreshToken = ref(null)
     const schemaName = ref(null)
 
@@ -102,7 +103,7 @@ export const useUserStore = defineStore('user', () => {
         jobRoleName.value = ''
         roles.value = []
 
-        isLoggedIn.value = false
+        // isLoggedIn.value = false
 
         refreshToken.value = null
         schemaName.value = null
@@ -164,6 +165,36 @@ export const useUserStore = defineStore('user', () => {
             return false
         }
     }
+    async function updateUserInfo(userId) {
+        console.log('savedUser', userId)
+        try {
+            const response = await api.get(`/api/user/info/${userId}`)
+
+            const newUserInfo = response.data.data
+            setUserData(newUserInfo)
+            localStorage.setItem('user', JSON.stringify({
+                id: id.value,
+                employeeNum: employeeNum.value,
+                name: name.value,
+                email: email.value,
+                birth: birth.value,
+                hireDate: hireDate.value,
+                isResign: isResign.value,
+                resignDate: resignDate.value,
+                profileImage: profileImage.value,
+                deptName: deptName.value,
+                jobRankName: jobRankName.value,
+                jobRoleName: jobRoleName.value,
+                roles: roles.value
+            }))
+            return true
+        } catch (e) {
+            console.log(e)
+            forcedLogout.value = true
+            logout()
+            return false
+        }
+    }
 
     async function restoreFromStorage() {
         const savedUser = localStorage.getItem('user')
@@ -202,7 +233,7 @@ export const useUserStore = defineStore('user', () => {
 
         forcedLogout,
         restoreFromStorage,
-        isLoggedIn,
+        // isLoggedIn,
 
         refreshToken,
         schemaName,
@@ -210,6 +241,7 @@ export const useUserStore = defineStore('user', () => {
         logout,
         forceLogout,
         clearState,
-        tryReissueToken
+        tryReissueToken,
+        updateUserInfo
     }
 })

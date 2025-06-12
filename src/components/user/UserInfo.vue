@@ -12,8 +12,9 @@
                         @click="toggleProfile"
                         />
                         <div v-if="showProfileOption" class="dropdown-menu" ref="profileRef" @click.stop>
-                            <div class="dropdown-item">프로필 변경</div>
-                            <div class="dropdown-item deleted">프로필 삭제</div>
+                            <div class="dropdown-item" @click="triggerFileInput">프로필 변경</div>
+                            <input type="file" accept="image/*" @change="handleFileChange" ref="fileInput" style="display:none"/>
+                            <div class="dropdown-item deleted" @click="deleteProfile">프로필 삭제</div>
                         </div>
                     </div>
                     <div class="profile">
@@ -152,7 +153,7 @@
 
     const showProfileOption = ref(false)
     const profileRef = ref(null)
-
+    const fileInput = ref(null)
     const formData = ref([])
 
     onMounted(async () => {
@@ -237,6 +238,55 @@
         }
         console.log('submit', payload)
         emit('user-updated', payload)
+    }
+
+    const imageUrl = ref(null)
+    function triggerFileInput() {
+        fileInput.value?.click()
+    }
+
+    async function handleFileChange(event) {
+        const file = event.target.files[0]
+        if (!file && file.type.statsWith('image/')) {
+            alert('이미지 파일만 선택해주세요.')
+            return
+        }
+    const reader = new FileReader()
+    reader.onload = async () => {
+    imageUrl.value = reader.result // base64 문자열
+    const confirmed = confirm('프로필 사진을 등록하시겠습니까')
+    if(!confirmed) return
+
+    try {
+        const response = await api.patch('/api/user/update-profile',{
+            id: formData.value.id,
+            profileImage: imageUrl.value
+        })
+        alert(response.data.message)
+        formData.value.profileImage.value = imageUrl.value
+        } catch(error) {
+        if (error.message) {
+            error(error.message)
+        } else {
+            error('알 수 없는 에러가 발생했습니다.')
+        }
+        }
+    }
+    reader.readAsDataURL(file)
+    }
+    async function deleteProfile() {
+    confirm('프로필 사진을 삭제하시겠습니까?')
+    try{
+        const response = await api.delete(`/api/user/delete-profile/${formData.value.id}`)
+        alert(response.data.message)
+        formData.value.profileImage = null
+    } catch (error) {
+        if (error.message) {
+        error(error.message)
+        } else {
+        error('알 수 없는 에러가 발생했습니다.')
+        }
+    }
     }
 </script>
 
