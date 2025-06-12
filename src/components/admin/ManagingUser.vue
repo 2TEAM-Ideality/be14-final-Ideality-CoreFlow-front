@@ -98,21 +98,27 @@
                     </tbody>
                 </table>
 
-                <div class="pagination">
-                    <button :disabled="currentPage===1" @click="currentPage=1">맨 앞</button>
-                    <button :disabled="currentPage === 1" @click="currentPage--">← 이전</button>
+                <div style="display: flex; justify-content: space-between;">
+                    <div class="pagination">
+                        <button :disabled="currentPage===1" @click="currentPage=1">맨 앞</button>
+                        <button :disabled="currentPage === 1" @click="currentPage--">← 이전</button>
 
-                    <button
-                        v-for="page in visiblePages"
-                        :key="page"
-                        @click="changePage(page)"
-                        :class="{ current: currentPage === page}"
-                    >
-                        {{ page }}
-                    </button>
-                    
-                    <button :disabled="currentPage === totalPages" @click="currentPage++">다음 →</button>
-                    <button :disabled="currentPage === totalPages" @click="currentPage=totalPages">마지막</button>
+                        <button
+                            v-for="page in visiblePages"
+                            :key="page"
+                            @click="changePage(page)"
+                            :class="{ current: currentPage === page}"
+                        >
+                            {{ page }}
+                        </button>
+                        
+                        <button :disabled="currentPage === totalPages" @click="currentPage++">다음 →</button>
+                        <button :disabled="currentPage === totalPages" @click="currentPage=totalPages">마지막</button>
+                    </div>
+                    <div style="margin-top: 16px; display:flex; gap:6px;">
+                        <input v-model.number="pageInput" style="background-color: white; width: 30px; border: 1px solid gray; text-align: center; border-radius: 6px;"/>
+                        <button style="background-color: white; border:1px solid gray; padding: 3px; border-radius: 6px;" @click="goToInputPage">이동</button>
+                    </div>
                 </div>
             </section>
         </div>
@@ -172,6 +178,7 @@
     const jobRoleList = ref([])
 
     const userList = ref([])
+    const pageInput = ref(1)
 
     const deptFilter = ref([]);
     const jobRankFilter = ref(null);
@@ -483,12 +490,16 @@
     }
 
     function goToInputPage() {
-        if (goToInputPage.value >= 1 && goToInputPage.value <= totalPages.value) {
-            currentPage.value = goToInputPage.value
-            showPageInput.value = false
+        if (pageInput.value >= 1 && pageInput.value <= totalPages.value) {
+            changePage(Number(pageInput.value))
+        } else {
+            alert('올바르지 않은 페이지 입력입니다.')
         }
     }
 
+    watch(currentPage, (newVal) => {
+        pageInput.value = newVal
+    })
 </script>
 
 <style scoped>
@@ -606,6 +617,7 @@
         background: white;
         border: 1px solid #ccc;
         cursor: pointer;
+        border-radius: 6px;
     }
 
     .pagination .current {
