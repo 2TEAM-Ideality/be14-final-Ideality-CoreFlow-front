@@ -3,7 +3,13 @@
         <AdminSideBar class="sidebar"/>
         <div class="main-content">
             <div class="content-wrapper">
-                <router-view />
+                <router-view v-slot="{ Component }">
+                    <component
+                        v-if="Component && propsReady"
+                        :is="Component"
+                        v-bind="propsForComponent"
+                    />
+                </router-view>
             </div>
         </div>
     </div>
@@ -11,6 +17,37 @@
 
 <script setup>
     import AdminSideBar from '@/components/admin/AdminSideBar.vue';
+    import { ref, watchEffect } from 'vue'
+    import { useRoute } from 'vue-router'
+    import api from '@/api'
+
+    const userList = ref([])
+    const propsReady = ref(false)
+    const propsForComponent = ref({})
+
+    const route = useRoute()
+
+    watchEffect(async () => {
+        propsReady.value = false
+        
+        const meta = route.meta
+        propsForComponent.value = {}
+
+        if (meta.title) {
+            propsForComponent.value.title = meta.title
+        }
+
+        if (meta.needUserList) {
+            console.log('필요?', meta.needUserList)
+            const userResponse = await api.get('/api/users/find-all')
+            userList.value = userResponse.data.data
+            console.log("부모에서 list", userList.value)
+            propsForComponent.value.list = userList.value
+            console.log('propsFor', propsForComponent.value.list)
+        }
+
+        propsReady.value = true
+    })
 </script>
 
 <style>

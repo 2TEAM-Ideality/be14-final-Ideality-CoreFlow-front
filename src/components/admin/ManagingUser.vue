@@ -1,13 +1,14 @@
 <template>
     <div class="user-management-container">
-        <h1>사용자 관리</h1>
+        <h1>{{ props.title }}</h1>
         <div class="content">
             <!-- 조직도 -->
-            <aside class="sidebar">
+            <aside class="sidebar" style="height: 500px">
                 <div class="sub-title">조직도</div>
-                <input  type="text" placeholder="부서 🔍" class="side-search search-box" v-model="searchDept"/>
+                <input type="text" placeholder="부서 🔍" class="side-search search-box" v-model="searchDept"/>
                 <ul class="tree">
-                    <li>schemaName
+                    <li>
+                        <button @click="deptFilter = []">schemaName</button>
                         <!-- 부서 목록 -->
                         <DeptTree :tree="filteredDeptTree" :expanded-ids="expandedIds" @toggle="handleToggle" @click-dept="onDeptClick"/>
                     </li>
@@ -53,6 +54,7 @@
                     </div>
                     <button class="filter-btn" @click="toggleCreationFilter">생성 권한 : {{ isCreationFilter === null ? '전체' : isCreationFilter ? 'O' : 'X' }}</button>
                     <button class="filter-btn" @click="toggleResignFilter">계정 활성 여부 : {{ isResignFilter === null ? '전체' : isResignFilter ? 'X' : 'O' }}</button>
+                    <button class="filter-btn" @click="filterClear">초기화</button>
                 </div>
                 <div class="create-user">
                     <div class="filters">    
@@ -145,6 +147,11 @@
     import CreateUser from './CreateUser.vue'
     import CreatePartner from './CreatePartner.vue'
 
+    const props = defineProps({
+        list: Array,
+        title: String
+    })
+
     const showCreateUserModal = ref(false)
     const showCreatePartnerModal = ref(false)
 
@@ -196,6 +203,14 @@
         showDropdown.value[type] = false
     }
 
+    function filterClear() {
+        deptFilter.value = [];
+        jobRankFilter.value = null
+        jobRoleFilter.value = null
+        isResignFilter.value = null;
+        isCreationFilter.value = null;
+    }
+
     const filterBox = ref(null)
 
     function handleClickOutside(e) {
@@ -203,7 +218,6 @@
             showDropdown.value = { dept: false, rank: false, role: false }
         }
     }
-
 
     const deptFilterIds = ref([])
     function getChildDeptIds(allDepts, parentDeptId) {
@@ -362,10 +376,7 @@
         jobRoleList.value = orgData.jobRoleList
 
         tree.value = buildDeptTree(deptList.value)
-
-        // 유저 리스트 요청도 날릴 예정
-        const userResponse = await api.get('/api/users/find-all')
-        userList.value = userResponse.data.data
+        userList.value = props.list
 
         document.addEventListener('click', handleClickOutside)
     })
@@ -426,7 +437,6 @@
         })
         expandedIds.value = Array.from(matchedDeptIds)
     })
-
 </script>
 
 <style scoped>
@@ -453,7 +463,7 @@
         flex-direction: column;
         /* align-items: center; */
         padding-left: 20px;
-        height: 600px;
+        height: 800px;
         border-radius: 10px;
         height: auto;
     }

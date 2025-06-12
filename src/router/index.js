@@ -114,12 +114,20 @@ const routes = [
       {
         path: 'user',
         name: 'ManagingUser',
-        component: () => import('@/components/admin/ManagingUser.vue')
+        component: () => import('@/components/admin/ManagingUser.vue'),
+        meta: {
+          title: '사용자 관리',
+          needUserList: true
+        }
       },
       {
         path: 'org',
         name: 'ManagingOrg',
-        component: () => import('@/components/admin/ManagingOrg.vue')
+        component: () => import('@/components/admin/ManagingOrg.vue'),
+        meta: {
+          title: '조직 관리',
+          needUserList: false
+        }
       },
       {
         path:'',
