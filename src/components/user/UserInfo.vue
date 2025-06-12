@@ -254,8 +254,8 @@
     const reader = new FileReader()
     reader.onload = async () => {
     imageUrl.value = reader.result // base64 문자열
-    const confirmed = confirm('프로필 사진을 등록하시겠습니까')
-    if(!confirmed) return
+    const isConfirmed = confirm('프로필 사진을 등록하시겠습니까')
+    if(!isConfirmed) return
 
     try {
         const response = await api.patch('/api/user/update-profile',{
@@ -275,7 +275,8 @@
     reader.readAsDataURL(file)
     }
     async function deleteProfile() {
-    confirm('프로필 사진을 삭제하시겠습니까?')
+    const isConfirmed = confirm('프로필 사진을 삭제하시겠습니까?')
+    if (!isConfirmed) return
     try{
         const response = await api.delete(`/api/user/delete-profile/${formData.value.id}`)
         alert(response.data.message)

@@ -212,7 +212,6 @@
             if (value !== null) {
                 onDeptClick(value)
             }
-            console.log("deptFilter", deptFilter)
         }
         if (type === 'rank') jobRankFilter.value = value
         if (type === 'role') jobRoleFilter.value = value
@@ -281,10 +280,9 @@
     function isInnerByUserId(id) {
         const user = userList.value.find(u => u.id === id)
         if (user) {
-            console.log(user.isInner)
             return user.isInner
         } else {
-            console.log("유저를 찾을 수 없습니다.")
+            alert('유저를 찾을 수 없습니다.')
         }
     }
 
@@ -370,10 +368,9 @@
     function creation(id) {
         const user = userList.value.find(u => u.id === id)
         if (user) {
-            console.log('creation', user.isCreation)
             return user.isCreation
         } else {
-            console.log("유저를 찾을 수 없습니다.")
+            alert("유저를 찾을 수 없습니다.")
         }
     }
 
@@ -384,11 +381,8 @@
 
     function handelUserClick(userId) {
         selectedUserId.value = userId
-        console.log(selectedUserId.value)
         isCreation.value = creation(selectedUserId.value)
-        console.log('creation설정', isCreation.value)
         isInner.value = isInnerByUserId(selectedUserId.value)
-        console.log('isInner', isInner.value)
     }
 
     onMounted(async () => {
@@ -426,7 +420,8 @@
         }
     }
 
-    watch(deptFilterIds, (ids) => {
+    watch(
+        deptFilterIds, (ids) => {
         if (ids.length === 0) {
             deptFilter.value = null
         } else {
@@ -437,6 +432,9 @@
                 })
                 .filter(Boolean)
         }
+    })
+    watch(filteredUserList, () => {
+        currentPage.value = 1
     })
 
     watch(searchDept, (keyword) => {

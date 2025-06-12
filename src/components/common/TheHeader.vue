@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-  import { ref, onMounted,onBeforeUnmount } from 'vue'
+  import { ref, onMounted,onBeforeUnmount, computed } from 'vue'
   import { useUserStore } from '@/stores/userStore'
   import { useRouter, RouterLink } from 'vue-router'
   import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
@@ -62,6 +62,7 @@ import { useNotifications } from '@/components/common/useNotifications.js'
 const imageUrl = ref(null)
 const fileInput = ref(null)
 const router = useRouter()
+const userStore = useUserStore()
 
 function triggerFileInput() {
   fileInput.value?.click()
@@ -77,8 +78,8 @@ async function handleFileChange(event) {
   const reader = new FileReader()
   reader.onload = async () => {
     imageUrl.value = reader.result // base64 문자열
-    const confirmed = confirm('프로필 사진을 등록하시겠습니까')
-    if(!confirmed) return
+    const isConfirmed = confirm('프로필 사진을 등록하시겠습니까')
+    if(!isConfirmed) return
 
     try {
       const response = await api.patch('/api/user/update-profile',{
@@ -99,8 +100,6 @@ async function handleFileChange(event) {
   }
   reader.readAsDataURL(file)
 }
-
-const userStore = useUserStore()
 
 const notificationSidebarOpen = ref(false) // 사이드바 상태 관리
 const notifications = ref([]) // 알림 상태 관리
@@ -157,9 +156,6 @@ onMounted(() => {
     connectToSSE(token)  // 로그인 시 실시간 알림 연결
   }
   window.addEventListener('click', handleClickOutside)
-  console.log("mounted 프로필", profileImage.value)
-  profileImage.value = userStore.profileImage
-  isAdmin.value = userStore.roles.includes('ADMIN')
 })
 
 onBeforeUnmount(() => {
@@ -182,7 +178,7 @@ const showDropdown = ref({
 
 const profileImage = ref(userStore.profileImage)
 
-const isAdmin = ref(userStore.roles?.includes('ADMIN'))
+const isAdmin = ref(userStore.roles.includes('ADMIN'))
 
 const toggleDropdown = (type) => {
   showDropdown.value = {
@@ -198,7 +194,8 @@ const logout = () => {
 }
 
 async function deleteProfile() {
-  confirm('프로필 사진을 삭제하시겠습니까?')
+  const isConfirmed = confirm('프로필 사진을 삭제하시겠습니까?')
+  if (!isConfirmed) return
   try{
     const response = await api.delete(`/api/user/delete-profile/${userStore.id}`)
     alert(response.data.message)
