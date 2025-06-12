@@ -51,7 +51,7 @@
 <script setup>
   import { ref, onMounted,onBeforeUnmount } from 'vue'
   import { useUserStore } from '@/stores/userStore'
-  import { useRouter } from 'vue-router'
+  import { useRouter, RouterLink } from 'vue-router'
   import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
   import api from '@/api'
 
@@ -174,7 +174,6 @@ const showDropdown = ref({
 })
 
 const profileImage = ref(userStore.profileImage)
-const showProfileOption = ref(false)
 
 const isAdmin = ref(userStore.roles.includes('ADMIN'))
 
