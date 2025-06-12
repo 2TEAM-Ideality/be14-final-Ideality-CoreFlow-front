@@ -2,7 +2,7 @@
     <div class="dept-tree">
         <!-- 부서 목록 -->
         <li v-for="dept in tree" :key="dept.id">
-            <div @click="toggle(dept.id)" class="node">
+            <div @click="toggle(dept.id), $emit('click-dept', dept.id)" class="node">
                 ㄴ{{ dept.name }}
                 <span v-if="dept.children?.length"></span>
             </div>
@@ -13,6 +13,7 @@
                 :tree="dept.children"
                 :expanded-ids="expandedIds"
                 @toggle="$emit('toggle', $event)"
+                @click-dept="$emit('click-dept', $event)"
             />
         </li>
     </div>

@@ -17,27 +17,35 @@
                         </div>
                     </div>
                     <div class="profile">
-                        <div>{{ formData.name }}</div>
+                        <div style="font-size: 24px; font-weight: bold">{{ formData.name }}</div>
                         <div class="role-info">
                             <div class="d-flex role">
-                                <div>{{ formData.deptName }}</div>
-                                <div>{{ formData.jobRankName }}</div>
+                                <div style="font-weight: bold;">{{ formData.deptName }}</div>
+                                <div style="font-weight: bold;">{{ formData.jobRankName }}</div>
                             </div>
-                            <div>{{ formData.isResign ? '비활성' : '활성화' }}</div>
+                            <div  
+                                class="isActive"                                   
+                                :style="{ 
+                                    color: formData.isResign ? 'red' : 'blue',
+                                    backgroundColor: formData.isResign ? '#ffdddd' : '#ddddff',
+                                }"
+                            >
+                                {{ formData.isResign ? '비활성' : '활성화' }}
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="divider"></div>
                 <div class="user-info">
                     <div class="mb-2 input-box">
-                        <label class="mb-1">이메일</label>
+                        <label class="mb-1 category">이메일</label>
                         <div class="py-2 border radius-box pl-2">
                             {{ formData.email }}
                         </div>
                     </div>
 
                     <div class="mb-2 input-box">
-                        <label class="mb-1">사번</label>
+                        <label class="mb-1 category">사번</label>
                         <div class="py-1 border radius-box pl-2">
                             {{ formData.employeeNum }}
                         </div>
@@ -45,7 +53,7 @@
 
                     <div class="mb-2 two-divide">
                         <div class="two-space">
-                            <label class="mb-1">부서</label>
+                            <label class="mb-1 category">부서</label>
                             <select 
                                 v-model="formData.deptName" 
                                 class="py-1 border radius-box two-box drop-down text-black"
@@ -57,7 +65,7 @@
                             </select>
                         </div>
                         <div class="two-space">
-                            <label class="mb-1">프로젝트 생성 권한</label>
+                            <label class="mb-1 category">프로젝트 생성 권한</label>
                             <select 
                                 v-model="formData.isCreation" 
                                 class="py-1 border radius-box two-box drop-down text-black"
@@ -71,7 +79,7 @@
 
                     <div class="mb-2 two-divide">
                         <div class="two-space">
-                            <label class="mb-1">직위</label>
+                            <label class="mb-1 category">직위</label>
                             <select 
                                 v-model="formData.jobRankName" 
                                 class="py-1 border radius-box two-box drop-down text-black"
@@ -83,7 +91,7 @@
                             </select>
                         </div>
                         <div class="two-space">
-                            <label class="mb-1">직책</label>
+                            <label class="mb-1 category">직책</label>
                             <select
                                 v-model="formData.jobRoleName"
                                 class="py-1 border radius-box two-box drop-down text-black"
@@ -98,7 +106,7 @@
 
                     <div class="mb-2 two-divide">
                         <div class="two-space">
-                            <label class="mb-1">입사일</label>
+                            <label class="mb-1 category">입사일</label>
                             <input 
                                 type="date"
                                 v-model="formData.hireDate" 
@@ -107,7 +115,7 @@
                             />
                         </div>
                         <div class="two-space">
-                            <label class="mb-1">퇴사일</label>
+                            <label class="mb-1 category">퇴사일</label>
                             <input 
                                 type="date"
                                 v-model="formData.resignDate"
@@ -292,6 +300,7 @@
     .role-info {
         display: flex;
         justify-content: space-between;
+        align-items: center;
     }
     .role {
         gap: 8px;
@@ -323,7 +332,6 @@
     .two-space {
         display: flex;
         flex-direction: column;
-        width: 150px;
     }
     .radius-box {
         border-radius: 8px;
@@ -382,5 +390,12 @@
 
     .dropdown-item.deleted:hover {
         color: white;
+    }
+    .isActive {
+        padding: 4px;
+        border-radius: 6px;
+    }
+    .category {
+        font-weight: bold;
     }
 </style>

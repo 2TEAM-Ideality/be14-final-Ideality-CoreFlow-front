@@ -5,11 +5,11 @@
             <!-- 조직도 -->
             <aside class="sidebar">
                 <div class="sub-title">조직도</div>
-                <input  type="text" placeholder="부서 🔍" class="side-search search-box" />
+                <input  type="text" placeholder="부서 🔍" class="side-search search-box" v-model="searchDept"/>
                 <ul class="tree">
-                    <li>기아 타이거즈
+                    <li>schemaName
                         <!-- 부서 목록 -->
-                        <DeptTree :tree="tree" :expanded-ids="expandedIds" @toggle="handleToggle" />
+                        <DeptTree :tree="filteredDeptTree" :expanded-ids="expandedIds" @toggle="handleToggle" @click-dept="onDeptClick"/>
                     </li>
                 </ul>
             </aside>
@@ -18,18 +18,48 @@
             <section class="main">
                 <div class="sub-title">구성원</div>
                 <div class="filters">
-                    <button class="filter-btn">부서 : {{ deptFilter }}</button>
-                    <button class="filter-btn">직급 : {{ jobRankFilter }}</button>
-                    <button class="filter-btn">직책 : {{ jobRoleFilter }}</button>
-                    <button class="filter-btn" @click="creationFilterModal">생성 권한 : {{ isCreationFilter }}</button>
-                    <button class="filter-btn" @click="activeFilterSwitch">계정 활성 여부 : {{ isActiveFilter ? '활성' : '비활성' }}</button>
+                    <div class="dropdown">
+                        <button class="filter-btn" @click="toggleDropdown('dept')">
+                            부서 : {{ selectedDeptName || '전체' }}
+                        </button>
+                        <ul v-if="showDropdown.dept" class="dropdown-list">
+                            <li @click="selectFilter('dept', '')">전체</li>
+                            <li v-for="dept in deptList" :key="dept.id" @click="selectFilter('dept', dept.id)">
+                                {{ dept.name }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="filter-btn" @click="toggleDropdown('rank')">
+                            직급 : {{ jobRankFilter || '전체' }}
+                        </button>
+                        <ul v-if="showDropdown.rank" class="dropdown-list">
+                            <li @click="selectFilter('rank', '')">전체</li>
+                            <li v-for="rank in jobRankList" :key="rank.id" @click="selectFilter('rank', rank.name)">
+                                {{ rank.name }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="filter-btn" @click="toggleDropdown('role')">
+                            직책 : {{ jobRoleFilter || '전체' }}
+                        </button>
+                        <ul v-if="showDropdown.role" class="dropdown-list">
+                            <li @click="selectFilter('role', '')">전체</li>
+                            <li v-for="role in jobRoleList" :key="role.id" @click="selectFilter('role', role.name)">
+                                {{ role.name }}
+                            </li>
+                        </ul>
+                    </div>
+                    <button class="filter-btn" @click="toggleCreationFilter">생성 권한 : {{ isCreationFilter === null ? '전체' : isCreationFilter ? 'O' : 'X' }}</button>
+                    <button class="filter-btn" @click="toggleResignFilter">계정 활성 여부 : {{ isResignFilter === null ? '전체' : isResignFilter ? 'X' : 'O' }}</button>
                 </div>
                 <div class="create-user">
                     <div class="filters">    
-                        <button class="green filter-btn">+ 협력 업체 계정 생성</button>
-                        <button class="blue filter-btn">+ 구성원 계정 생성</button>
+                        <button class="green filter-btn" @click="showCreatePartnerModal = true">+ 협력 업체 계정 생성</button>
+                        <button class="blue filter-btn" @click="handleShowCreateUserModal()">+ 구성원 계정 생성</button>
                     </div>
-                    <input type="text" placeholder="이름 🔍" class="main-search search-box"/>
+                    <input type="text" placeholder="이름 🔍" class="main-search search-box" v-model="searchUser"/>
                 </div>
 
 
@@ -38,14 +68,14 @@
                         <tr>
                             <th>이름</th>
                             <th>부서</th>
-                            <th>직급</th>
+                            <th>직위</th>
                             <th>직책</th>
                             <th>프로젝트 생성 권한</th>
                             <th>계정 상태</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(user, index) in userList" :key="index" @click="handelUserClick(user.id)">
+                        <tr v-for="(user, index) in filteredUserList" :key="index" @click="handelUserClick(user.id)">
                             <td>{{ user.name }}</td>
                             <td>{{ user.deptName }}</td>
                             <td>{{ user.jobRankName }}</td>
@@ -54,12 +84,12 @@
                             <td>
                                 <div
                                     :style="{ 
-                                        color: user.isActive ? 'red' : 'blue',
-                                        backgroundColor: user.isActive ? '#ffdddd' : '#ddddff'
+                                        color: user.isResign ? 'red' : 'blue',
+                                        backgroundColor: user.isResign ? '#ffdddd' : '#ddddff'
                                     }"
                                     class = "active-card"
                                 >
-                                    {{ user.isActive ? '비활성' : '활성' }}
+                                    {{ user.isResign ? '비활성' : '활성' }}
                                 </div>
                             </td>
                         </tr>
@@ -89,14 +119,34 @@
                 />
             </div>
         </div>
+        <!-- 유저 생성 모달 -->
+        <CreateUser 
+            v-if="showCreateUserModal" 
+            :deptList="filteredDeptList"
+            :jobRankList="filteredRankList"
+            :jobRoleList="filteredRoleList"
+            @close="showCreateUserModal = false" 
+            @user-created="createUserInList"
+        />
+        <!-- 협력업체 계정 생성 모달 -->
+        <CreatePartner 
+            v-if="showCreatePartnerModal" 
+            @close="showCreatePartnerModal = false" 
+            @user-created="createUserInList"
+        />
     </div>
 </template>
 
 <script setup>
     import api from '@/api'
-    import { ref, onMounted, computed, watch } from 'vue'
+    import { ref, onMounted, computed, onBeforeUnmount, watch } from 'vue'
     import DeptTree from './DeptTree.vue'
     import UserInfo from '../user/UserInfo.vue'
+    import CreateUser from './CreateUser.vue'
+    import CreatePartner from './CreatePartner.vue'
+
+    const showCreateUserModal = ref(false)
+    const showCreatePartnerModal = ref(false)
 
     const deptList = ref([])
     const tree = ref([])
@@ -107,11 +157,81 @@
 
     const userList = ref([])
 
-    const deptFilter = ref('기획팀');
-    const jobRankFilter = ref('과장');
-    const jobRoleFilter = ref('파트장');
-    const isActiveFilter = ref(true);
-    const isCreationFilter = ref(null);
+    const deptFilter = ref([]);
+    const jobRankFilter = ref(null);
+    const jobRoleFilter = ref(null);
+    const isResignFilter = ref(null); // null-전체, true-활성, false-비활성
+    const isCreationFilter = ref(null); // null-전체, true-생성가능, false-생성불가
+
+    const selectedDeptName = computed(() => {
+    return Array.isArray(deptFilter.value) && deptFilter.value.length > 0
+        ? deptFilter.value[0]
+        : null
+    })
+
+    const showDropdown = ref({
+        dept: false,
+        rank: false,
+        role: false
+    })
+
+    function toggleDropdown(type) {
+        showDropdown.value = {
+            dept: false,
+            rank: false,
+            role: false,
+            [type]: !showDropdown.value[type]
+        }
+    }
+
+    function selectFilter(type, value) {
+        if (type === 'dept') {
+            if (value !== null) {
+                onDeptClick(value)
+            }
+            console.log("deptFilter", deptFilter)
+        }
+        if (type === 'rank') jobRankFilter.value = value
+        if (type === 'role') jobRoleFilter.value = value
+        showDropdown.value[type] = false
+    }
+
+    const filterBox = ref(null)
+
+    function handleClickOutside(e) {
+        if (filterBox.value && !filterBox.value.contains(e.target)) {
+            showDropdown.value = { dept: false, rank: false, role: false }
+        }
+    }
+
+
+    const deptFilterIds = ref([])
+    function getChildDeptIds(allDepts, parentDeptId) {
+        const result = [parentDeptId]
+        const children = allDepts.filter(dept => dept.parentDeptId === parentDeptId)
+
+        for (const child of children) {
+            result.push(...getChildDeptIds(allDepts, child.id))
+        }
+        return result
+    }
+
+    function onDeptClick(deptId) {
+        deptFilterIds.value = getChildDeptIds(deptList.value, deptId)
+    }
+
+    const filteredUserList = computed(() => {
+        return userList.value.filter(user => {
+            const deptMatch = deptFilter.value.length === 0 || deptFilter.value.includes(user.deptName)
+            const rankMatch = !jobRankFilter.value || user.jobRankName === jobRankFilter.value
+            const roleMatch = !jobRoleFilter.value || user.jobRoleName === jobRoleFilter.value
+            const creationMatch = isCreationFilter.value === null || user.isCreation === isCreationFilter.value
+            const resignMatch = isResignFilter.value === null || user.isResign === isResignFilter.value
+            const nameMatch = !searchUser.value || user.name.includes(searchUser.value)
+
+            return deptMatch && rankMatch && roleMatch && creationMatch && resignMatch && nameMatch
+        })
+    })
 
     const selectedUserId = ref(null)
     const searchDept = ref('')
@@ -129,6 +249,39 @@
             console.log("유저를 찾을 수 없습니다.")
         }
     }
+
+    function buildTree(flatList, parentDeptId = null) {
+        return flatList
+            .filter(dept => dept.parentDeptId === parentDeptId)
+            .map(dept => ({
+                ...dept,
+                children: buildTree(flatList, dept.id)
+            }))
+    }
+
+    const filteredDeptTree = computed(() => {
+        if (!searchDept.value) return buildTree(deptList.value)
+
+        // 이름에 검색 키워드가 포함된 부서들과 그 상위부서들까지 포함
+        const keyword = searchDept.value.toLowerCase()
+        const matchedIds = new Set()
+        const parentMap = {}
+
+        deptList.value.forEach(dept => {
+            parentMap[dept.id] = dept.parentDeptId
+            if (dept.name.toLowerCase().includes(keyword)) {
+                let currentId = dept.id
+                while (currentId) {
+                    matchedIds.add(currentId)
+                    currentId = parentMap[currentId]
+                }
+            }
+        })
+
+        const filteredList = deptList.value.filter(dept => matchedIds.has(dept.id))
+        return buildTree(filteredList)
+    })
+
 
     // 조건부 필터링(외부, 내부)
     const filteredDeptList = computed(() => {
@@ -149,6 +302,19 @@
             : jobRoleList.value.filter(jobRole => jobRole.name === '협력업체')
     })
 
+    function toggleCreationFilter() {
+        if (isCreationFilter.value === null) isCreationFilter.value = true
+        else if (isCreationFilter.value === true) isCreationFilter.value = false
+        else isCreationFilter.value = null
+    }
+
+    function toggleResignFilter() {
+        if (isResignFilter.value === null) isResignFilter.value = false
+        else if (isResignFilter.value === false) isResignFilter.value = true
+        else isResignFilter.value = null
+    }
+
+
     function updateUserInList(updateUser) {
         const index = userList.value.findIndex(u => u.id === updateUser.id)
         if (index !== -1) {
@@ -157,6 +323,10 @@
                 ...updateUser
             }
         }
+    }
+
+    function createUserInList(newUser) {
+        userList.value.unshift(newUser)
     }
 
     function creation(id) {
@@ -169,6 +339,11 @@
         }
     }
 
+    function handleShowCreateUserModal() {
+        showCreateUserModal.value = true;
+        isInner.value = true;
+    }
+
     function handelUserClick(userId) {
         selectedUserId.value = userId
         console.log(selectedUserId.value)
@@ -176,10 +351,6 @@
         console.log('creation설정', isCreation.value)
         isInner.value = isInnerByUserId(selectedUserId.value)
         console.log('isInner', isInner.value)
-    }
-    
-    function activeFilterSwitch() {
-        isActiveFilter.value = !isActiveFilter.value
     }
 
     onMounted(async () => {
@@ -195,6 +366,12 @@
         // 유저 리스트 요청도 날릴 예정
         const userResponse = await api.get('/api/users/find-all')
         userList.value = userResponse.data.data
+
+        document.addEventListener('click', handleClickOutside)
+    })
+
+    onBeforeUnmount(() => {
+        document.removeEventListener('click', handleClickOutside)
     })
 
     function buildDeptTree(flatList, parentId = null) {
@@ -213,6 +390,43 @@
             expandedIds.value.push(id)
         }
     }
+
+    watch(deptFilterIds, (ids) => {
+        if (ids.length === 0) {
+            deptFilter.value = null
+        } else {
+            deptFilter.value = ids
+                .map(id => {
+                const dept = deptList.value.find(d => d.id === id)
+                return dept ? dept.name : null
+                })
+                .filter(Boolean)
+        }
+    })
+
+    watch(searchDept, (keyword) => {
+        if (!keyword) {
+            expandedIds.value = []
+            return
+        }
+
+        const lowerKeyword = keyword.toLowerCase()
+        const matchedDeptIds = new Set()
+        const parentMap = {}
+
+        deptList.value.forEach(dept => {
+            parentMap[dept.id] = dept.parentDeptId
+            if (dept.name.toLowerCase().includes(lowerKeyword)) {
+                let currentId = dept.id
+                while (currentId) {
+                    matchedDeptIds.add(currentId)
+                    currentId = parentMap[currentId]
+                }
+            }
+        })
+        expandedIds.value = Array.from(matchedDeptIds)
+    })
+
 </script>
 
 <style scoped>
@@ -363,4 +577,30 @@
         align-items: center;
         justify-content: space-between;
     }
+
+
+    .dropdown {
+  position: relative;
+}
+
+.dropdown-list {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0 0;
+  z-index: 10;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdown-list li {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.dropdown-list li:hover {
+  background-color: #f0f0f0;
+}
 </style>

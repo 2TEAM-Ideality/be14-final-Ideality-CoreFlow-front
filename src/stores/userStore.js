@@ -104,7 +104,7 @@ export const useUserStore = defineStore('user', () => {
         jobRoleName.value = ''
         roles.value = []
 
-        forcedLogout.value = false
+        isLoggedIn.value = false
 
         refreshToken.value = null
         schemaName.value = null
@@ -182,7 +182,7 @@ export const useUserStore = defineStore('user', () => {
             schemaName.value = savedSchemaName
             accessToken.value = savedAccessToken
         } else {
-            throw new Error('No user data found in storage')
+            forceLogout()
         }
     }
 
