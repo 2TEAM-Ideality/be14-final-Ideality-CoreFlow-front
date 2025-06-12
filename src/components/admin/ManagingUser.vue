@@ -8,7 +8,7 @@
                 <input type="text" placeholder="부서 🔍" class="side-search search-box" v-model="searchDept"/>
                 <ul class="tree">
                     <li>
-                        <button @click="deptFilter = []">schemaName</button>
+                        <button @click="deptFilter = []">{{ schemaName }}</button>
                         <!-- 부서 목록 -->
                         <DeptTree :tree="filteredDeptTree" :expanded-ids="expandedIds" @toggle="handleToggle" @click-dept="onDeptClick"/>
                     </li>
@@ -158,6 +158,8 @@
         list: Array,
         title: String
     })
+
+    const schemaName = ref('')
 
     const showCreateUserModal = ref(false)
     const showCreatePartnerModal = ref(false)
@@ -386,7 +388,7 @@
 
         tree.value = buildDeptTree(deptList.value)
         userList.value = props.list
-
+        schemaName.value = localStorage.getItem('schemaName')
         document.addEventListener('click', handleClickOutside)
     })
 
