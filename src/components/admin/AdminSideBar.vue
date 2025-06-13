@@ -12,7 +12,7 @@
     import { RouterLink } from 'vue-router';
 </script>
 
-<style>
+<style scoped>
     .admin-home {
         font-size: 24px;
         font-weight: bold;

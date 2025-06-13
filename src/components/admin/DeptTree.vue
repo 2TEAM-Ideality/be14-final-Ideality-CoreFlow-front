@@ -34,7 +34,7 @@
     }
 </script>
 
-<style>
+<style scoped>
     .dept-tree {
         list-style: none;
         padding-left: 16px;

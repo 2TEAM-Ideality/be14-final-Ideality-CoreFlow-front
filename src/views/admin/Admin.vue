@@ -50,7 +50,7 @@
     })
 </script>
 
-<style>
+<style scoped>
     .con {
         display: flex;
         height: calc(100vh - 50px);
