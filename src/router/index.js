@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
 
 const routes = [
   {
@@ -106,6 +107,34 @@ const routes = [
   //   name: 'Pipe',
   //   component: () => import('@/views/test/PipePage.vue')
   // }
+  {
+    path: '/admin',
+    component: () => import('@/views/admin/Admin.vue'),
+    children: [
+      {
+        path: 'user',
+        name: 'ManagingUser',
+        component: () => import('@/components/admin/ManagingUser.vue'),
+        meta: {
+          title: '사용자 관리',
+          needUserList: true
+        }
+      },
+      {
+        path: 'org',
+        name: 'ManagingOrg',
+        component: () => import('@/components/admin/ManagingOrg.vue'),
+        meta: {
+          title: '조직 관리',
+          needUserList: false
+        }
+      },
+      {
+        path: '',
+        redirect: { name: 'ManagingUser' }
+      }
+    ]
+  },
   // 태스크 관련
   {
     path: '/task/:taskId',
@@ -148,6 +177,19 @@ const router = createRouter({
 // router/index.js 하단에 추가
 router.beforeEach((to, from, next) => {
   console.log('✅ 라우팅 시작:', to.fullPath)
+  next()
+})
+
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore()
+
+  if (to.path === '/admin') {
+    const hasAdminRole = userStore.roles.includes('ADMIN')
+    if (!hasAdminRole) {
+      alert('관리자만 접근할 수 있습니다.')
+      return next('/')
+    }
+  }
   next()
 })
 

@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/userStore'
 
 const api = axios.create({
-    timeout: 5000
+    timeout: 50000
 })
 
 api.interceptors.request.use(
