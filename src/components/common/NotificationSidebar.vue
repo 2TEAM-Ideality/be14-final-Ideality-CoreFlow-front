@@ -26,6 +26,10 @@
 
 <script setup>
 import { defineProps,defineEmits,watch } from 'vue'
+import { useUserStore } from '@/stores/userStore'
+
+  const userStore = useUserStore()
+  const token = userStore.accessToken;
 
 const props = defineProps({
   notifications: {
@@ -48,41 +52,42 @@ const closeSidebar = () => {
 
 // 알림 삭제 함수
 const deleteNotification = async (notificationId) => {
+  if (!token) {
+    console.error("토큰이 없습니다. 로그인 상태를 확인해주세요.");
+    return;
+  }
+
   try {
     // API 요청: 알림의 isAutoDelete를 true로 설정
-    const response = await axios.patch(`/api/notifications/${notificationId}`, {
-      isAutoDelete: true
-    })
+    const response = await fetch(`/api/notifications/${notificationId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // 헤더에 토큰 추가
+      },
+      body: JSON.stringify({
+        isAutoDelete: true
+      })
+    });
 
-    if (response.data.success) {
+    // 서버에서 반환된 데이터를 파싱
+    const data = await response.json();
+
+    // 응답의 status가 success인 경우 처리
+    if (data.status === "success") {
       // UI에서 해당 알림 삭제
-      const index = props.notifications.findIndex(notice => notice.id === notificationId)
+      const index = props.notifications.findIndex(notice => notice.id === notificationId);
       if (index !== -1) {
-        props.notifications.splice(index, 1)
+        props.notifications.splice(index, 1);
       }
     } else {
-      console.error("알림 삭제 실패")
+      // 실패한 경우 응답 내용 출력
+      console.error("알림 삭제 실패:", data.message || "알 수 없는 오류");
     }
   } catch (error) {
-    console.error('알림 삭제 오류:', error)
+    console.error('알림 삭제 오류:', error);
   }
 }
-
-
-// 현재 알림 목록에서 가장 최신 알림 ID 추적
-const getLastNotificationId = () => {
-  if (props.notifications.length > 0) {
-    return props.notifications[0].id
-  }
-  return 0
-}
-
-// 알림이 갱신될 때마다, 가장 최근 알림 ID를 추적합니다.
-watch(() => props.notifications, () => {
-  const lastNotificationId = getLastNotificationId()
-  console.log("현재 알림 목록에서 가장 최신 알림 ID:", lastNotificationId)
-})
-
 
 </script>
 

@@ -86,10 +86,11 @@ const fetchNotifications = async () => {
     const data = await response.json()
     console.log('알림 데이터:', data); // API 응답 데이터 확인
     if (data && data.data) {
-        notifications.value = data.data // 알림 데이터를 상태에 저장
+        // isAutoDelete가 true인 알림을 제외한 목록을 필터링
+      notifications.value = data.data.filter(notice => !notice.isAutoDelete)
       
       // 마지막 알림 ID 추출 (가장 최근의 알림 ID)
-      const lastNotification = data.data[data.data.length - 1]
+      const lastNotification = data.data[0]
       if (lastNotification) {
         // `lastNotificationId_${userStore.id}`에 저장
         localStorage.setItem(`lastNotificationId_${userStore.id}`, lastNotification.id)
