@@ -1,9 +1,9 @@
 <template>
-    <div>
+    <div class="container" @click="clearSelection">
         <h2>결재 내역</h2>
         <div class="tabs">
-            <button :class="{active: currentTab === 'received' }" @click="currentTab = 'received'">수신</button>
-            <button :class="{active: currentTab === 'sent' }" @click="currentTab = 'sent'">발신</button>
+            <button :class="{active: currentTab === 'received' }" @click="selectTab('received')">수신</button>
+            <button :class="{active: currentTab === 'sent' }" @click="selectTab('sent')">발신</button>
         </div>
 
         <table class="history-table">
@@ -15,7 +15,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="item in displayedList" :key="item.id" @click="selectApproval(item.id)">
+                <tr v-for="item in displayedList" :key="item.id" @click.stop="selectApproval(item.id)">
                     <td style="width: 100px; padding-left:20px">{{ currentTab === 'received' ? item.requesterName : item.approverName }}</td>
                     <td style="width: 300px">{{ item.title }}</td>
                     <td>
@@ -35,6 +35,19 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import api from '@/api'
+
+const emit = defineEmits(['select-approval', 'select-tab'])
+
+function selectApproval(id) {
+    emit('select-approval', id)
+}
+function clearSelection() {
+    emit('select-approval', null)
+}
+function selectTab(type) {
+    currentTab.value = type
+    emit('select-tab', type)
+}
 
 const currentTab = ref('received')
 
@@ -71,12 +84,12 @@ function statusClass(status) {
             return '';
     }
 }
-function selectApproval(id) {
-    console.log('선택한 결재 id: ', id)
-}
 </script>
 
 <style scoped>
+.container {
+    height: 1000px;
+}
 .tabs {
   display: flex;
   gap: 8px;
