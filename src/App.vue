@@ -25,16 +25,12 @@ import { decodeJwt } from 'jose'
   // 앱 시작 시 세션 복원
   onMounted(async () => {
     try {
-<<<<<<< HEAD
       await userStore.restoreFromStorage()
       // 로그인 상태고 현재 경로가 login이면 home으로 보내기
       if (userStore.isLoggedIn && route.path === '/login') {
         router.push('/')
       }
-=======
-      await userStore.restoreFromStorage() // 사용자 확인
       isRestored.value = true
->>>>>>> fa95b73ff83c4761d635af019257c7a3dd4c608a
     } catch (e) {
       console.error('복원 중 오류: ', e)
     }
@@ -48,11 +44,6 @@ import { decodeJwt } from 'jose'
 
     if (!isLoggedIn && currentPath !== '/login') {
       router.push('/login')
-<<<<<<< HEAD
-    } else {
-      // router.push('/')   // 새로 고침 시 (/) 로 리다이렉트 방지
-=======
->>>>>>> fa95b73ff83c4761d635af019257c7a3dd4c608a
     }
     { immediate: true }
   })
