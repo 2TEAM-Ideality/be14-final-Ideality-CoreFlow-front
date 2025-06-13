@@ -1,7 +1,6 @@
 <template>
   <div class="custom-node">
-    <!-- 왼쪽 핸들 -->
-    <Handle type="target" position="left" class="handle" />
+    <Handle id="target" type="target" position="left" class="handle" />
 
     <div class="content">
       <div class="label">{{ data.label }}</div>
@@ -11,10 +10,10 @@
       <div class="dept">📂 {{ data.dept }}</div>
     </div>
 
-    <!-- 오른쪽 핸들 -->
-    <Handle type="source" position="right" class="handle" />
+    <Handle id="source" type="source" position="right" class="handle" />
   </div>
 </template>
+
 
 <script setup>
 import { Handle } from '@vue-flow/core'

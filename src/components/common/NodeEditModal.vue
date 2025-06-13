@@ -6,27 +6,27 @@
 
       <div class="input-group">
         <label for="taskName">태스크명</label>
-        <input id="taskName" v-model="nodeData.label" placeholder="태스크명" />
+        <input id="taskName" v-model="localNode.label" placeholder="태스크명" />
       </div>
 
       <div class="input-group">
         <label for="description">설명</label>
-        <input id="description" v-model="nodeData.description" placeholder="설명" />
+        <input id="description" v-model="localNode.description" placeholder="설명" />
       </div>
 
       <div class="input-group">
         <label for="duration">총 소요일 (일)</label>
-        <input id="duration" v-model.number="nodeData.duration" type="number" placeholder="숫자" />
+        <input id="duration" v-model.number="localNode.duration" type="number" placeholder="숫자" />
       </div>
 
       <div class="input-group">
         <label for="slackTime">슬랙 타임 (일)</label>
-        <input id="slackTime" v-model.number="nodeData.slackTime" type="number" placeholder="숫자" />
+        <input id="slackTime" v-model.number="localNode.slackTime" type="number" placeholder="숫자" />
       </div>
 
       <div class="input-group">
         <label for="deptList">담당 부서</label>
-        <input id="deptList" v-model="nodeData.deptListString" placeholder="쉼표로 구분된 부서 이름들" />
+        <input id="deptList" v-model="localNode.deptListString" placeholder="쉼표로 구분된 부서 이름들" />
       </div>
 
       <div class="modal-actions">
@@ -38,15 +38,53 @@
 </template>
 
 <script setup>
+import { reactive, watch } from 'vue'
+
 const props = defineProps({
   show: Boolean,
   nodeData: Object
 })
+
 const emit = defineEmits(['save', 'close'])
 
+const localNode = reactive({
+  id: '',
+  label: '',
+  description: '',
+  duration: 0,
+  slackTime: 0,
+  deptListString: ''
+})
+
+// nodeData 변경 시 localNode 초기화
+watch(
+  () => props.nodeData,
+  (newVal) => {
+    if (newVal && newVal.data) {
+      localNode.id = newVal.id
+      localNode.label = newVal.data.label || ''
+      localNode.description = newVal.data.description || ''
+      localNode.duration = newVal.data.duration || 0
+      localNode.slackTime = newVal.data.slackTime || 0
+      localNode.deptListString = newVal.data.deptListString || ''
+    }
+  },
+  { immediate: true }
+)
+
 function onSave() {
-  emit('save', { ...props.nodeData })
+  emit('save', {
+    id: localNode.id,
+    data: {
+      label: localNode.label,
+      description: localNode.description,
+      duration: localNode.duration,
+      slackTime: localNode.slackTime,
+      deptListString: localNode.deptListString
+    }
+  })
 }
+
 </script>
 
 <style scoped>

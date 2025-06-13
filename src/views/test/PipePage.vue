@@ -4,16 +4,16 @@ import { Panel, VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import CustomNode from './CustomNode.vue'
 import '@/assets/vue-flow-style.css'
-import { useRouter} from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useLayout } from './useLayout'
 import NodeEditModal from '@/components/common/NodeEditModal.vue'
-// import { propsFactory } from 'vuetify/lib/util'
+import { nanoid } from 'nanoid' // 노드 ID 생성용
 
 const props = defineProps({
-  templateName: {
-    type: String,
-    required: true
-  },
+  // templateName: {
+  //   type: String,
+  //   required: true
+  // },
   nodes: {
     type: Array,
     required: true
@@ -23,64 +23,58 @@ const props = defineProps({
     required: true
   }
 })
+const emit = defineEmits(['save']) // 
+const templateName = defineModel('templateName')
 
 const { zoomTo, fitView, onPaneReady } = useVueFlow()
 
 onPaneReady(() => {
-  zoomTo(0.35)      // 초기 줌 설정
-  // fitView()         // 노드 전체 보기 자동 맞춤 (선택사항)
+  zoomTo(0.35)
 })
 
-
 const router = useRouter() 
+const { layout } = useLayout()
 
 const nodes = ref(props.nodes.map(n => ({
   ...n,
-  position: n.position ?? { x: 0, y: 0 }  // position 없으면 기본값
+  position: n.position ?? { x: 0, y: 0 }
 })))
 
 const edges = ref([...props.edges])
-
 const nodeTypes = { custom: CustomNode }
-
 const selectedNode = ref(null)
 const showModal = ref(false)
+const duration = ref(0)  // 총 소요일
+const taskCount = ref(0)  // 전체 태스크 개수 
 
-const { layout } = useLayout()
+
 
 function onConnect({ source, target }) {
   if (!source || !target) return
 
   const id = `e-${source}-${target}-${Date.now()}`
-  edges.value.push({
-    id,
-    source,
-    target,
-    type: 'default'
-  })
+  edges.value.push({ id, source, target, type: 'default' })
 }
 
-// 노드 위치 재배치
 async function layoutGraph(direction) {
   nodes.value = layout(nodes.value, edges.value, direction)
   nextTick(() => fitView())
 }
 
-// + 버튼으로 노드 추가
 function onAddNode(parentId) {
   const parent = nodes.value.find(n => n.id === parentId)
   if (!parent) return
 
-  const newId = `node-${Date.now()}`
+  const newId = nanoid(6)
   const newNode = {
     id: newId,
     type: 'custom',
     position: {
       x: parent.position.x + 250,
-      y: parent.position.y
+      y: parent.position.y + 100,
     },
     data: {
-      label: '',
+      label: `새 태스크`,
       description: '',
       deptList: [],
       duration: null,
@@ -97,41 +91,51 @@ function onAddNode(parentId) {
   })
 }
 
-// 노드 클릭 시 모달 오픈
+function onCreateNewNode() {
+  const newId = nanoid(6)
+  const newNode = {
+    id: newId,
+    type: 'custom',
+    position: { x: 100, y: 100 + nodes.value.length * 120 },
+    data: {
+      label: `새 태스크`,
+      description: '',
+      deptList: [],
+      duration: null,
+      slackTime: null
+    }
+  }
+  nodes.value.push(newNode)
+}
+
 function onNodeClick(nodeId) {
   const node = nodes.value.find(n => n.id === nodeId)
   if (node) {
     const cloned = JSON.parse(JSON.stringify(node))
     cloned.data.deptListString = Array.isArray(cloned.data.deptList)
-    ? cloned.data.deptList.map(d => {
-        if (typeof d === 'object' && d !== null) return d.name
-        return d
-      }).join(', ')
-    : ''
+      ? cloned.data.deptList.map(d => (typeof d === 'object' && d !== null ? d.name : d)).join(', ')
+      : ''
     selectedNode.value = cloned
     showModal.value = true
   }
 }
 
-
-// 저장 시 실제 노드 데이터 업데이트
-function saveNodeData() {
-  const index = nodes.value.findIndex(n => n.id === selectedNode.value.id)
+function saveNodeDataFromChild(updatedNode) {
+  const index = nodes.value.findIndex(n => n.id === updatedNode.id)
   if (index !== -1) {
-    const updated = { ...selectedNode.value.data }
-    updated.deptList = updated.deptListString
-    ? updated.deptListString.split(',').map(name => ({ name: name.trim() }))
-    : []
-    delete updated.deptListString
+    const updatedData = {
+      ...updatedNode.data,
+      deptList: updatedNode.data.deptListString
+        ? updatedNode.data.deptListString.split(',').map(name => ({ name: name.trim() }))
+        : []
+    }
+    delete updatedData.deptListString
 
-    // ✅ 완전히 새로운 객체로 할당 (Vue의 반응성 시스템이 감지하게끔)
-    const oldNode = nodes.value[index]
     const newNode = {
-      ...oldNode,
-      data: { ...updated }
+      ...nodes.value[index],
+      data: { ...updatedData }
     }
 
-    // 🔁 강제 재할당 (얕은 복사 아닌 새 배열로 할당해야 Vue가 갱신)
     nodes.value = [
       ...nodes.value.slice(0, index),
       newNode,
@@ -144,42 +148,71 @@ function saveNodeData() {
 
 
 
-// 전체 저장
+
+function saveNodeData() {
+  const index = nodes.value.findIndex(n => n.id === selectedNode.value.id)
+  if (index !== -1) {
+    const updated = { ...selectedNode.value.data }
+    updated.deptList = updated.deptListString
+      ? updated.deptListString.split(',').map(name => ({ name: name.trim() }))
+      : []
+    delete updated.deptListString
+
+    const oldNode = nodes.value[index]
+    const newNode = {
+      ...oldNode,
+      data: { ...updated }
+    }
+
+    nodes.value = [
+      ...nodes.value.slice(0, index),
+      newNode,
+      ...nodes.value.slice(index + 1)
+    ]
+  }
+
+  showModal.value = false
+}
+
 function exportTemplateData() {
-  // 현재 노드 목록에서 deptListString은 제외하고 저장
-  // const nodeList = nodes.value.map(n => ({
-  //   ...n,
-  //   data: {
-  //     ...n.data,
-  //     deptListString: undefined
-  //   }
-  // }))
   const nodeList = nodes.value.map(({ data, id, type, position }) => ({
     id,
     type,
-    position, // 자동 계산된 위치
+    position,
     data: { ...data }
   }))
 
   const edgeList = edges.value
+  const duration = nodeList.reduce((sum, node) => sum + (Number(node.data.duration) || 0), 0)
+  const taskCount = nodeList.length
 
-  const payload = { nodeList, edgeList }
+  // 유효성 검사 추가
+  if (taskCount === 0) {
+    alert('최소 하나 이상의 태스크가 필요합니다.')
+    return
+  }
 
-  // ✅ 콘솔에 현재 상태 출력
-  console.log('%c📦 현재 저장되는 노드/엣지 상태:', 'color: #10b981; font-weight: bold;')
-  console.log(JSON.stringify(payload, null, 2))
+  if (nodeList.some(n => !n.data.duration)) {
+    alert('모든 태스크에 소요일(duration)을 입력해주세요.')
+    return
+  }
+
+  const payload = {
+    nodeList,
+    edgeList,
+    duration,
+    taskCount,
+  }
+
+  emit('save', payload)
 }
 
-// 노드 삭제 시 엣지 삭제
-function deleteNode(nodeId) {
-  // 1. 해당 노드를 삭제
-  nodes.value = nodes.value.filter(n => n.id !== nodeId)
 
-  // 2. 해당 노드와 연결된 엣지를 삭제
+function deleteNode(nodeId) {
+  nodes.value = nodes.value.filter(n => n.id !== nodeId)
   edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
 }
 
-// 노드 연결 정보 업데이트 
 function updateEdge(edgeId, newTargetId) {
   const index = edges.value.findIndex(e => e.id === edgeId)
   if (index !== -1) {
@@ -187,16 +220,13 @@ function updateEdge(edgeId, newTargetId) {
   }
 }
 
-
 async function handleNodesInitialized() {
-  // 1. 렌더링 이후 한 프레임 기다리기
   await nextTick()
   requestAnimationFrame(() => {
-    layoutGraph('LR')  // 정확한 dimensions 기준으로 layout 적용
+    layoutGraph('LR')
   })
 }
 
-// 데이터 감시
 watch(() => props.nodes, (newVal) => {
   nodes.value = newVal.map(n => ({
     ...n,
@@ -207,71 +237,64 @@ watch(() => props.nodes, (newVal) => {
 watch(() => props.edges, (newVal) => {
   edges.value = [...newVal]
 }, { immediate: true })
-
-
 </script>
 
-
 <template>
-    
-    <div class="layout-flow">
-      <VueFlow
-        :nodes="nodes"
-        :edges="edges"
-        :node-types="nodeTypes"
-        :connectable="true"
-        @connect="onConnect"
-        @nodes-initialized="handleNodesInitialized"
-      >
-        <template #node-custom="{ id, data }">
+  <div class="layout-flow">
+    <VueFlow
+      :nodes="nodes"
+      :edges="edges"
+      :node-types="nodeTypes"
+      :connectable="true"
+      @connect="onConnect"
+      @nodes-initialized="handleNodesInitialized"
+    >
+      <template #node-custom="{ id, data }">
         <CustomNode :id="id" :data="data" @addNode="onAddNode" @click="() => onNodeClick(id)" />
-        </template>
-  
-        <Background />
-        <Panel position="top-left" class="left-panel">
+      </template>
 
-            <v-text-field
-              label="템플릿 이름"
-              v-model="props.templateName"
-              variant="outlined"
-              hide-details
-              density="comfortable"
-              class="w-100"
-               style="min-width: 280px; max-width: 400px;"
-            />
-        </Panel>
-
-        <Panel class="process-panel" position="top-right">
-          <div class="layout-panel">
-            <!--  @click="layoutGraph('LR')"  -->
-            <button title="새로운 태스크 생성"  @click="layoutGraph('LR')">
-              ➕ 새로운 태스크 생성
-            </button>
-            <button title="새로운 태스크 생성"  @click="layoutGraph('LR')">
-              ↔️ 정렬
-            </button>
-            <button title="전체 저장" @click="exportTemplateData">
-            💾 편집 완료
-            </button>
-             <button title="편집 취소" @click="router.back()">
-            ↙️
-            </button>
-          </div>
-        </Panel>
-      </VueFlow>
-  
-      <!-- 편집 모달 -->
-      <div v-if="showModal" class="modal-backdrop">
-        <NodeEditModal
-          :show="showModal"
-          :nodeData="selectedNode"
-          @save="saveNodeDataFromChild"
-          @close="showModal = false"
+      <Background />
+      <Panel position="top-left" class="left-panel">
+        <v-text-field
+          label="템플릿 이름"
+          v-model="props.templateName"
+          variant="outlined"
+          hide-details
+          density="comfortable"
+          class="w-100"
+          style="min-width: 280px; max-width: 400px;"
         />
-      </div>
+      </Panel>
 
+      <Panel class="process-panel" position="top-right">
+        <div class="layout-panel">
+          <button title="새로운 태스크 생성" @click="onCreateNewNode">
+            ➕ 새로운 태스크 생성
+          </button>
+          <button title="정렬" @click="layoutGraph('LR')">
+            ↔️ 정렬
+          </button>
+          <button title="전체 저장" @click="exportTemplateData">
+            💾 편집 완료
+          </button>
+          <button title="편집 취소" @click="router.back()">
+            ↙️
+          </button>
+        </div>
+      </Panel>
+    </VueFlow>
+
+    <div v-if="showModal" class="modal-backdrop">
+      <NodeEditModal
+        :show="showModal"
+        :nodeData="selectedNode"
+        @save="saveNodeDataFromChild"
+        @close="showModal = false"
+      />
     </div>
-  </template>
+  </div>
+</template>
+
   
 <style scoped>
 

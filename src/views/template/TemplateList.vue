@@ -3,15 +3,29 @@
     <!-- <v-container fluid> -->
       
     <div class="list-container">
-      <SearchBar
-        v-model:query="searchQuery"
-        :filter-label="selectedDept || '부서 전체'"
-        :sort-label="sortLabel"
-        :dept-list="allDepts"
-        placeholder="템플릿 이름 검색"
-        @filter-click="handleDeptFilter"  
-        @sort-click="toggleSort"
-      />
+      <!-- 검색 섹션 -->
+      <div class="search-section">
+        <div class="left-group">
+          <SearchBar
+            v-model:query="searchQuery"
+            :filter-label="selectedDept || '부서 전체'"
+            :sort-label="sortLabel"
+            :dept-list="allDepts"
+            placeholder="템플릿 이름 검색"
+            @filter-click="handleDeptFilter"  
+            @sort-click="toggleSort"
+          />
+        </div>
+
+        <div class="right-group">
+          <v-btn variant="flat" class="create-btn" @click="goToCreateTemplate">
+            <v-icon start>mdi-plus</v-icon>
+            새로운 템플릿 생성
+          </v-btn>
+        </div>
+      </div>
+
+     
       <v-row  dense>
         <template v-for="(template, index) in paginatedTemplates" :key="template.id">
           <v-col cols="12" sm="6" md="6" >
@@ -43,6 +57,10 @@ import TemplateCard from '@/components/template/TemplateCard.vue';
 import SearchBar from '@/components/common/SearchBar.vue'
 import api from '@/util/api.js';
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+
+const router = useRouter(); 
 
 /*  페이지  */
 const templates = ref([]);
@@ -125,15 +143,14 @@ const handleDelete = (id) => {
   }
 }
 
-
-const openFilter = () => {
-  console.log('부서 필터 클릭')
-}
 const toggleSort = () => {
   sortLabel.value = sortLabel.value === '오름차순' ? '내림차순' : '오름차순'
 }
 
-
+const goToCreateTemplate = () => {
+  console.log("템플릿 생성 페이지로 이동")
+  router.push('/template/create')
+}
 </script>
 
 <style scoped>
@@ -144,5 +161,35 @@ const toggleSort = () => {
   display: flex;
   flex-direction : column;
   gap: 30px;
+}
+.search-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  width: 100%;
+}
+
+.left-group {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+.right-group {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.create-btn {
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 8px;
+  height: 40px;
+  background-color: #25BEAD;
+  color: white;
+  align-items: center;
+  align-content: center;
 }
 </style>

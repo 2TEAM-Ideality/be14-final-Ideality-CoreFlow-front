@@ -85,6 +85,11 @@ const routes = [
       name: 'CreateTemplate',
       component: () => import('@/views/template/CreateTemplate.vue')
     },
+    {
+      path: '/template/create/task',
+      name: 'CreateTemplateTask',
+      component: () => import('@/views/template/CreateTemplateTask.vue')
+    },
     
     // 부서 일정
     {

@@ -64,7 +64,9 @@ const props = defineProps({
 const emit = defineEmits(['update:query', 'filter-click', 'sort-click'])
 
 const searchInput = ref(props.query || '')
-watch(() => searchInput.value, val => emit('update:query', val))
+watch(() => props.query, (val) => {
+  searchInput.value = val
+})
 
 // ✅ 부서 선택 드롭다운용
 const menu = ref(false)
@@ -78,7 +80,8 @@ const selectDept = (deptName) => {
 .search-bar {
   display: flex;
   gap: 10px;
-  align-items: center;
+  align-items: stretch;
+  width :100%;
 }
 
 .filter-btn,

@@ -3,10 +3,14 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/util/api.js'
 import PipePage from '@/views/test/PipePage.vue'
+import { useUserStore } from '@/stores/userStore'
+
+
 
 const route = useRoute()
 const router = useRouter()
 const templateId = ref(route.params.id)
+const userStore = useUserStore()
 
 const templateInfo = ref(null)
 const nodeList = ref([])
@@ -28,12 +32,20 @@ const fetchTemplate = async () => {
 
 onMounted(fetchTemplate)
 
+const handleTemplateUpdate = async ({ nodeList, edgeList, duration, taskCount }) => {
+  const payload = {
+    name: templateInfo.value.name,
+    description: templateInfo.value.description,
+    createdBy: userStore.id,
+    duration,
+    taskCount,
+    nodeList,
+    edgeList
+  }
 
-
-
-
-
-
+  await api.put(`/api/template/${templateId.value}`, payload)
+  router.push(`/template/detail/${templateId.value}`)
+}
 
 </script>
 
@@ -49,6 +61,7 @@ onMounted(fetchTemplate)
         :templateName="templateInfo?.name"
         :nodes="nodeList"
         :edges="edgeList"
+        @save="handleTemplateUpdate"
       />
     </div>
   </v-container>
