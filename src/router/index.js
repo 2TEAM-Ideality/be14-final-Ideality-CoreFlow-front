@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+=======
+import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
+>>>>>>> fa95b73ff83c4761d635af019257c7a3dd4c608a
 
 const routes = [
   {
@@ -105,12 +110,62 @@ const routes = [
       component: () => import('@/views/approval/Approval.vue')
     },
 
+<<<<<<< HEAD
+=======
+  // -----------------------------------------------테스트용
+  // {
+  //   path: '/test/pipe',
+  //   name: 'Pipe',
+  //   component: () => import('@/views/test/PipePage.vue')
+  // }
+  {
+    path: '/admin',
+    component: () => import('@/views/admin/Admin.vue'),
+    children: [
+      {
+        path: 'user',
+        name: 'ManagingUser',
+        component: () => import('@/components/admin/ManagingUser.vue'),
+        meta: {
+          title: '사용자 관리',
+          needUserList: true
+        }
+      },
+      {
+        path: 'org',
+        name: 'ManagingOrg',
+        component: () => import('@/components/admin/ManagingOrg.vue'),
+        meta: {
+          title: '조직 관리',
+          needUserList: false
+        }
+      },
+      {
+        path:'',
+        redirect: { name: 'ManagingUser' }
+      }
+    ]
+  },
+>>>>>>> fa95b73ff83c4761d635af019257c7a3dd4c608a
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   // history: createWebHashHistory(),
   routes
+})
+
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore()
+
+  if (to.path === '/admin') {
+    const hasAdminRole = userStore.roles.includes('ADMIN')
+    if(!hasAdminRole) {
+      alert('관리자만 접근할 수 있습니다.')
+      return next('/')
+    }
+  }
+  next()
 })
 
 export default router
