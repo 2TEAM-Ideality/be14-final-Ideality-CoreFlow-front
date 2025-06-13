@@ -1,13 +1,18 @@
 <script setup>
-import {ref} from 'vue'
+import { ref, computed } from 'vue'
 import ApprovalLayout from '@/components/layout/ApprovalLayout.vue'
 import ApprovalHistory from '@/components/approval/ApprovalHistory.vue';
 import ApprovalDetails from '@/components/approval/ApprovalDetails.vue';
 
 const selectedApprovalId = ref(null)
 const selectedTab = ref('received')
+
+function handleApprovalDetails() {
+  selectedApprovalId.value = null
+}
 function handleSelectApproval(id) {
   selectedApprovalId.value = id
+  console.log('selectedTab', selectedTab.value)
 }
 function handleSelectTab(type) {
   selectedTab.value = type
@@ -28,8 +33,8 @@ function handleSelectTab(type) {
     </template>
 
     <template #right>
-      <div style="background: white; height: calc(100vh - 50px); padding: 20px;">
-        <ApprovalDetails :approvalId = selectedApprovalId :selectedTab = selectedTab />
+      <div style="background: white; height: calc(100vh - 50px); padding: 50px;">
+        <ApprovalDetails v-if="selectedApprovalId" :approvalId = selectedApprovalId :selectedTab = selectedTab @close="handleApprovalDetails"/>
       </div>
     </template>
   </ApprovalLayout>

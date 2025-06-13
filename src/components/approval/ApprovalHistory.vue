@@ -88,7 +88,7 @@ function statusClass(status) {
 
 <style scoped>
 .container {
-    height: 1000px;
+    height: calc(100vh - 100px);
 }
 .tabs {
   display: flex;

@@ -9,7 +9,8 @@
                     ref="nameInput"
                     v-model="name"
                     placeholder="이름을 입력해주세요"
-                    class="px-2 py-2 border box"
+                    class="px-2 py-2 border"
+                    style="border-radius: 8px;"
                 />
                 <small v-if="!name" class="error">
                     이름을 입력해주세요.
@@ -20,7 +21,8 @@
                 <input
                     v-model="email"
                     placeholder="이메일을 입력해주세요."
-                    class="px-2 py-2 border box"
+                    class="px-2 py-2 border"
+                    style="border-radius: 8px;"
                 />
                 <small v-if="!email" class="error">이메일을 입력해주세요.</small>
                 <small v-if="email && !isEmailValid" class="error">

@@ -10,7 +10,8 @@
                     ref="nameInput"
                     v-model="name"
                     placeholder="이름을 입력해주세요"
-                    class="px-2 py-2 border box"
+                    class="px-2 py-2 border"
+                    style="border-radius: 8px;"
                 />
                 <small v-if="!name" class="error">
                     이름을 입력해주세요.
@@ -21,7 +22,8 @@
                 <input
                     v-model="email"
                     placeholder="이메일을 입력해주세요."
-                    class="px-2 py-2 border box"
+                    class="px-2 py-2 border"
+                    style="border-radius: 8px;"
                 />
                 <small v-if="!email" class="error">이메일을 입력해주세요.</small>
                 <small v-if="email && !isEmailValid" class="error">
@@ -34,8 +36,8 @@
                     <input
                         type="date"
                         v-model="birth"
-                        style="width:180px"
-                        class="px-2 py-2 border box two-box"
+                        style="border-radius: 8px;"
+                        class="px-2 py-2 border two-box"
                     />
                     <small v-if="!birth" class="error">생일을 입력해주세요.</small>
                 </div>
@@ -44,8 +46,8 @@
                     <input
                         type="date"
                         v-model="hireDate"
-                        style="width:180px"
-                        class="px-2 py-2 border box two-box drop-down"
+                        style="border-radius: 8px;"
+                        class="px-2 py-2 border two-box drop-down"
                     />
                     <small v-if="!hireDate" class="error">입사일을 입력해주세요.</small>
                 </div>
@@ -56,6 +58,7 @@
                     <select 
                         v-model="deptId" 
                         class="py-1 border radius-box two-box drop-down text-black"
+                        style="border-radius: 8px; padding-left: 8px;"
                     >
                         <option v-for="dept in props.deptList" :key="dept.id" :value="dept.id">
                             {{ dept.name }}
@@ -68,6 +71,7 @@
                     <select 
                         v-model="jobRankName" 
                         class="py-1 border radius-box two-box drop-down text-black"
+                        style="border-radius: 8px; padding-left: 8px"
                     >
                         <option v-for="jobRank in props.jobRankList" :key="jobRank.id" :value="jobRank.name">
                             {{ jobRank.name }}
@@ -82,6 +86,7 @@
                     <select 
                         v-model="jobRoleName" 
                         class="py-1 border radius-box two-box drop-down text-black"
+                        style="border-radius: 8px; padding-left: 8px;"
                     >
                         <option v-for="jobRole in props.jobRoleList" :key="jobRole.id" :value="jobRole.name">
                             {{ jobRole.name }}
@@ -94,6 +99,7 @@
                     <select 
                         v-model="isCreation" 
                         class="py-1 border radius-box two-box drop-down text-black"
+                        style="border-radius: 8px; padding-left: 8px;"
                     >
                         <option :value="true">생성 가능</option>
                         <option :value="false">생성 불가</option>
@@ -226,6 +232,7 @@
     .input-box {
         display: flex;
         flex-direction: column;
+        width: 400px;
     }
     .close-btn {
         position: absolute;

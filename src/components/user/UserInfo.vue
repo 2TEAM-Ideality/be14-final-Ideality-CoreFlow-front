@@ -57,7 +57,8 @@
                             <label class="mb-1 category">부서</label>
                             <select 
                                 v-model="formData.deptName" 
-                                class="py-1 border radius-box two-box drop-down text-black"
+                                class="py-1 border radius-box drop-down text-black"
+                                style="width: 180px;"
                                 :disabled="!isModify"
                             >
                                 <option v-for="dept in props.deptList" :key="dept.id" :value="dept.name">
@@ -69,8 +70,9 @@
                             <label class="mb-1 category">프로젝트 생성 권한</label>
                             <select 
                                 v-model="formData.isCreation" 
-                                class="py-1 border radius-box two-box drop-down text-black"
+                                class="py-1 border radius-box drop-down text-black"
                                 :disabled="!isModify"
+                                style="width: 180px"
                             >
                                 <option :value="true">O</option>
                                 <option :value="false">X</option>
@@ -83,8 +85,9 @@
                             <label class="mb-1 category">직위</label>
                             <select 
                                 v-model="formData.jobRankName" 
-                                class="py-1 border radius-box two-box drop-down text-black"
+                                class="py-1 border radius-box drop-down text-black"
                                 :disabled="!isModify"
+                                style="width: 180px;"
                             >
                                 <option v-for="jobRank in props.jobRankList" :key="jobRank.id" :value="jobRank.name">
                                     {{ jobRank.name }}
@@ -95,8 +98,9 @@
                             <label class="mb-1 category">직책</label>
                             <select
                                 v-model="formData.jobRoleName"
-                                class="py-1 border radius-box two-box drop-down text-black"
+                                class="py-1 border radius-box drop-down text-black"
                                 :disabled="!isModify"
+                                style="width: 180px"
                             >
                                 <option v-for="jobRole in props.jobRoleList" :key="jobRole.id" :value="jobRole.name">
                                     {{ jobRole.name }}
@@ -111,8 +115,9 @@
                             <input 
                                 type="date"
                                 v-model="formData.hireDate" 
-                                class="py-1 border radius-box two-box drop-down text-black"
+                                class="py-1 border radius-box drop-down text-black"
                                 :disabled="!isModify"
+                                style="width: 180px;"
                             />
                         </div>
                         <div class="two-space">
@@ -120,8 +125,9 @@
                             <input 
                                 type="date"
                                 v-model="formData.resignDate"
-                                class="py-1 border radius-box two-box drop-down text-black"
+                                class="py-1 border radius-box drop-down text-black"
                                 :disabled="!isModify"
+                                style="width:180px"
                             />
                         </div>
                     </div>
@@ -208,6 +214,13 @@
                 }
             }
             console.log(changedFields)
+            const confirmed = confirm('수정하시겠습니까?')
+            if (!confirmed) {
+                for (const key in formData.value) {
+                    formData.value[key] = userData.value[key]
+                }
+                return
+            }
 
             if (Object.keys(changedFields).length === 0) {
                 alert("변경된 값이 없습니다.")
