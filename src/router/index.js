@@ -85,7 +85,7 @@ const routes = [
     name: 'CreateTemplate',
     component: () => import('@/views/template/CreateTemplate.vue')
   },
-  
+
   // 부서 일정
   {
     path: '/calendar',
@@ -106,11 +106,49 @@ const routes = [
   //   name: 'Pipe',
   //   component: () => import('@/views/test/PipePage.vue')
   // }
+  // 태스크 관련
+  {
+    path: '/task/:taskId',
+    component: () => import('@/views/task/TaskDetail.vue'),
+    children: [
+      {
+        path: '',
+        name: 'TaskInfo',
+        component: () => import('@/components/task/TaskInfoTab.vue')
+      },
+      {
+        path: 'approval',
+        name: 'TaskApproval',
+        component: () => import('@/components/task/TaskApprovalTab.vue')
+      },
+      {
+        path: 'attachments',
+        name: 'TaskAttachment',
+        component: () => import('@/components/task/TaskAttachmentTab.vue')
+      },
+      {
+        path: 'comment',
+        name: 'TaskComment',
+        component: () => import('@/components/task/CommentTab.vue')
+      },
+      {
+        path: 'notice',
+        name: 'TaskNotice',
+        component: () => import('@/components/task/NoticeTab.vue')
+      }
+    ]
+  }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// router/index.js 하단에 추가
+router.beforeEach((to, from, next) => {
+  console.log('✅ 라우팅 시작:', to.fullPath)
+  next()
 })
 
 export default router

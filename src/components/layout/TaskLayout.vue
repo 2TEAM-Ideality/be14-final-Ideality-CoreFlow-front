@@ -1,38 +1,38 @@
 <template>
     <div class="project-detail-layout">
-  
-      <!-- 페이지 타이틀 -->
-      <h1 class="page-title">프로젝트 > 프로젝트 이름 > TASK 번호 : TASK 이름</h1>
-  
-      <!-- 탭 메뉴 -->
-      <div class="tab-menu">
+
+    <!-- 페이지 타이틀 -->
+    <h1 class="page-title">프로젝트 > 프로젝트 이름 > TASK 번호 : TASK 이름</h1>
+
+    <!-- 탭 메뉴 -->
+    <div class="tab-menu">
         <router-link
-          v-for="tab in tabs"
-          :key="tab.name"
-          :to="tab.route"
-          class="tab-button"
-          :class="{ active: $route.name === tab.name }"
+        v-for="tab in tabs"
+        :key="tab.name"
+        :to="tab.route"
+        class="tab-button"
+        :class="{ active: $route.name === tab.name }"
         >
-          {{ tab.label }}
+        {{ tab.label }}
         </router-link>
-      </div>
-  
-      <!-- 콘텐츠 영역 -->
-      <div class="content-box">
-        <router-view />
-      </div>
     </div>
-  </template>
+  
+    <!-- 콘텐츠 영역 -->
+    <div class="content-box">
+        <router-view />
+    </div>
+    </div>
+</template>
   
   <script setup>
-  const tabs = [
-    { name: 'ProjectOverview', label: '프로젝트 개요', route: '/project/detail/overview' },
-    { name: 'ProjectPipeline', label: '파이프라인', route: '/project/detail/pipeline' },
-    { name: 'ProjectGantt', label: '간트 차트', route: '/project/detail/gantt' },
-    { name: 'ProjectDelayLog', label: '지연 로그', route: '/project/detail/delay' },
-    { name: 'ProjectSearch', label: '자료 검색', route: '/project/detail/search' },
-    { name: 'ProjectMembers', label: '참여자 목록', route: '/project/detail/members' }
-  ]
+  
+const tabs = [
+  { name: 'TaskDetail', label: '태스크 정보', route: `/task/${taskId}` },
+  { name: 'TaskApproval', label: '결재 내역', route: `/task/${taskId}/approval` },
+  { name: 'TaskAttachment', label: '자료 검색', route: `/task/${taskId}/attachments` },
+  { name: 'TaskComment', label: '댓글', route: `/task/${taskId}/comment` },
+  { name: 'TaskNotice', label: '공지', route: `/task/${taskId}/notice` }
+]
   </script>
   
   <style scoped>
