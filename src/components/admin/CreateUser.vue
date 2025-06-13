@@ -116,7 +116,7 @@
 
 <script setup>
     import { ref, onMounted, nextTick, computed } from 'vue'
-    import api from '@/api'
+    import api from '@/util/api'
     import LoadingModal from '../common/LoadingModal.vue'
     
     const props = defineProps({

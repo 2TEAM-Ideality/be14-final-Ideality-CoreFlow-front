@@ -19,7 +19,7 @@
     import AdminSideBar from '@/components/admin/AdminSideBar.vue';
     import { ref, watchEffect } from 'vue'
     import { useRoute } from 'vue-router'
-    import api from '@/api'
+    import api from '@/util/api'
 
     const userList = ref([])
     const propsReady = ref(false)

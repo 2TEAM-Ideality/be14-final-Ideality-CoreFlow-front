@@ -120,11 +120,21 @@ const cancelEdit = () => {
     <BasicLayout>
         <template #main >
             <div class="page-title">
-            📁 {{ templateInfo?.name }}
+            템플릿 수정
             </div>
 
+            <div class="section-label">템플릿명</div>
+            <v-text-field
+                variant="outlined"
+                v-model="templateInfo.name"
+                class="mb-2"
+            />
+
             <div class="section-label">템플릿 설명</div>
-            <v-text-field variant="outlined" >{{ templateInfo?.description }}</v-text-field>  
+            <v-text-field
+                variant="outlined"
+                v-model="templateInfo.description"
+            />
             <div class="d-flex align-center justify-space-between mb-2" style="flex-wrap: nowrap;">
             <span class="section-label" style="white-space: nowrap;">프로세스 구조도</span>
             <div class="button-section d-flex align-center" style="gap: 8px; flex-wrap: nowrap;">
@@ -195,16 +205,17 @@ const cancelEdit = () => {
         <template #sidebar>
             <div class="sidebar-section">
                 <div>
-                <InfoField label="작성자" :value="templateInfo?.createdBy" />
-                <InfoField label="생성일" :value="templateInfo?.createdAt?.split('T')[0]" />
-                <InfoField label="최종 수정일" :value="templateInfo?.updatedAt?.split('T')[0]" />
-                <InfoField label="총 소요 기간" :value="templateInfo?.duration + ' 일'" />
-                <InfoField label="전체 태스크 수" :value="templateInfo?.taskCount + '개'" />
-                <InfoField label="사용 중인 프로젝트" :value="templateInfo?.usingProjects + '개'" />
-                <InfoField
+                    <InfoField label="작성자" icon="mdi-account" :value="templateInfo?.createdBy" />
+                    <InfoField label="생성일" icon="mdi-calendar" :value="templateInfo?.createdAt?.split('T')[0]" />
+                    <InfoField label="최종 수정일" icon="mdi-update" :value="templateInfo?.updatedAt?.split('T')[0]" />
+                    <InfoField label="총 소요 기간" icon="mdi-timer-sand" :value="templateInfo?.duration + ' 일'" />
+                    <InfoField label="전체 태스크 수" icon="mdi-format-list-numbered" :value="templateInfo?.taskCount + '개'" />
+                    <InfoField label="사용 중인 프로젝트" icon="mdi-folder-multiple" :value="templateInfo?.usingProjects + '개'" />
+                    <InfoField
                     label="참여 부서"
+                    icon="mdi-office-building"
                     :value="templateInfo?.deptList?.map(dept => dept.name).join(', ')"
-                />
+                    />
                 </div>
             </div>
         </template> 
@@ -213,9 +224,9 @@ const cancelEdit = () => {
 
 <style scoped>
 .page-title {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: bold;
-  margin-bottom : 20px;
+  margin-bottom : 50px;
   text-align: left;
 }
 
@@ -274,6 +285,7 @@ const cancelEdit = () => {
   gap: 30px;
   border-radius: 20px;
   text-align: left;
+  padding-top: 50px;
 }
 
 .sidebar-section-label {

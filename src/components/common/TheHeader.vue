@@ -2,7 +2,8 @@
   <header class="header">
     <div class="logo">
       <router-link to="/">
-        <img src="@/assets/logo.png" alt="Coreflow Logo" />
+        <!-- <img src="@/assets/logo.png" alt="Coreflow Logo" /> -->
+        <img src="@/assets/black-logo.png" alt="Coreflow Logo" />
       </router-link>
     </div>
     <nav class="nav">
@@ -53,7 +54,7 @@
   import { useUserStore } from '@/stores/userStore'
   import { useRouter, RouterLink } from 'vue-router'
   import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
-  import api from '@/api'
+  import api from '@/util/api'
 
   const showChangePwdModal = ref(false)
 import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
@@ -221,6 +222,7 @@ async function deleteProfile() {
   padding: 5px 40px;
   border-bottom: 1px solid #eee;
   background-color: #fff;
+  /* background-color: #091336; */
   height: 50px;
   z-index: 100;
 }

@@ -143,7 +143,7 @@
 
 <script setup>
     import { ref, onMounted, onBeforeUnmount } from 'vue'
-    import api from '@/api';
+    import api from '@/util/api';
     import isEqual from 'lodash/isEqual'
 
     const isModify = ref(false)

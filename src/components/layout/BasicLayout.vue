@@ -18,17 +18,19 @@
 <style scoped>
 .template-layout {
   display: grid;
-  grid-template-columns: 7fr 3fr; /* 7:3 비율 */
-  padding: 80px 60px;
+  grid-template-columns: 9fr 3fr; 
+  padding-left: 15%;
+  padding-right: 15%;
+  padding-top : 64px;
 }
 
 .template-main {
   min-width: 0;
-  padding: 40px 60px;
+  padding-right: 8%;
 }
 
 .template-sidebar {
-  padding: 40px 60px;
+  padding-left: 15%;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>

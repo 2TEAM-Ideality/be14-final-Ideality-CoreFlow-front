@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
-import api from '@/api'
+import api from '@/util/api'
 
 export const useUserStore = defineStore('user', () => {
     const id = ref(null)
