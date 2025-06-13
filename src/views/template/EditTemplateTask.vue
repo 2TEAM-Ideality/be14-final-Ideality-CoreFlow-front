@@ -1,8 +1,40 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import api from '@/util/api.js'
 import PipePage from '@/views/test/PipePage.vue'
 
-const templateName = ref('SS 블라우스 개발 템플릿')
+const route = useRoute()
+const router = useRouter()
+const templateId = ref(route.params.id)
+
+const templateInfo = ref(null)
+const nodeList = ref([])
+const edgeList = ref([])
+
+// 템플릿 데이터 가져오기 
+const fetchTemplate = async () => {
+    const res = await api.get(`/api/template/${templateId.value}`)
+    const data = res.data.data
+    console.log(data);
+
+    templateInfo.value = data.templateInfo
+    nodeList.value = data.templateData.nodeList
+    edgeList.value = data.templateData.edgeList
+
+    // 👉 데이터 로딩 후 변환 함수 호출
+    // convertToFlowData()
+}
+
+onMounted(fetchTemplate)
+
+
+
+
+
+
+
+
 </script>
 
 <template>
@@ -12,8 +44,12 @@ const templateName = ref('SS 블라우스 개발 템플릿')
     </div>
 
     <div class="flow-wrapper">
-      <!-- 이름 전달 -->
-      <PipePage :templateName="templateName" />
+      <!-- 이름 , 노드/엣지 리스트 전달 -->
+      <PipePage
+        :templateName="templateInfo?.name"
+        :nodes="nodeList"
+        :edges="edgeList"
+      />
     </div>
   </v-container>
 </template>

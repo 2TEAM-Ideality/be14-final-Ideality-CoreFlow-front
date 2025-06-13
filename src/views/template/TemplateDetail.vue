@@ -31,9 +31,9 @@
 
       
       <div class="section-label">템플릿 설명</div>
-      <v-text-field variant="outlined" readonly>{{ templateInfo?.description }}</v-text-field>  
+      <v-text-field variant="outlined" readonly style="font-size: 12px;">{{ templateInfo?.description }}</v-text-field>  
       
-      <div class="d-flex align-center justify-space-between mb-2">
+      <div class="d-flex align-center justify-space-between mb-2" >
         <span class="section-label">프로세스 구조도</span>
         <v-btn
           variant="outlined"
@@ -58,30 +58,24 @@
         <Background />
         <Controls />
       </VueFlow>
-            
 
     </template>
 
     <template #sidebar>
       <div class="sidebar-section">
-        <div class="section-label">작성자</div>
-        <v-text-field variant="outlined" readonly class="sidebar-input" density="compact" hide-details  style="border-radius : 15px;">
-          {{ templateInfo?.createdBy }}
-        </v-text-field>  
-        <div class="section-label">소요 기간</div>
-        <v-text-field variant="outlined" readonly class="sidebar-input" density="compact" hide-details >
-          {{ templateInfo?.duration }}일
-        </v-text-field>  
-        <div class="section-label">사용 중인 프로젝트</div>
-        <v-text-field variant="outlined" readonly class="sidebar-input" density="compact" hide-details >
-          {{ templateInfo?.usingProjects }}
-        </v-text-field>  
-        <div class="section-label">참여 부서</div>
-        <v-text-field variant="outlined" readonly class="sidebar-input" density="compact" hide-details >
-          {{ templateInfo?.deptList.map(dept => dept.name).join(', ') }}
-        </v-text-field>  
-      </div>
-     
+          <div>
+            <InfoField label="작성자" :value="templateInfo?.createdBy" />
+            <InfoField label="생성일" :value="templateInfo?.createdAt?.split('T')[0]" />
+            <InfoField label="최종 수정일" :value="templateInfo?.updatedAt?.split('T')[0]" />
+            <InfoField label="총 소요 기간" :value="templateInfo?.duration + ' 일'" />
+            <InfoField label="전체 태스크 수" :value="templateInfo?.taskCount + '개'" />
+            <InfoField label="사용 중인 프로젝트" :value="templateInfo?.usingProjects + '개'" />
+            <InfoField
+                label="참여 부서"
+                :value="templateInfo?.deptList?.map(dept => dept.name).join(', ')"
+            />
+          </div>
+        </div>
     </template>
   </BasicLayout>
 </template>
@@ -89,7 +83,7 @@
 <script setup>
 import BasicLayout from '@/components/layout/BasicLayout.vue';
 import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/util/api.js'
 import { VueFlow } from '@vue-flow/core'
 import { useVueFlow } from '@vue-flow/core'
@@ -100,6 +94,7 @@ import '@vue-flow/core/dist/theme-default.css'
 import dagre from '@dagrejs/dagre'
 import { Position } from '@vue-flow/core'
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
+import InfoField from '@/components/common/SideInfoField.vue'
 
 const nodeTypes = {
   custom: TemplateViewNode
@@ -108,6 +103,7 @@ const nodeTypes = {
 const vueFlowRef = ref(null)
 
 const route = useRoute()
+const router = useRouter()
 const templateId = ref(route.params.id)
 
 const templateInfo = ref(null)
@@ -183,7 +179,10 @@ const convertToFlowData = () => {
     targetPosition: Position.Left
   }))
 }
-
+// 수정 페이지로 이동 
+const editTemplate = () => {
+  router.push(`/template/edit/${templateId.value}`)
+}
 
 
 watch(() => route.params.id, async (newId) => {
@@ -199,10 +198,9 @@ watch(() => route.params.id, async (newId) => {
   font-size: 20px;
   font-weight: bold;
   margin-bottom : 20px;
-
 }
 .template-flow {
-  height: 500px;
+  height: 400px;
   background-color: #ffffff;
   border: 1px solid #ddd;
   margin-top: 16px;
@@ -221,31 +219,29 @@ watch(() => route.params.id, async (newId) => {
   gap: 10px;
   justify-content: flex-end;
 }
+
 .basic-button{
   color :#757575;
   border-radius: 5px;
   border : solid 1px #D9D9D9;
-  font-weight: 300;
+  font-weight: 500;
   height: 30px;
-  /* text-transform: none; */
-  /* padding : 10px 20px 10px 20px; */
 }
 .color-button{
   background-color: #25BEAD;
   color: white;
-  font-weight: 300;
-}
-.sidebar-input .v-input__control {
-  font-size: 13px !important; /* 원하는 크기로 */
-  padding: 4px 8px !important;
-  min-height: 32px !important;
+  font-weight: 500;
 }
 
 .sidebar-section {
   display:flex;
   flex-direction : column;
-  gap: 10px;
+  gap: 30px;
+  border-radius: 20px;
 }
 
+.v-input.readonly .v-field__input {
+  font-size: 12px;
+}
 </style>
 

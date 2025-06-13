@@ -8,7 +8,7 @@
     import LoginModal from '@/components/user/LoginModal.vue'
 </script>
 
-<style>
+<style scoped>
     .container {
         display: flex;
         justify-content: center;

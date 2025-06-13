@@ -1,4 +1,7 @@
 <template>
+  <div class="text-grey text-body-2 mb-4" style="text-align: left;">
+        템플릿 &gt; 템플릿 생성 &gt; 템플릿 편집
+  </div>
   <div class="template-layout">
     <!-- 왼쪽: main -->
     <div class="template-main">
@@ -25,7 +28,7 @@
 }
 
 .template-sidebar {
-  padding: 0 2%;
+  padding: 40px 60px;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>

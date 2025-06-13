@@ -71,12 +71,12 @@ const routes = [
       component: () => import('@/views/template/TemplateDetail.vue')
     },
     {
-      path: '/template/edit',
+      path: '/template/edit/:id',
       name: 'EditTemplate',
       component: () => import('@/views/template/EditTemplate.vue')
     },
     {
-      path: '/template/edit/task',
+      path: '/template/edit/task/:id',
       name: 'EditTemplateTask',
       component: () => import('@/views/template/EditTemplateTask.vue')
     },
