@@ -153,7 +153,7 @@
 
 </script>
 
-<style>
+<style scoped>
     .modal-overlay {
         position: fixed;
         top: 0;
@@ -180,7 +180,6 @@
 
     .find-pwd-modal {
         position: relative;
-        /* height: 450px; */
         width: 500px;
         display: flex;
         align-items: center;
@@ -206,6 +205,6 @@
     }
 
     .btn:hover {
-        background-color: blue;
+        background-color: #9090ff;
     }
 </style>

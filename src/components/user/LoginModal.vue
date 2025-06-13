@@ -175,7 +175,7 @@
     }
 </script>
 
-<style>
+<style scoped>
     .login-modal {
         height: 450px;
         width: 500px;

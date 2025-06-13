@@ -15,13 +15,14 @@
       <button @click="openNotificationSidebar" class="ring-btn">
         <img src="@/assets/icons/ring.png" alt="알림" />
       </button>
-      <img class="profile-img mr-3" :src="profileImage" @click="toggleProfile" />
-      <div v-if="showProfileOption" class="dropdown-menu" ref="profileRef" @click.stop>
-        <div class="dropdown-item">프로필 변경</div>
-        <div class="dropdown-item deleted">프로필 삭제</div>
+      <img class="profile-img mr-3" ref="profileBox" :src="profileImage" @click="toggleDropdown('profile')" />
+      <div v-if="showDropdown.profile" class="dropdown-menu" ref="profileRef" @click.stop>
+        <div class="dropdown-item" @click="triggerFileInput">프로필 변경</div>
+        <input type="file" accept="image/*" @change="handleFileChange" ref="fileInput" style="display:none"/>
+        <div class="dropdown-item deleted" @click="deleteProfile">프로필 삭제</div>
       </div>
 
-      <div class="user-info" @click="toggleDropdown">
+      <div class="user-info" ref="userBox" @click="toggleDropdown('user')">
         <div class="position">{{ userStore.deptName }} {{ userStore.jobRankName }}</div>
         <div class="name-role">
           <strong>{{ userStore.name }} 님</strong>
@@ -36,23 +37,69 @@
       />
 
       <!-- 드롭다운 메뉴 -->
-      <div v-if="showDropdown" class="dropdown-menu" ref="dropdownRef" @click.stop>
-        <div class="dropdown-item">비밀번호 변경</div>
-        <div v-if="isAdmin" class="dropdown-item">구성원 관리</div>
+      <div v-if="showDropdown.user" class="dropdown-menu" ref="dropdownRef" @click.stop>
+        <div class="dropdown-item" @click="showChangePwdModal = true">비밀번호 변경</div>
+        <!-- 관리자는 구성원 관리 표시 -->
+        <routerLink to="/admin" v-if="isAdmin" class="dropdown-item">구성원 관리</routerLink>
         <div class="dropdown-item deleted" @click="logout">로그아웃</div>
       </div>
     </div>
+    <ChangePwdModal v-if="showChangePwdModal" @close="showChangePwdModal = false" />
   </header>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useUserStore } from '@/stores/userStore'
-import { useRouter } from 'vue-router'
+  import { ref, onMounted,onBeforeUnmount, computed } from 'vue'
+  import { useUserStore } from '@/stores/userStore'
+  import { useRouter, RouterLink } from 'vue-router'
+  import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
+  import api from '@/api'
+
+  const showChangePwdModal = ref(false)
 import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
 import { useNotifications } from '@/components/common/useNotifications.js'
 
+const imageUrl = ref(null)
+const fileInput = ref(null)
+const router = useRouter()
 const userStore = useUserStore()
+
+function triggerFileInput() {
+  fileInput.value?.click()
+}
+
+async function handleFileChange(event) {
+  const file = event.target.files[0]
+  if (!file && file.type.statsWith('image/')) {
+    alert('이미지 파일만 선택해주세요.')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = async () => {
+    imageUrl.value = reader.result // base64 문자열
+    const isConfirmed = confirm('프로필 사진을 등록하시겠습니까')
+    if(!isConfirmed) return
+
+    try {
+      const response = await api.patch('/api/user/update-profile',{
+        id: userStore.id,
+        profileImage: imageUrl.value
+      })
+      alert(response.data.message)
+      await userStore.updateUserInfo(userStore.id)
+      profileImage.value = userStore.profileImage
+      profileImage.value = imageUrl.value
+    } catch(error) {
+      if (error.message) {
+        error(error.message)
+      } else {
+        error('알 수 없는 에러가 발생했습니다.')
+      }
+    }
+  }
+  reader.readAsDataURL(file)
+}
 
 const notificationSidebarOpen = ref(false) // 사이드바 상태 관리
 const notifications = ref([]) // 알림 상태 관리
@@ -108,25 +155,60 @@ onMounted(() => {
   if (token) {
     connectToSSE(token)  // 로그인 시 실시간 알림 연결
   }
+  window.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutside)
+})
+
+const profileBox = ref(null)
+const userBox = ref(null)
+
+function handleClickOutside(e) {
+  const clickedEl = e.target
+  if (!profileBox.value.contains(clickedEl) && !userBox.value.contains(clickedEl)) {
+    showDropdown.value = { users: false, profile: false }
+  }
+}
+const showDropdown = ref({
+  user: false,
+  profile: false
 })
 
 const profileImage = ref(userStore.profileImage)
-const showProfileOption = ref(false)
-const showDropdown = ref(false)
 
 const isAdmin = ref(userStore.roles.includes('ADMIN'))
 
-const toggleProfile = () => {
-  showProfileOption.value = !showProfileOption.value
-}
-
-const toggleDropdown = () => {
-  showDropdown.value = !showDropdown.value
+const toggleDropdown = (type) => {
+  showDropdown.value = {
+    user: false,
+    profile: false,
+    [type]: !showDropdown.value[type]
+  }
 }
 
 const logout = () => {
   userStore.logout()
-  useRouter().push('/login')
+  router.push('/login')
+}
+
+async function deleteProfile() {
+  const isConfirmed = confirm('프로필 사진을 삭제하시겠습니까?')
+  if (!isConfirmed) return
+  try{
+    const response = await api.delete(`/api/user/delete-profile/${userStore.id}`)
+    alert(response.data.message)
+    await userStore.updateUserInfo(userStore.id)
+    profileImage.value = userStore.profileImage
+    console.log(profileImage.value)
+  } catch (error) {
+    if (error.message) {
+      error(error.message)
+    } else {
+      error('알 수 없는 에러가 발생했습니다.')
+    }
+  }
 }
 </script>
 
@@ -140,6 +222,7 @@ const logout = () => {
   border-bottom: 1px solid #eee;
   background-color: #fff;
   height: 50px;
+  z-index: 100;
 }
 
 .logo img {
@@ -168,6 +251,11 @@ const logout = () => {
   gap: 8px;
   align-items: center;
   position: relative;
+}
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .profile-img {
   width: 36px;
