@@ -62,7 +62,7 @@
     </template>
 
     <template #sidebar>
-      <div class="sidebar-section">
+        <div class="sidebar-section">
           <div>
             <InfoField label="작성자" icon="mdi-account" :value="templateInfo?.createdBy" />
             <InfoField label="생성일" icon="mdi-calendar" :value="templateInfo?.createdAt?.split('T')[0]" />
@@ -70,11 +70,20 @@
             <InfoField label="총 소요 기간" icon="mdi-timer-sand" :value="templateInfo?.duration + ' 일'" />
             <InfoField label="전체 태스크 수" icon="mdi-format-list-numbered" :value="templateInfo?.taskCount + '개'" />
             <InfoField label="사용 중인 프로젝트" icon="mdi-folder-multiple" :value="templateInfo?.usingProjects + '개'" />
-            <InfoField
-              label="참여 부서"
-              icon="mdi-office-building"
-              :value="templateInfo?.deptList?.map(dept => dept.name).join(', ')"
-            />
+            <div>
+              <div class="section-label">참여 부서</div>
+              <div class="d-flex flex-wrap dept-chip-wrap">
+                <v-chip
+                  v-for="dept in templateInfo?.deptList || []"
+                  :key="dept.id"
+                  size="small"
+                  color="primary"
+                  variant="tonal"
+                >
+                  {{ dept.name }}
+                </v-chip>
+              </div>
+            </div>
           </div>
         </div>
     </template>
@@ -96,12 +105,14 @@ import dagre from '@dagrejs/dagre'
 import { Position } from '@vue-flow/core'
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 import InfoField from '@/components/common/SideInfoField.vue'
+import { markRaw } from 'vue'
 
 const nodeTypes = {
-  custom: TemplateViewNode
+  custom: markRaw(TemplateViewNode)
 }
-
-const vueFlowRef = ref(null)
+// const nodeTypes = {
+//   custom: TemplateViewNode
+// }
 
 const route = useRoute()
 const router = useRouter()
@@ -185,6 +196,15 @@ const editTemplate = () => {
   router.push(`/template/edit/${templateId.value}`)
 }
 
+// 템플릿 삭제
+const deleteTemplate = async () => {
+  try {
+    await api.delete(`/api/template/${templateId.value}`)
+    router.push('/template') // 목록 페이지로 이동 등
+  } catch (e) {
+    console.error('삭제 실패', e)
+  }
+}
 
 watch(() => route.params.id, async (newId) => {
   templateId.value = newId
@@ -199,6 +219,7 @@ watch(() => route.params.id, async (newId) => {
   font-size: 24px;
   font-weight: bold;
   margin-bottom : 20px;
+  text-align: left;
 }
 .template-flow {
   height: 400px;
@@ -211,6 +232,7 @@ watch(() => route.params.id, async (newId) => {
   font-weight: 500;
   font-size: 15px;
   margin-bottom : 10px;
+  text-align: left;
 }
 
 .button-section {
@@ -243,6 +265,9 @@ watch(() => route.params.id, async (newId) => {
 
 .v-input.readonly .v-field__input {
   font-size: 12px;
+}
+.dept-chip-wrap {
+  gap: 8px;
 }
 </style>
 

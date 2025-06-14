@@ -32,7 +32,7 @@ const handleSelect = () => emit('click', props.id)
     <div class="dept-row">
       <div class="label">담당 부서 ({{ data.deptList?.length || 0 }})</div>
       <div class="dept-list">
-        {{ data.deptList?.slice(0, 2).map(d => d.name || d).join(', ') }}
+        {{ data.deptList?.slice(0, 2).map(d => d.deptName || d.name || d).join(', ') }}
         <span v-if="data.deptList?.length > 2">+{{ data.deptList.length - 2 }}</span>
       </div>
 

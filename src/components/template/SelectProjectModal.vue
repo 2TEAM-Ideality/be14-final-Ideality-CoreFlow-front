@@ -26,34 +26,26 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="project in filteredProjects"
-                :key="project?.id"
-                :class="{ selected: selected?.id === project?.id }"
-                @click="selected = project"
-                style="cursor: pointer;"
+            <tr
+              v-for="project in filteredProjects"
+              :key="project?.id"
+              :class="{ selected: selected?.id === project?.id }"
+              @click="toggleSelection(project)"
+              style="cursor: pointer;"
             >
-                <td>
+              <td>
                 <input
-                    type="radio"
-                    :id="`project-${project?.id}`"
-                    :value="project"
-                    v-model="selected"
+                  type="radio"
+                  :id="`project-${project?.id}`"
+                  :value="project"
+                  v-model="selected"
                 />
-                </td>
-                <td>{{ project?.name }}</td>
-                <td>{{ project?.duration }}일</td>
-                <td>{{ project?.taskCount }}</td>
-                <td>{{ project?.delayDays }}</td>
-                <td>{{ project?.endDate }}</td>
-                <!-- <td>
-                <span
-                    v-for="dept in project?.deptList ?? []"
-                    :key="dept?.id"
-                    class="badge"
-                >
-                    {{ dept?.name }} + {{ dept?.count || 10 }}
-                </span>
-                </td> -->
+              </td>
+              <td>{{ project?.name }}</td>
+              <td>{{ project?.duration }}일</td>
+              <td>{{ project?.taskCount }}</td>
+              <td>{{ project?.delayDays }}</td>
+              <td>{{ project?.endDate }}</td>
             </tr>
             </tbody>
 
@@ -82,17 +74,30 @@ const emit = defineEmits(['select', 'close'])
 const search = ref('')
 const selected = ref(null)
 
+
+
 const filteredProjects = computed(() => {
   return props.projects.filter(p =>
     p.name?.toLowerCase().includes(search.value.toLowerCase())
   )
 })
 
+const toggleSelection = (project) => {
+  if (selected.value?.id === project.id) {
+    selected.value = null // 선택 취소
+  } else {
+    selected.value = project
+  }
+}
+
+
 const confirmSelection = () => {
   if (selected.value) {
     emit('select', selected.value)
   }
 }
+
+
 </script>
 
 <style scoped>
@@ -110,6 +115,7 @@ const confirmSelection = () => {
 }
 .modal {
   width: 800px;
+  min-height: 550px;
   background: white;
   border-radius: 12px;
   padding: 24px;

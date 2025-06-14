@@ -7,13 +7,10 @@ import '@/assets/vue-flow-style.css'
 import { useRouter } from 'vue-router';
 import { useLayout } from './useLayout'
 import NodeEditModal from '@/components/common/NodeEditModal.vue'
-import { nanoid } from 'nanoid' // 노드 ID 생성용
+import api from '@/util/api.js'
+import { nanoid } from 'nanoid' 
 
 const props = defineProps({
-  // templateName: {
-  //   type: String,
-  //   required: true
-  // },
   nodes: {
     type: Array,
     required: true
@@ -29,7 +26,7 @@ const templateName = defineModel('templateName')
 const { zoomTo, fitView, onPaneReady } = useVueFlow()
 
 onPaneReady(() => {
-  zoomTo(0.35)
+  zoomTo(0.8)
 })
 
 const router = useRouter() 
@@ -47,6 +44,18 @@ const showModal = ref(false)
 const duration = ref(0)  // 총 소요일
 const taskCount = ref(0)  // 전체 태스크 개수 
 
+const deptList = ref([])
+
+onMounted(() => {
+  fetchDeptList()
+})
+
+// 부서 목록 가져오기
+const fetchDeptList = async () => {
+  const res = await api.get('/api/dept/all')
+  deptList.value = res.data.data;
+  console.log('부서 목록', res)
+}
 
 
 function onConnect({ source, target }) {
@@ -111,23 +120,17 @@ function onCreateNewNode() {
 function onNodeClick(nodeId) {
   const node = nodes.value.find(n => n.id === nodeId)
   if (node) {
-    const cloned = JSON.parse(JSON.stringify(node))
-    cloned.data.deptListString = Array.isArray(cloned.data.deptList)
-      ? cloned.data.deptList.map(d => (typeof d === 'object' && d !== null ? d.name : d)).join(', ')
-      : ''
-    selectedNode.value = cloned
+    selectedNode.value = JSON.parse(JSON.stringify(node))
     showModal.value = true
   }
 }
+
 
 function saveNodeDataFromChild(updatedNode) {
   const index = nodes.value.findIndex(n => n.id === updatedNode.id)
   if (index !== -1) {
     const updatedData = {
-      ...updatedNode.data,
-      deptList: updatedNode.data.deptListString
-        ? updatedNode.data.deptListString.split(',').map(name => ({ name: name.trim() }))
-        : []
+      ...updatedNode.data
     }
     delete updatedData.deptListString
 
@@ -148,31 +151,62 @@ function saveNodeDataFromChild(updatedNode) {
 
 
 
+// 소요일 계산
+function calculateTotalDuration(nodeList, edgeList) {
+  const nodeMap = new Map(nodeList.map(n => [n.id, n]))
+  const adj = new Map()
+  const inDegree = new Map()
 
-function saveNodeData() {
-  const index = nodes.value.findIndex(n => n.id === selectedNode.value.id)
-  if (index !== -1) {
-    const updated = { ...selectedNode.value.data }
-    updated.deptList = updated.deptListString
-      ? updated.deptListString.split(',').map(name => ({ name: name.trim() }))
-      : []
-    delete updated.deptListString
+  nodeList.forEach(n => {
+    adj.set(n.id, [])
+    inDegree.set(n.id, 0)
+  })
 
-    const oldNode = nodes.value[index]
-    const newNode = {
-      ...oldNode,
-      data: { ...updated }
+  edgeList.forEach(edge => {
+    adj.get(edge.source).push(edge.target)
+    inDegree.set(edge.target, inDegree.get(edge.target) + 1)
+  })
+
+  const queue = []
+  const durationMap = new Map()
+
+  // 초기 노드 설정
+  nodeList.forEach(node => {
+    const id = node.id
+    const baseDuration = Number(node.data.duration || 0)
+    const slack = Number(node.data.slackTime || 0)
+    if (inDegree.get(id) === 0) {
+      queue.push(id)
+      durationMap.set(id, baseDuration + slack)
+    } else {
+      durationMap.set(id, 0)
     }
+  })
 
-    nodes.value = [
-      ...nodes.value.slice(0, index),
-      newNode,
-      ...nodes.value.slice(index + 1)
-    ]
+  // 위상 정렬 + 경로 누적 시간 계산
+  while (queue.length > 0) {
+    const current = queue.shift()
+    const currentDuration = durationMap.get(current)
+
+    adj.get(current).forEach(next => {
+      const nextNode = nodeMap.get(next)
+      const base = Number(nextNode.data.duration || 0)
+      const slack = Number(nextNode.data.slackTime || 0)
+      const newDuration = currentDuration + base + slack
+
+      durationMap.set(next, Math.max(durationMap.get(next), newDuration))
+
+      inDegree.set(next, inDegree.get(next) - 1)
+      if (inDegree.get(next) === 0) {
+        queue.push(next)
+      }
+    })
   }
 
-  showModal.value = false
+  return Math.max(...durationMap.values())
 }
+
+
 
 function exportTemplateData() {
   const nodeList = nodes.value.map(({ data, id, type, position }) => ({
@@ -183,10 +217,17 @@ function exportTemplateData() {
   }))
 
   const edgeList = edges.value
-  const duration = nodeList.reduce((sum, node) => sum + (Number(node.data.duration) || 0), 0)
+  const duration = calculateTotalDuration(nodeList, edgeList)
   const taskCount = nodeList.length
 
-  // 유효성 검사 추가
+  // 🔍 콘솔에 출력
+  console.log('📦 Exported Template Data')
+  console.log('노드 목록:', nodeList)
+  console.log('간선 목록:', edgeList)
+  console.log('총 소요일:', duration)
+  console.log('태스크 수:', taskCount)
+
+  // 유효성 검사
   if (taskCount === 0) {
     alert('최소 하나 이상의 태스크가 필요합니다.')
     return
@@ -198,27 +239,19 @@ function exportTemplateData() {
   }
 
   const payload = {
-    nodeList,
-    edgeList,
+    name: props.templateName,
+    description: props.templateDescription,
+    updatedBy: props.updatedBy,
     duration,
     taskCount,
+    nodeList,
+    edgeList
   }
 
   emit('save', payload)
 }
 
 
-function deleteNode(nodeId) {
-  nodes.value = nodes.value.filter(n => n.id !== nodeId)
-  edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
-}
-
-function updateEdge(edgeId, newTargetId) {
-  const index = edges.value.findIndex(e => e.id === edgeId)
-  if (index !== -1) {
-    edges.value[index].target = newTargetId
-  }
-}
 
 async function handleNodesInitialized() {
   await nextTick()
@@ -237,6 +270,7 @@ watch(() => props.nodes, (newVal) => {
 watch(() => props.edges, (newVal) => {
   edges.value = [...newVal]
 }, { immediate: true })
+
 </script>
 
 <template>
@@ -288,6 +322,7 @@ watch(() => props.edges, (newVal) => {
       <NodeEditModal
         :show="showModal"
         :nodeData="selectedNode"
+        :deptList="deptList"
         @save="saveNodeDataFromChild"
         @close="showModal = false"
       />

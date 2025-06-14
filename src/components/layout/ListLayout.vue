@@ -26,7 +26,7 @@ defineProps({
 
 <style scoped>
 .list-layout {
-  padding: 40px 200px;
+  padding: 7% 15%;
   min-height: 100vh;
 }
 .page-title {

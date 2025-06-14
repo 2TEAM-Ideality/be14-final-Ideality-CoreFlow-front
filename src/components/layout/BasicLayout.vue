@@ -21,7 +21,8 @@
   grid-template-columns: 9fr 3fr; 
   padding-left: 15%;
   padding-right: 15%;
-  padding-top : 64px;
+  padding-top : 5%;
+  padding-bottom: 5%;
 }
 
 .template-main {

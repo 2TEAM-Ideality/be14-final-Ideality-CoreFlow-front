@@ -7,7 +7,10 @@
       <div class="description">{{ data.description }}</div>
       <div class="durtaion">🕒 소요: {{ data.duration }}일</div>
       <div v-if="data.slackTime" class="slack">⏱ 여유: {{ data.slackTime }}일</div>
-      <div class="dept">📂 {{ data.dept }}</div>
+      <div class="dept">📂
+        {{ data.deptList?.slice(0, 2).map(d => d.deptName || d.name || d).join(', ') }}
+        <span v-if="data.deptList?.length > 2">+{{ data.deptList.length - 2 }}</span>
+      </div>
     </div>
 
     <Handle id="source" type="source" position="right" class="handle" />
@@ -23,7 +26,6 @@ const props = defineProps({
   data: Object
 })
 
-console.log(props.data);
 </script>
 
 <style scoped>
@@ -37,6 +39,7 @@ console.log(props.data);
   box-sizing: border-box;
   padding: 12px;
   position: relative;
+  text-align: left;
 }
 .content {
   font-size: 13px;

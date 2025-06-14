@@ -26,8 +26,6 @@ const fetchTemplate = async () => {
     nodeList.value = data.templateData.nodeList
     edgeList.value = data.templateData.edgeList
 
-    // 👉 데이터 로딩 후 변환 함수 호출
-    // convertToFlowData()
 }
 
 onMounted(fetchTemplate)
@@ -36,16 +34,25 @@ const handleTemplateUpdate = async ({ nodeList, edgeList, duration, taskCount })
   const payload = {
     name: templateInfo.value.name,
     description: templateInfo.value.description,
-    createdBy: userStore.id,
+    updatedBy: userStore.id, // createdBy → updatedBy로 수정 필요
     duration,
     taskCount,
     nodeList,
     edgeList
   }
 
-  await api.put(`/api/template/${templateId.value}`, payload)
-  router.push(`/template/detail/${templateId.value}`)
+  console.log('📝 템플릿 수정 요청:', payload)
+
+  try {
+    await api.put(`/api/template/${templateId.value}`, payload)
+    console.log("템플릿 수정 성공")
+    router.push(`/template/detail/${templateId.value}`)
+  } catch (err) {
+    console.error('❌ 템플릿 수정 실패:', err)
+    alert('템플릿 수정 중 오류가 발생했습니다.')
+  }
 }
+
 
 </script>
 

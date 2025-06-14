@@ -58,6 +58,9 @@ import SearchBar from '@/components/common/SearchBar.vue'
 import api from '@/util/api.js';
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/userStore' 
+
+const userStore = useUserStore() 
 
 
 const router = useRouter(); 
@@ -76,6 +79,12 @@ const allDepts = ref([])  // 부서 전체 목록
 
 
 onMounted(async () => {
+  if (!userStore.accessToken) {
+    console.warn("로그인 토큰 없음! 로그인 페이지로 이동")
+    router.push('/login')
+    return
+  }
+  
   try {
     const templateList = await fetchTemplates();     // 템플릿 목록 가져오기
     const deptList = await fetchDeptList();// 부서 목록 가져오기 
@@ -86,6 +95,7 @@ onMounted(async () => {
     console.error('템플릿 목록 불러오기 실패:', error);
   }
 });
+
 
 // 템플릿 목록 가져오기
 const fetchTemplates = async () => {

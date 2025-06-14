@@ -26,7 +26,14 @@
 
       <div class="input-group">
         <label for="deptList">담당 부서</label>
-        <input id="deptList" v-model="localNode.deptListString" placeholder="쉼표로 구분된 부서 이름들" />
+        <v-select
+          v-model="localNode.deptList"
+          :items="props.deptList"
+          item-title="deptName"
+          item-value="deptId"
+          multiple
+          chips
+        />
       </div>
 
       <div class="modal-actions">
@@ -42,7 +49,8 @@ import { reactive, watch } from 'vue'
 
 const props = defineProps({
   show: Boolean,
-  nodeData: Object
+  nodeData: Object,
+  deptList: Array 
 })
 
 const emit = defineEmits(['save', 'close'])
@@ -56,6 +64,27 @@ const localNode = reactive({
   deptListString: ''
 })
 
+function onSave() {
+  const selectedDepts = props.deptList
+    .filter(dept => localNode.deptList.includes(dept.deptId))
+    .map(dept => ({
+      id: dept.deptId,
+      deptName: dept.deptName
+    }))
+
+  emit('save', {
+    id: localNode.id,
+    data: {
+      label: localNode.label,
+      description: localNode.description,
+      duration: localNode.duration,
+      slackTime: localNode.slackTime,
+      deptList: selectedDepts // ← 원하는 포맷
+    }
+  })
+}
+
+
 // nodeData 변경 시 localNode 초기화
 watch(
   () => props.nodeData,
@@ -66,24 +95,14 @@ watch(
       localNode.description = newVal.data.description || ''
       localNode.duration = newVal.data.duration || 0
       localNode.slackTime = newVal.data.slackTime || 0
-      localNode.deptListString = newVal.data.deptListString || ''
+      localNode.deptList = Array.isArray(newVal.data.deptList)
+      ? newVal.data.deptList.map(d => d.id ?? d) // id 추출 (기존 deptList와 호환)
+      : []
     }
   },
   { immediate: true }
 )
 
-function onSave() {
-  emit('save', {
-    id: localNode.id,
-    data: {
-      label: localNode.label,
-      description: localNode.description,
-      duration: localNode.duration,
-      slackTime: localNode.slackTime,
-      deptListString: localNode.deptListString
-    }
-  })
-}
 
 </script>
 
