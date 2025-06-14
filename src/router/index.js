@@ -164,6 +164,11 @@ const routes = [
         path: 'notice',
         name: 'TaskNotice',
         component: () => import('@/components/task/NoticeTab.vue')
+      },
+      {
+        path: 'detail',
+        name: 'TaskDetails',
+        component: () => import('@/components/task/DetailTab.vue')
       }
     ]
   }
