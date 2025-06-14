@@ -40,11 +40,12 @@
           color="grey-darken-2"
           size="small"
           class="basic-button"
-          @click="fitToView"
+          @click="showFullscreenView = true"
         >
           전체 보기
           <v-icon end icon="mdi-arrow-top-right" />
         </v-btn>
+
       </div>
 
       <VueFlow
@@ -58,6 +59,28 @@
         <Background />
         <Controls />
       </VueFlow>
+
+      <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
+        <v-card class="pa-4">
+          <div class="d-flex justify-space-between align-center mb-2">
+            <h3 class="text-h6">📌 전체 프로세스 보기</h3>
+            <v-btn icon @click="showFullscreenView = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </div>
+
+          <VueFlow
+            :nodes="flowNodes"
+            :edges="flowEdges"
+            :node-types="nodeTypes"
+            fit-view
+            style="height: calc(100vh - 100px)"
+          >
+            <Background />
+            <Controls />
+          </VueFlow>
+        </v-card>
+      </v-dialog>
 
     </template>
 
@@ -118,6 +141,8 @@ const route = useRoute()
 const router = useRouter()
 const templateId = ref(route.params.id)
 
+const showFullscreenView = ref(false)
+
 const templateInfo = ref(null)
 const nodeList = ref([])
 const edgeList = ref([])
@@ -132,11 +157,16 @@ const fetchTemplate = async () => {
   nodeList.value = data.templateData.nodeList
   edgeList.value = data.templateData.edgeList
 
-  // 👉 데이터 로딩 후 변환 함수 호출
+  console.log(data)
+
+  // 데이터 로딩 후 변환 함수 호출
   convertToFlowData()
 }
 
-onMounted(fetchTemplate)
+
+onMounted(() => {
+  fetchTemplate()
+})
 
 const fitToView = () => {
   if (vueFlowRef.value?.fitView) {
@@ -173,9 +203,9 @@ const convertToFlowData = () => {
       data: {
         label: node.data.label,
         description: node.data.description,
-        durtaion: node.data.durtaion,
+        duration: node.data.duration,
         slackTime: node.data.slackTime,
-        dept: node.data.deptList.map(d => d.name).join(', '),
+        deptList: node.data.deptList
       }
     }
   })

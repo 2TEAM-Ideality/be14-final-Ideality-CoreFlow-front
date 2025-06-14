@@ -31,6 +31,7 @@ onPaneReady(() => {
 
 const router = useRouter() 
 const { layout } = useLayout()
+const nodeTypes = { custom: CustomNode }
 
 const nodes = ref(props.nodes.map(n => ({
   ...n,
@@ -38,7 +39,6 @@ const nodes = ref(props.nodes.map(n => ({
 })))
 
 const edges = ref([...props.edges])
-const nodeTypes = { custom: CustomNode }
 const selectedNode = ref(null)
 const showModal = ref(false)
 const duration = ref(0)  // 총 소요일
@@ -48,6 +48,7 @@ const deptList = ref([])
 
 onMounted(() => {
   fetchDeptList()
+  
 })
 
 // 부서 목록 가져오기

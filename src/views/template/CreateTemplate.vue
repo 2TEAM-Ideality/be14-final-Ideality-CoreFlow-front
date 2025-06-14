@@ -240,16 +240,11 @@ const createNewTemplate = async () => {
         duration: data.duration,
         slackTime: data.slackTime,
         deptList: (data.deptList || [])
-          .map(d => {
-            if (typeof d === 'object') {
-              return {
-                id: d.id ?? d.deptId,
-                name: d.name ?? d.deptName ?? ''
-              }
-            }
-            return null
-          })
-          .filter(d => d && d.id != null)  
+          .map(d => ({
+            id: d.id ?? d.deptId,
+            name: d.name ?? d.deptName ?? ''
+          }))
+          .filter(d => d.id != null)
       }
     }
   })

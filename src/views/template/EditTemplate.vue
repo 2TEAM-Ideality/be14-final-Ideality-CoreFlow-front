@@ -13,8 +13,9 @@ import dagre from '@dagrejs/dagre'
 import { Position } from '@vue-flow/core'
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 import InfoField from '@/components/common/SideInfoField.vue'
-
+import PipePage from '@/views/test/PipePage.vue'
 import { markRaw } from 'vue'
+import { useUserStore } from '@/stores/userStore' 
 
 const nodeTypes = {
   custom: markRaw(TemplateViewNode)
@@ -23,7 +24,7 @@ const nodeTypes = {
 // const nodeTypes = {
 //   custom: TemplateViewNode
 // }
-
+const user = useUserStore() 
 const route = useRoute()
 const router = useRouter()
 const templateId = ref(route.params.id)
@@ -46,6 +47,9 @@ const fetchTemplate = async () => {
     templateInfo.value = data.templateInfo
     nodeList.value = data.templateData.nodeList
     edgeList.value = data.templateData.edgeList
+    
+    console.log('[nodeList]', JSON.stringify(nodeList.value, null, 2))
+
     convertToFlowData()
   } catch (e) {
     console.error('템플릿 로딩 실패:', e)
@@ -121,9 +125,27 @@ const convertToFlowData = () => {
 
 
 // 수정 완료
-function saveEditedTemplate() {
-  // 수정 완료 버튼 동작 구현 예정
+async function saveEditedTemplate() {
+  const payload = {
+    name: templateInfo.value.name,
+    description: templateInfo.value.description,
+    updatedBy: user?.id,
+    duration: templateInfo.value.duration,
+    taskCount: templateInfo.value.taskCount,
+    nodeList: flowNodes.value,
+    edgeList: flowEdges.value
+  }
+
+  try {
+    await api.put(`/api/template/${templateId.value}`, payload)
+    alert('템플릿 수정이 완료되었습니다 ✅')
+    router.push('/template') // 목록 등으로 이동
+  } catch (err) {
+    console.error('템플릿 수정 실패 ❌', err)
+    alert('템플릿 수정에 실패했습니다 ❌')
+  }
 }
+
 
 // 수정 취소 뒤로 가기
 const cancelEdit = () => {
@@ -156,10 +178,6 @@ const cancelEdit = () => {
         <div class="d-flex align-center justify-space-between mb-2" style="flex-wrap: nowrap;">
           <span class="section-label" style="white-space: nowrap;">프로세스 구조도</span>
           <div class="button-section d-flex align-center" style="gap: 8px; flex-wrap: nowrap;">
-            <v-btn variant="outlined" color="grey-darken-2" size="small" class="basic-button" @click="cancelEdit">
-              <v-icon icon="mdi-delete-outline" class="mr-1" />
-              초기화
-            </v-btn>
             <v-btn
               variant="outlined"
               color="grey-darken-2"
