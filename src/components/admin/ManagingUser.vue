@@ -153,7 +153,7 @@
 </template>
 
 <script setup>
-    import api from '@/api'
+    import api from '@/util/api'
     import { ref, onMounted, computed, onBeforeUnmount, watch } from 'vue'
     import DeptTree from './DeptTree.vue'
     import UserInfo from '../user/UserInfo.vue'
