@@ -2,6 +2,13 @@
 import {computed} from 'vue'
 // import {format} from 'date-fns'
 import DonutChart from '@/components/common/DonutChart.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const onGoToDetail = () => {
+    router.push(`/projects/${props.project.id}`) 
+}
 
 const onEdit = () => {
     console.log('수정 클릭됨', project.id)
@@ -83,7 +90,7 @@ const delayDays = computed(() => props.project.delayDays || 0)
 </script>
 
 <template>
-    <v-card class="project-card" elevation="1">
+    <v-card class="project-card" elevation="1" @click="onGoToDetail">
         <!-- 좌측: 상태 아이콘 및 메타 정보 -->
         <div class="card-left">
             <v-avatar size="32" class="mr-2">

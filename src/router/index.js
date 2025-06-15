@@ -20,8 +20,9 @@ const routes = [
   //   component: () => import('@/views/project/ProjectList.vue')
   // },
   {
-    path: '/project/detail',
+    path: '/project/:projectId',
     component: () => import('@/views/project/ProjectDetail.vue'),
+    props: true,
     children: [
       {
         path: 'overview',
