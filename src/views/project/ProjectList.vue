@@ -10,6 +10,16 @@ import ProjectCard from '@/components/project/ProjectCard.vue';
 const projectList = ref([])
 const searchKeyword = ref('')
 const fullProjectList = ref([])
+const statusOptions = [
+  { label: '전체', value: 'ALL' },
+  { label: '시작전', value: 'PENDING' },
+  { label: '진행중', value: 'PROGRESS' },
+  { label: '완료', value: 'COMPLETED' },
+  { label: '취소됨', value: 'CANCELLED'},
+  { label: '삭제됨', value: 'DELETED'},
+]
+const selectedStatuses = ref([])
+const showFilterDropdown = ref(false)
 
 onMounted(async () => {
   try {
@@ -32,6 +42,35 @@ const onSearch=()=>{
   )
 }
 
+const toggleStatus = (status) => {
+  const index = selectedStatuses.value.indexOf(status)
+  if (index>-1){
+    selectedStatuses.value.splice(index, 1)
+  }else{
+    selectedStatuses.value.push(status)
+  }
+  applyFilter()
+}
+
+const applyFilter = ()=> {
+  const keyword = searchKeyword.value.trim().toLocaleLowerCase();
+  let filtered = fullProjectList.value;
+
+  if (selectedStatuses.value.length>0){
+    filtered = filtered.filter(p=>
+      selectedStatuses.value.includes(p.status)
+    )
+  }
+
+  if(keyword){
+    filtered = filtered.filter(p=>
+      p.name.toLowerCase().includes(keyword)
+    )
+  }
+  projectList.value = filtered
+  // if()
+}
+
 </script>
 
 <template>
@@ -51,10 +90,27 @@ const onSearch=()=>{
               <v-icon class="search-icon" size="18">mdi-magnify</v-icon>
             </button>
           </div>
-          <div>
-            <button>
-              <v-icon class="filter-icon" size="18">mdi-filter</v-icon>필터
+          <div class="filter-wrapper">
+            <button @click="showFilterDropdown = !showFilterDropdown" class="filter-btn">
+              <v-icon class="filter-icon" size="18">
+                {{ selectedStatuses.length > 0 ? 'mdi-filter-menu' : 'mdi-filter-menu-outline' }}
+              </v-icon>
+              필터
             </button>
+            <div v-if="showFilterDropdown" class="filter-dropdown">
+                <ul class="filter-list">
+                  <li
+                    v-for="option in statusOptions.slice(1)" 
+                    :key="option.value"
+                    :class="{ active: selectedStatuses.includes(option.value) }"
+                    @click="() => toggleStatus(option.value)"
+                  >
+                    <input type="checkbox" :checked="selectedStatuses.includes(option.value)" readonly />
+                    {{ option.label }}
+                  </li>
+                  <li @click="() => { selectedStatuses = []; applyFilter() }">전체 해제</li>
+              </ul>
+            </div>
           </div>
         </div>
         <div class="create-btn">
@@ -123,5 +179,36 @@ const onSearch=()=>{
   font-size: 14px;
   outline: none;
 }
+
+.filter-wrapper{
+  display: flex;
+  flex-direction: row;
+  padding: 5px;
+}
+
+.filter-dropdown .filter-list {
+  list-style: none;         
+  display: flex;            
+  gap: 4px;               
+  padding: 0;
+  margin: 0;
+}
+
+.filter-dropdown .filter-list li {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: white;
+}
+
+.filter-dropdown .filter-list li.active {
+  background-color: #84c3ed;
+  color: white;
+  font-weight: bold;
+}
+
 </style>
 
