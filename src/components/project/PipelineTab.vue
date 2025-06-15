@@ -1,5 +1,5 @@
 <template>
-  <div class="layout-flow">
+  <div class="layout-flow" style="position: relative; overflow: visible">
     <VueFlow
       ref="vueFlowRef"
       :nodes="nodes"
@@ -36,7 +36,7 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </div>
-
+        
         <VueFlow
           :nodes="nodes"
           :edges="edges"
@@ -83,7 +83,7 @@ const edges = ref([])
 
 
 const { layout } = useLayout()
-const { fitView } = useVueFlow()
+const { fitView, zoomTo } = useVueFlow()
 
 
 // 프로젝트 파이프라인 데이터 가져오기
@@ -120,7 +120,8 @@ async function fetchPipeline() {
         progressRate : node.progressRate,
         delayDays : node.delayDays,
         status: node.status,
-        deptList: Array.from(new Set(node.deptList.map(d => d.name))) // 중복 부서 제거
+        deptList: Array.from(new Set(node.deptList.map(d => d.name))), // 중복 부서 제거
+        toolbarVisible: false
       }
     }))
 
@@ -182,7 +183,7 @@ function onConnect({ source, target }) {
 async function layoutGraph(direction) {
   nodes.value = layout(nodes.value, edges.value, direction)
   await nextTick()
-  zoomTo(0.6)
+  zoomTo(0.85)
 }
 
 async function handleNodesInitialized() {
@@ -237,6 +238,10 @@ async function handleNodesInitialized() {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+}
+.vue-flow__viewport {
+  overflow: visible !important;
+  z-index: auto !important; /* 또는 적당히 높은 수치 */
 }
 
 
