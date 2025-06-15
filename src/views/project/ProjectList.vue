@@ -24,9 +24,22 @@ onMounted(async () => {
 
     <ListLayout title="프로젝트 목록" >
       <div class="search-bar">
-        <input type="text" placeholder="프로젝트 검색"/>
-        <button>filter</button>
-        <button class="create-btn">+ 프로젝트 생성하기</button>
+        <div class="left-side">
+          <div class="search-input-wrapper">
+            <input type="text" placeholder="프로젝트 검색" />
+            <button>
+              <v-icon class="search-icon" size="18">mdi-magnify</v-icon>
+            </button>
+          </div>
+          <div>
+            <button>
+              <v-icon class="filter-icon" size="18">mdi-filter</v-icon>필터
+            </button>
+          </div>
+        </div>
+        <div class="create-btn">
+          <button >+ 프로젝트 생성하기</button>
+        </div>
       </div>
 
       <div class="project-list">
@@ -43,6 +56,11 @@ onMounted(async () => {
 
 
 <style scoped>
+.left-side{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
 .content-box {
   background-color: #ddd;
   min-height: 600px;
@@ -51,8 +69,11 @@ onMounted(async () => {
 }
 .search-bar {
   display: flex;
+  flex-direction: row;
   gap: 12px;
   margin-bottom: 20px;
+  align-items: center;
+  justify-content: space-between;
 }
 .project-list {
   display: flex;
@@ -64,6 +85,23 @@ onMounted(async () => {
   color: white;
   border-radius: 4px;
   padding: 6px 12px;
+}
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px 6px 10px;
+  border: 1px solid #ccc; 
+  border-radius: 4px;
+  width: 300px;
+  justify-content: space-between;
+}
+.search-input-wrapper input {
+  flex: 1; /* ✅ 버튼 제외 나머지 공간 전부 차지 */
+  border: none;
+  padding: 6px 10px;
+  font-size: 14px;
+  outline: none;
 }
 </style>
 
