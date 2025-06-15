@@ -1,54 +1,3 @@
-<script setup>
-import { nextTick, ref } from 'vue'
-import { Panel, VueFlow, useVueFlow } from '@vue-flow/core'
-import { Background } from '@vue-flow/background'
-import TaskNode from '@/components/flow/TaskNode.vue'
-import '@/assets/vue-flow-style.css'
-import { useRouter } from 'vue-router'
-import { useLayout } from '@/views/test/useLayout'
-import api from '@/util/api.js'
-
-
-// 프로젝트용 초기 노드/엣지 데이터 (임시)
-import { initialProjectNodes, initialProjectEdges } from '@/components/flow/project-elements.js'
-
-const { layout } = useLayout()
-const { fitView } = useVueFlow()
-
-const router = useRouter()
-
-const showFullscreenView = ref(false)
-const vueFlowRef = ref(null)
-
-
-const nodes = ref(initialProjectNodes.map(n => ({
-  ...n,
-  position: { x: 0, y: 0 }  // ❗ 모든 노드에 기본값 주기
-})))
-const edges = ref(initialProjectEdges)
-const nodeTypes = { task: TaskNode }
-
-
-function onConnect({ source, target }) {
-  if (!source || !target) return
-  const id = `e-${source}-${target}-${Date.now()}`
-  edges.value.push({ id, source, target, type: 'default' })
-}
-
-async function layoutGraph(direction) {
-  nodes.value = layout(nodes.value, edges.value, direction)
-  await nextTick()
-  zoomTo(0.6)
-}
-
-async function handleNodesInitialized() {
-  await nextTick()
-  requestAnimationFrame(() => {
-    layoutGraph('LR')
-  })
-}
-</script>
-
 <template>
   <div class="layout-flow">
     <VueFlow
@@ -57,7 +6,7 @@ async function handleNodesInitialized() {
       :edges="edges"
       :node-types="nodeTypes"
       :connectable="false"
-
+      :default-edge-options="{ type: 'smoothstep', animated: true }"
       @connect="onConnect"
       @nodes-initialized="handleNodesInitialized"
     >
@@ -69,10 +18,12 @@ async function handleNodesInitialized() {
 
       <Panel class="process-panel" position="top-right">
         <div class="layout-panel">
-          <!-- <button @click="layoutGraph('LR')">↔️ 가로 정렬</button>
-          <button @click="layoutGraph('TB')">↕️ 세로 정렬</button>
-          <button @click="router.back()">⬅️ 뒤로가기</button> -->
-          <button @click="showFullscreenView = true">🔍 전체 보기</button>
+          <button title="정렬" @click="layoutGraph('LR')">
+            ↔️ 정렬
+          </button>
+          <button title="전체 보기" @click="showFullscreenView = true">
+            🔍 전체 보기
+          </button>
         </div>
       </Panel>
     </VueFlow>
@@ -101,6 +52,150 @@ async function handleNodesInitialized() {
 
   </div>
 </template>
+
+
+
+<script setup>
+import { nextTick, ref, onMounted } from 'vue'
+import { Panel, VueFlow, useVueFlow, Position } from '@vue-flow/core'
+import { Background } from '@vue-flow/background'
+import TaskNode from '@/components/flow/TaskNode.vue'
+import '@/assets/vue-flow-style.css'
+import { useRouter, useRoute } from 'vue-router'
+import { useLayout } from '@/views/test/useLayout'
+import api from '@/util/api.js'
+import { markRaw } from 'vue'
+import dagre from '@dagrejs/dagre'
+
+const nodeTypes = {
+  task: markRaw(TaskNode)
+}
+
+const router = useRouter()
+const route = useRoute()
+const projectId = route.params.id
+
+const showFullscreenView = ref(false)
+const vueFlowRef = ref(null)
+
+const nodes = ref([])
+const edges = ref([])
+
+
+const { layout } = useLayout()
+const { fitView } = useVueFlow()
+
+
+// 프로젝트 파이프라인 데이터 가져오기
+async function fetchPipeline() {
+  try {
+    const res = await api.get(`/api/projects/${projectId}/pipeline`, {
+      params: { projectId }
+    })
+    const data = res.data.data
+    console.log(data)
+
+    const rawNodes = data.nodeList
+    const rawEdges = data.edgeList
+
+    // 중복 제거한 엣지
+    const uniqueEdges = Array.from(
+      new Map(rawEdges.map(e => [`${e.source}-${e.target}`, e])).values()
+    )
+
+    // 노드 변환
+    const convertedNodes = rawNodes.map(node => ({
+      id: String(node.id),
+      type: 'task',
+      position: { x: 0, y: 0 },
+      data: {
+        label: node.name,
+        description: node.description,
+        startBase: node.startBase,
+        endBase: node.endBase,
+        startExpect: node.startExpect,
+        endExpect: node.endExpect,
+        startReal : node.startReal,
+        endReal : node.endReal,
+        progressRate : node.progressRate,
+        delayDays : node.delayDays,
+        status: node.status,
+        deptList: Array.from(new Set(node.deptList.map(d => d.name))) // 중복 부서 제거
+      }
+    }))
+
+    // 엣지 변환
+    const convertedEdges = uniqueEdges.map(edge => ({
+      id: edge.id || `e-${edge.source}-${edge.target}`,
+      source: String(edge.source),
+      target: String(edge.target),
+      type: 'bezier', // 곡선 타입
+      animated: true,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left
+    }))
+
+    // 레이아웃 처리
+    const g = new dagre.graphlib.Graph()
+    g.setDefaultEdgeLabel(() => ({}))
+    g.setGraph({ rankdir: 'LR', nodesep: 60, ranksep: 100 })
+
+    convertedNodes.forEach(n => {
+      g.setNode(n.id, { width: 240, height: 130 })
+    })
+
+    convertedEdges.forEach(e => {
+      g.setEdge(e.source, e.target)
+    })
+
+    dagre.layout(g)
+
+    // 위치 반영
+    nodes.value = convertedNodes.map(n => {
+      const pos = g.node(n.id)
+      return {
+        ...n,
+        position: { x: pos.x, y: pos.y },
+        sourcePosition: Position.Right,
+        targetPosition: Position.Left
+      }
+    })
+
+    edges.value = convertedEdges
+    await nextTick()
+    fitView()
+  } catch (err) {
+    console.error('파이프라인 불러오기 실패:', err)
+  }
+}
+
+onMounted(() => {
+  fetchPipeline()
+})
+
+function onConnect({ source, target }) {
+  if (!source || !target) return
+  const id = `e-${source}-${target}-${Date.now()}`
+  edges.value.push({ id, source, target, type: 'default' })
+}
+
+async function layoutGraph(direction) {
+  nodes.value = layout(nodes.value, edges.value, direction)
+  await nextTick()
+  zoomTo(0.6)
+}
+
+async function handleNodesInitialized() {
+  await nextTick()
+  requestAnimationFrame(() => {
+    layoutGraph('LR')
+  })
+}
+
+
+</script>
+
+
 
 <style scoped>
 .layout-flow {

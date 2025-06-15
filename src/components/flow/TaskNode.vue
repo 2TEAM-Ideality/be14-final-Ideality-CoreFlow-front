@@ -1,5 +1,5 @@
 <template>
-  <div class="custom-node-horizontal" @click.self="handleSelect" >
+  <div class="custom-node-horizontal" @click.self="handleSelect">
     <Handle type="target" :position="Position.Left" :style="handleStyle" />
     <Handle type="source" :position="Position.Right" :style="handleStyle" />
 
@@ -22,8 +22,16 @@
 
       <!-- 날짜 -->
       <div class="date-info">
-        <div>실제 시작일: {{ data.startDate || '-' }}</div>
-        <div>{{ data.endLabel || '예상 마감일' }}: {{ data.endDate || '-' }}</div>
+        <div v-if="status === 'pending'">예상 시작일: {{ data.startExpect || '-' }}</div>
+        <div v-if="status === 'pending'">예상 마감일: {{ data.endExpect || '-' }}</div>
+
+        <div v-if="status === 'progress'">실제 시작일: {{ data.startReal || '-' }}</div>
+        <div v-if="status === 'progress'">예상 마감일: {{ data.endExpect || '-' }}</div>
+
+        <div v-if="status === 'completed'">실제 시작일: {{ data.startReal || '-' }}</div>
+        <div v-if="status === 'completed'">실제 종료일: {{ data.endReal || '-' }}</div>
+
+        <div v-if="status === 'cancelled' || status === 'deleted'">기간 없음</div>
       </div>
 
       <!-- 진행 정보 -->
@@ -31,23 +39,23 @@
         <div class="metric">
           <div class="label">진척률</div>
           <v-progress-circular
-            :model-value="data.progress || 0"
+            :model-value="data.progressRate || 0"
             :color="progressColor"
             size="40"
             width="4"
           >
-            {{ (data.progress || 0) + '%' }}
+            {{ (data.progressRate || 0) + '%' }}
           </v-progress-circular>
         </div>
         <div class="metric">
           <div class="label">경과율</div>
           <v-progress-circular
-            :model-value="data.elapsed || 0"
+            :model-value="data.passedRate || 0"
             :color="progressColor"
             size="40"
             width="4"
           >
-            {{ (data.elapsed || 0) + '%' }}
+            {{ (data.passedRate || 0) + '%' }}
           </v-progress-circular>
         </div>
         <div class="metric">
@@ -62,38 +70,41 @@
 <script setup>
 import { Handle, Position } from '@vue-flow/core'
 const props = defineProps(['data', 'id'])
+console.log(props.data.status, props.data.startExpect)
 const emit = defineEmits(['addNode', 'click'])
 
 const handleSelect = () => emit('click', props.id)
 
 const iconMap = {
-  'in-progress': 'mdi-play-circle-outline',
+  'progress': 'mdi-play-circle-outline',
   'pending': 'mdi-pause-circle-outline',
-  'done': 'mdi-check-circle-outline',
-  'done-delayed': 'mdi-check-circle-outline',
-  'delayed': 'mdi-alert-circle-outline'
+  'completed': 'mdi-check-circle-outline',
+  'deleted': 'mdi-close-circle-outline',
+  'cancelled': 'mdi-cancel'
 }
 const colorMap = {
-  'in-progress': '#307CFF',
+  'progress': '#307CFF',
   'pending': '#B2B2B2',
-  'done': '#34C759',
-  'done-delayed': '#34C759',
-  'delayed': '#FF6577'
+  'completed': '#34C759',
+  'deleted': '#9CA3AF',
+  'cancelled': '#EF4444'
 }
 const backgroundMap = {
-  'in-progress': '#F0F5FF',
+  'progress': '#F0F5FF',
   'pending': '#FFFFFF',
-  'done': '#F6FCF7',
-  'done-delayed': '#F6FCF7',
-  'delayed': '#FFF7F7'
+  'completed': '#F6FCF7',
+  'deleted': '#F5F5F5',
+  'cancelled': '#FFF5F5'
 }
 
-const delay = props.data?.delay ?? 0
+const delay = props.data?.delayDays ?? 0
 const delayText = delay > 0 ? `+${delay}일` : '0일'
 const delayColor = delay > 0 ? 'text-red' : 'text-grey'
 const progressColor = 'deep-purple-lighten-1'
 
-const status = props.data?.status || 'pending'
+const status = props.data?.status?.toLowerCase() || 'pending'
+
+
 const icon = iconMap[status]
 const iconColor = colorMap[status]
 const backgroundColor = backgroundMap[status]
@@ -111,7 +122,6 @@ const handleStyle = {
 }
 </script>
 
-
 <style scoped>
 .custom-node-horizontal {
   position: relative;
@@ -119,7 +129,6 @@ const handleStyle = {
 .node-card {
   padding: 16px;
   width: 220px;
-  
 }
 .node-header {
   display: flex;
