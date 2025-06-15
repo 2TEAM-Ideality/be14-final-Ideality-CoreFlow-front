@@ -16,7 +16,8 @@
 .template-layout {
   display: grid;
   grid-template-columns: 7fr 3fr;
-  padding: 40px 0;
+  padding: 40px 80px;
+  gap : 32px;
 }
 
 .template-main {
