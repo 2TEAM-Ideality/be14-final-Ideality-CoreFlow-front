@@ -8,14 +8,29 @@ import api from '@/api';
 import ProjectCard from '@/components/project/ProjectCard.vue';
 
 const projectList = ref([])
+const searchKeyword = ref('')
+const fullProjectList = ref([])
+
 onMounted(async () => {
   try {
     const res = await api.get('/api/projects/list');
     projectList.value = res.data.data;
+    fullProjectList.value = res.data.data;
   } catch(err){
     console.error('프로젝트 목록 조회 실패', err);
   }
 })
+
+const onSearch=()=>{
+  const keyword = searchKeyword.value.trim().toLowerCase();
+  if(!keyword){
+    projectList.value = fullProjectList.value;
+    return;
+  }
+  projectList.value = fullProjectList.value.filter(p=>
+    p.name.toLowerCase().includes(keyword)
+  )
+}
 
 </script>
 
@@ -26,8 +41,13 @@ onMounted(async () => {
       <div class="search-bar">
         <div class="left-side">
           <div class="search-input-wrapper">
-            <input type="text" placeholder="프로젝트 검색" />
-            <button>
+            <input
+              v-model="searchKeyword"
+              type="text"
+              placeholder="프로젝트 검색"
+              @keydown.enter="onSearch"
+            />
+            <button @click="onSearch">
               <v-icon class="search-icon" size="18">mdi-magnify</v-icon>
             </button>
           </div>
