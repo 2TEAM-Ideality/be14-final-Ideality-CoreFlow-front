@@ -164,7 +164,7 @@ const commentTabs = [
 
     .comment-tab-menu {
     display: flex;
-    gap: 16px;
+    gap: 50px;
     border-bottom: 1px solid #ddd;
     padding-bottom: 0px;
     }
