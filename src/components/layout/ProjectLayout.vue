@@ -78,7 +78,6 @@ const tabs = [
   padding: 20px;
   height: 100%;
   width: 100%;
-  max-width: 1200px; /* 일반 탭에서는 가로 제한 */
   margin: 0 auto;
 }
 

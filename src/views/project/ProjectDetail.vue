@@ -1,15 +1,24 @@
-<template>
-    <BreadCrumb :items="[
-    { text: '프로젝트', to: '/' },
-    { text: '프로젝트이름', to: '/project/:id' },
-    // { text: '템플릿 편집' }  // 마지막 항목은 링크 없음
-    ]" />
-    <ProjectLayout>
-        <div>여기에 프로젝트 상세 내용 삽입</div>
-    </ProjectLayout>
-</template>
-
 <script setup>
-import BreadCrumb from '@/components/common/BreadCrumb.vue';
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import api from '@/util/api.js'
+import BreadCrumb from '@/components/common/BreadCrumb.vue'
 import ProjectLayout from '@/components/layout/ProjectLayout.vue'
+
+const route = useRoute()
+const projectName = ref('로딩 중...')
+const projectId = route.params.id
+
+onMounted(async () => {
+  const res = await api.get(`/api/projects/${projectId}`)
+  projectName.value = res.data.data.name
+})
 </script>
+
+<template>
+  <BreadCrumb :items="[
+    { text: '프로젝트', to: '/' },
+    { text: projectName, to: `/project/${projectId}` }
+  ]" />
+  <ProjectLayout />
+</template>

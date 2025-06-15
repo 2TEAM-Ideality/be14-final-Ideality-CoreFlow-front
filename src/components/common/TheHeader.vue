@@ -189,11 +189,13 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 40px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #dbdbdb;
   background-color: #fff;
   z-index: 100;
-}
 
+  /* 💡 그림자 추가 */
+  /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);  */
+}
 .logo img {
   height: 32px;
   object-fit: contain;

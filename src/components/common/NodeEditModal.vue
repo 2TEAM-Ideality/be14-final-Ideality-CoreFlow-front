@@ -2,7 +2,7 @@
 <template>
   <div v-if="show" class="modal-backdrop">
     <div class="modal">
-      <h3 class="modal-title">노드 정보 수정</h3>
+      <h3 class="modal-title">태스크 정보 수정</h3>
 
       <div class="input-group">
         <label for="taskName">태스크명</label>
@@ -79,7 +79,7 @@ function onSave() {
       description: localNode.description,
       duration: localNode.duration,
       slackTime: localNode.slackTime,
-      deptList: selectedDepts // ← 원하는 포맷
+      deptList: selectedDepts 
     }
   })
 }
@@ -139,8 +139,8 @@ watch(
 }
 .modal-title {
   font-weight: 600;
-  font-size: 16px;
-  margin-bottom: 12px;
+  font-size: 24px;
+  margin-bottom: 20px;
 }
 .input-group {
   margin-bottom: 12px;

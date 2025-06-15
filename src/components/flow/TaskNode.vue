@@ -111,6 +111,7 @@ const handleStyle = {
 }
 </script>
 
+
 <style scoped>
 .custom-node-horizontal {
   position: relative;

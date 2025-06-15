@@ -1,6 +1,5 @@
 <template>
   <div class="search-bar">
-    <!-- ✅ 부서 필터 -->
     <v-menu v-model="menu" offset-y >
       <template #activator="{ props }">
         <v-btn
@@ -68,7 +67,7 @@ watch(() => props.query, (val) => {
   searchInput.value = val
 })
 
-// ✅ 부서 선택 드롭다운용
+// 부서 선택 드롭다운용
 const menu = ref(false)
 const selectDept = (deptName) => {
   emit('filter-click', deptName || '부서 전체')

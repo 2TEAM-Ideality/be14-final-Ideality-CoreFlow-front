@@ -20,7 +20,7 @@ const routes = [
   //   component: () => import('@/views/project/ProjectList.vue')
   // },
   {
-    path: '/project/detail',
+    path: '/project/:id',
     component: () => import('@/views/project/ProjectDetail.vue'),
     children: [
       {

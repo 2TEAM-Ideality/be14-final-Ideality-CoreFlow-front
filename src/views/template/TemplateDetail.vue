@@ -89,12 +89,17 @@
           <div>
             <InfoField label="작성자" icon="mdi-account" :value="templateInfo?.createdBy" />
             <InfoField label="생성일" icon="mdi-calendar" :value="templateInfo?.createdAt?.split('T')[0]" />
-            <InfoField label="최종 수정일" icon="mdi-update" :value="templateInfo?.updatedAt?.split('T')[0]" />
+            <!-- <InfoField label="최종 수정일" icon="mdi-update" :value="templateInfo?.updatedAt?.split('T')[0]" /> -->
             <InfoField label="총 소요 기간" icon="mdi-timer-sand" :value="templateInfo?.duration + ' 일'" />
             <InfoField label="전체 태스크 수" icon="mdi-format-list-numbered" :value="templateInfo?.taskCount + '개'" />
-            <InfoField label="사용 중인 프로젝트" icon="mdi-folder-multiple" :value="templateInfo?.usingProjects + '개'" />
+            <!-- <InfoField label="사용 중인 프로젝트" icon="mdi-folder-multiple" :value="templateInfo?.usingProjects + '개'" /> -->
             <div>
-              <div class="section-label">참여 부서</div>
+              <div class="sidebar-section-label">
+                <span class="icon-wrapper">
+                  <v-icon size="18">mdi-domain</v-icon>
+                </span>
+                <span>참여 부서</span>
+              </div>
               <div class="d-flex flex-wrap dept-chip-wrap">
                 <v-chip
                   v-for="dept in templateInfo?.deptList || []"
@@ -115,33 +120,31 @@
 
 <script setup>
 import BasicLayout from '@/components/layout/BasicLayout.vue';
+import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
+import InfoField from '@/components/common/SideInfoField.vue'
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/util/api.js'
 import { VueFlow } from '@vue-flow/core'
-import { useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 import dagre from '@dagrejs/dagre'
 import { Position } from '@vue-flow/core'
-import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
-import InfoField from '@/components/common/SideInfoField.vue'
 import { markRaw } from 'vue'
+
 
 const nodeTypes = {
   custom: markRaw(TemplateViewNode)
 }
-// const nodeTypes = {
-//   custom: TemplateViewNode
-// }
 
 const route = useRoute()
 const router = useRouter()
 const templateId = ref(route.params.id)
 
-const showFullscreenView = ref(false)
+const showFullscreenView = ref(false)   // 플로우 차트 전체 보기
+const isLoading = ref(true)     // 데이터 로딩
 
 const templateInfo = ref(null)
 const nodeList = ref([])
@@ -149,18 +152,25 @@ const edgeList = ref([])
 const flowNodes = ref([])
 const flowEdges = ref([])
 
+// 템플릿 정보 가져오기 
 const fetchTemplate = async () => {
-  const res = await api.get(`/api/template/${templateId.value}`)
-  const data = res.data.data
+  try {
+    const res = await api.get(`/api/template/${templateId.value}`)
+    const data = res.data.data
 
-  templateInfo.value = data.templateInfo
-  nodeList.value = data.templateData.nodeList
-  edgeList.value = data.templateData.edgeList
+    isLoading.value = false
+    templateInfo.value = data.templateInfo
+    nodeList.value = data.templateData.nodeList
+    edgeList.value = data.templateData.edgeList
 
-  console.log(data)
+    console.log(data)
 
-  // 데이터 로딩 후 변환 함수 호출
-  convertToFlowData()
+    // 데이터 로딩 후 변환 함수 호출
+    convertToFlowData()
+  }catch (e){
+    console.error(`${templateId.value} 템플릿 정보 가져오기 실패!`, e) 
+    isLoading.value = true
+  } 
 }
 
 
@@ -168,11 +178,6 @@ onMounted(() => {
   fetchTemplate()
 })
 
-const fitToView = () => {
-  if (vueFlowRef.value?.fitView) {
-    vueFlowRef.value.fitView()
-  }
-}
 
 const convertToFlowData = () => {
   const g = new dagre.graphlib.Graph()
@@ -296,8 +301,25 @@ watch(() => route.params.id, async (newId) => {
 .v-input.readonly .v-field__input {
   font-size: 12px;
 }
+/* 부서 칩 라벨 영역 */
+.sidebar-section-label {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: gray;
+}
+
+.dept-chip-wrap {
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
 .dept-chip-wrap {
   gap: 8px;
 }
+
 </style>
 
