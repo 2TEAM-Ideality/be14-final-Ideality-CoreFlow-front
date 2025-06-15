@@ -16,7 +16,7 @@
             {{ notice.content }}
           </div>
           <div class="date">{{ notice.date }} <!-- 삭제 버튼 추가 -->
-          <button @click="deleteNotification(notice.id)" class="delete-btn">  삭제</button>
+          <button @click="deleteNotification(notice.id, true)" class="delete-btn">  삭제</button>
         </div>
         </div>
       </div>
@@ -27,8 +27,10 @@
 <script setup>
 import { defineProps,defineEmits,watch } from 'vue'
 import { useUserStore } from '@/stores/userStore'
+import { useNotificationStore } from '@/stores/notificationStore';
 
   const userStore = useUserStore()
+  const notificationStore = useNotificationStore()
   const token = userStore.accessToken;
 
 const props = defineProps({
@@ -51,7 +53,7 @@ const closeSidebar = () => {
 }
 
 // 알림 삭제 함수
-const deleteNotification = async (notificationId) => {
+const deleteNotification = async (notificationId, isAutoDelete) => {
   if (!token) {
     console.error("토큰이 없습니다. 로그인 상태를 확인해주세요.");
     return;
@@ -66,7 +68,7 @@ const deleteNotification = async (notificationId) => {
         'Authorization': `Bearer ${token}` // 헤더에 토큰 추가
       },
       body: JSON.stringify({
-        isAutoDelete: true
+        isAutoDelete: isAutoDelete  // isAutoDelete 값을 던져줌
       })
     });
 
@@ -75,11 +77,8 @@ const deleteNotification = async (notificationId) => {
 
     // 응답의 status가 success인 경우 처리
     if (data.status === "success") {
-      // UI에서 해당 알림 삭제
-      const index = props.notifications.findIndex(notice => notice.id === notificationId);
-      if (index !== -1) {
-        props.notifications.splice(index, 1);
-      }
+      // isAutoDelete 상태가 true로 변경되면, 배열에서 해당 알림 삭제
+      notificationStore.removeNotificationIfAutoDeleted(notificationId); 
     } else {
       // 실패한 경우 응답 내용 출력
       console.error("알림 삭제 실패:", data.message || "알 수 없는 오류");

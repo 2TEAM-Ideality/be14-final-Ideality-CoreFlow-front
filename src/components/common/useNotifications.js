@@ -28,8 +28,9 @@ export function useNotifications() {
         const newNotifications = JSON.parse(event.data);
 
         newNotifications.forEach((notification) => {
-          if (notification.id > lastStoredId) {
+          if (!notification.isAutoDelete && notification.id > lastStoredId) {
             store.addNotification(notification);  // Pinia store에 알림 추가
+            
             store.setLastNotificationId(notification.id);  // 최신 ID로 갱신
           }
         });

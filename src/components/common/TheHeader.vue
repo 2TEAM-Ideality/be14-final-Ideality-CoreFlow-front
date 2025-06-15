@@ -51,11 +51,13 @@ import { useUserStore } from '@/stores/userStore'
 import { useRouter } from 'vue-router'
 import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
 import { useNotifications } from '@/components/common/useNotifications.js'
+import { useNotificationStore } from '@/stores/notificationStore';
 
 const userStore = useUserStore()
+const store = useNotificationStore();  // Pinia store 사용
 
 const notificationSidebarOpen = ref(false) // 사이드바 상태 관리
-const notifications = ref([]) // 알림 상태 관리
+const notifications = store.notifications // Pinia store에서 notifications 배열을 가져옴
 const { connectToSSE } = useNotifications()
 
 const openNotificationSidebar = () => {
@@ -68,10 +70,10 @@ const closeSidebar = () => {
 }
 
 const fetchNotifications = async () => {
-  const token = userStore.accessToken
+  const token = userStore.accessToken;
   if (!token) {
-    console.error('토큰이 존재하지 않습니다. 로그인 상태를 확인하세요.')
-    return
+    console.error('토큰이 존재하지 않습니다. 로그인 상태를 확인하세요.');
+    return;
   }
 
   try {
@@ -79,29 +81,31 @@ const fetchNotifications = async () => {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       }
-    })
-    
-    const data = await response.json()
+    });
+
+    const data = await response.json();
     console.log('알림 데이터:', data); // API 응답 데이터 확인
     if (data && data.data) {
-        // isAutoDelete가 true인 알림을 제외한 목록을 필터링
-      notifications.value = data.data.filter(notice => !notice.isAutoDelete)
-      
+      // isAutoDelete가 true인 알림을 제외한 목록을 필터링하고 Pinia 상태에 추가
+      data.data.filter(notice => !notice.isAutoDelete).forEach(notification => {
+        store.addNotification(notification);  // Pinia store에 알림 추가
+      });
+
       // 마지막 알림 ID 추출 (가장 최근의 알림 ID)
-      const lastNotification = data.data[0]
+      const lastNotification = data.data[0];
       if (lastNotification) {
-        // `lastNotificationId_${userStore.id}`에 저장
-        localStorage.setItem(`lastNotificationId_${userStore.id}`, lastNotification.id)
+        store.setLastNotificationId(lastNotification.id); // 최신 ID로 갱신
       }
     } else {
       console.warn('알림 데이터가 비어있거나 잘못된 형식입니다.');
     }
   } catch (error) {
-    console.error('알림 조회 오류:', error)
+    console.error('알림 조회 오류:', error);
   }
-}
+};
+
 
 
 onMounted(() => {
