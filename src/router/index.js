@@ -21,7 +21,8 @@ const routes = [
   // },
   {
     path: '/project/:id',
-    component: () => import('@/views/project/ProjectDetail.vue'),
+    // component: () => import('@/views/project/ProjectDetail.vue'),
+    component: () => import('@/components/layout/ProjectDetail.vue'),
     children: [
       {
         path: 'overview',

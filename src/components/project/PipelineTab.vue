@@ -6,6 +6,8 @@ import TaskNode from '@/components/flow/TaskNode.vue'
 import '@/assets/vue-flow-style.css'
 import { useRouter } from 'vue-router'
 import { useLayout } from '@/views/test/useLayout'
+import api from '@/util/api.js'
+
 
 // 프로젝트용 초기 노드/엣지 데이터 (임시)
 import { initialProjectNodes, initialProjectEdges } from '@/components/flow/project-elements.js'
