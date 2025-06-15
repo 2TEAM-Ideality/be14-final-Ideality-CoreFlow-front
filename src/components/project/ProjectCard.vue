@@ -120,17 +120,20 @@ const delayDays = computed(() => props.project.delayDays || 0)
         <div class="card-right">
             <div class="rate-box">
                 <div class="rate-label">진척률</div>
-                <DonutChart :value="progressRate"  color="#6750A4" />
+                <DonutChart :value="progressRate"  color="#6750A4" /> <!-- @정민선 @이혜영 Help -->
+            
                 <!-- <div >{{ progressRate }}%</div> -->
             </div>
             <div class="rate-box">
                 <div class="rate-label">경과율</div>
-                <DonutChart :value="passedRate" label="경과율" color="#2196F3" />
+                <DonutChart :value="passedRate" label="경과율" color="#2196F3" /> <!-- @정민선 @이혜영 Help -->
                 <!-- <div class="circle">{{ passedRate }}%</div> -->
             </div>
             <div class="rate-box">
                 <div class="rate-label">지연일</div>
-                <div class="circle">{{ delayDays }}일</div>
+                <div class="circle" :class="{ 'delay-warning': delayDays > 0 }">
+                    {{ delayDays }}일
+                </div>
             </div>
             <v-menu>
                 <template #activator="{props}">
@@ -245,5 +248,11 @@ const delayDays = computed(() => props.project.delayDays || 0)
     line-height: 1.2;
     font-size: 12px;
 }
+.delay-warning {
+    /* background-color: #ffcccc; */
+    color: red;
+    font-weight: bold;
+}
+
 
 </style>
