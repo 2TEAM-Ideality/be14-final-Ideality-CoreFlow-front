@@ -1,6 +1,7 @@
 <script setup>
 import {computed} from 'vue'
 // import {format} from 'date-fns'
+import DonutChart from '@/components/common/DonutChart.vue'
 
 const onEdit = () => {
     console.log('수정 클릭됨', project.id)
@@ -119,11 +120,13 @@ const delayDays = computed(() => props.project.delayDays || 0)
         <div class="card-right">
             <div class="rate-box">
                 <div class="rate-label">진척률</div>
-                <div class="circle">{{ progressRate }}%</div>
+                <DonutChart :value="progressRate"  color="#6750A4" />
+                <!-- <div >{{ progressRate }}%</div> -->
             </div>
             <div class="rate-box">
                 <div class="rate-label">경과율</div>
-                <div class="circle">{{ passedRate }}%</div>
+                <DonutChart :value="passedRate" label="경과율" color="#2196F3" />
+                <!-- <div class="circle">{{ passedRate }}%</div> -->
             </div>
             <div class="rate-box">
                 <div class="rate-label">지연일</div>
@@ -227,7 +230,6 @@ const delayDays = computed(() => props.project.delayDays || 0)
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: #f3f3f3;
     display: flex;
     align-items: center;
     justify-content: center;
