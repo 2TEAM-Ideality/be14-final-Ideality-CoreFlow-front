@@ -2,7 +2,7 @@
 <script setup>
 import Breadcrumb from '@/components/common/BreadCrumb.vue';
 import ListLayout from '@/components/layout/ListLayout.vue';
-
+import { useUserStore } from '@/stores/userStore.js'
 import { ref, onMounted } from 'vue';
 import api from '@/api';
 import ProjectCard from '@/components/project/ProjectCard.vue';
@@ -20,6 +20,9 @@ const statusOptions = [
 ]
 const selectedStatuses = ref([])
 const showFilterDropdown = ref(false)
+const userStore = useUserStore()
+const token = userStore.accessToken
+
 
 onMounted(async () => {
   try {
