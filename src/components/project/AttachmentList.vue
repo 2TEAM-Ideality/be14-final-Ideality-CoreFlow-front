@@ -1,6 +1,7 @@
 <!-- 예: FileListView.vue -->
 <template>
-  <ListForm :headers="customHeaders" :items="fileItems" />
+
+    <ListForm :headers="customHeaders" :items="fileItems" />
 </template>
 
 <script setup>
