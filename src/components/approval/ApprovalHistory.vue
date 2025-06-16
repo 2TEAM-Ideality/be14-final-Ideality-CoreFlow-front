@@ -60,7 +60,10 @@ const fetchApprovalData = async () => {
         const response = await api.get('/api/approval/my-approval/all')
         approvalData.value = response.data.data
     } catch(error) {
-        error(error.response.data.message)
+        if (error.response) {
+            console.error('에러 응답:', error.response.data);
+            alert(error.response.data.message);
+        }
     }
 }
 
@@ -89,7 +92,7 @@ function statusClass(status) {
             return '';
     }
 }
-defineExpose({ fetchApprovalData })
+// defineExpose({ fetchApprovalData })
 </script>
 
 <style scoped>
