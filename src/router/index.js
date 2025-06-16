@@ -20,8 +20,9 @@ const routes = [
   //   component: () => import('@/views/project/ProjectList.vue')
   // },
   {
-    path: '/project/detail',
+    path: '/project/:id',
     component: () => import('@/views/project/ProjectDetail.vue'),
+    props: true,
     children: [
       {
         path: 'overview',
@@ -135,43 +136,6 @@ const routes = [
       }
     ]
   },
-  // 태스크 관련
-  {
-    path: '/task/:taskId',
-    component: () => import('@/views/task/TaskDetail.vue'),
-    children: [
-      {
-        path: '',
-        name: 'TaskInfo',
-        component: () => import('@/components/task/TaskInfoTab.vue')
-      },
-      {
-        path: 'approval',
-        name: 'TaskApproval',
-        component: () => import('@/components/task/TaskApprovalTab.vue')
-      },
-      {
-        path: 'attachments',
-        name: 'TaskAttachment',
-        component: () => import('@/components/task/TaskAttachmentTab.vue')
-      },
-      {
-        path: 'comment',
-        name: 'TaskComment',
-        component: () => import('@/components/task/CommentTab.vue')
-      },
-      {
-        path: 'notice',
-        name: 'TaskNotice',
-        component: () => import('@/components/task/NoticeTab.vue')
-      },
-      {
-        path: 'detail',
-        name: 'TaskDetails',
-        component: () => import('@/components/task/DetailTab.vue')
-      }
-    ]
-  }
 ]
 
 const router = createRouter({

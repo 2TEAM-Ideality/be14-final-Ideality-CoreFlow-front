@@ -54,7 +54,7 @@
 
 <script setup>
     import { ref, computed, nextTick, onMounted } from 'vue'
-    import api from '@/api'
+    import api from '@/api.js'
     import LoadingModal from '@/components/common/LoadingModal.vue'
 
     const emit = defineEmits(['close'])

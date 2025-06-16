@@ -162,6 +162,7 @@ export const useUserStore = defineStore('user', () => {
         } catch (e) {
             forcedLogout.value = true
             logout()
+            
             return false
         }
     }
