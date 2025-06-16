@@ -68,17 +68,17 @@ const routes = [
     component: () => import('@/views/template/TemplateList.vue')
   },
   {
-    path: '/template/detail',
+    path: '/template/detail/:id',
     name: 'TemplateDetail',
     component: () => import('@/views/template/TemplateDetail.vue')
   },
   {
-    path: '/template/edit',
+    path: '/template/edit/:id',
     name: 'EditTemplate',
     component: () => import('@/views/template/EditTemplate.vue')
   },
   {
-    path: '/template/edit/task',
+    path: '/template/edit/task/:id',
     name: 'EditTemplateTask',
     component: () => import('@/views/template/EditTemplateTask.vue')
   },
@@ -86,6 +86,11 @@ const routes = [
     path: '/template/create',
     name: 'CreateTemplate',
     component: () => import('@/views/template/CreateTemplate.vue')
+  },
+  {
+    path: '/template/create/task',
+    name: 'CreateTemplateTask',
+    component: () => import('@/views/template/CreateTemplateTask.vue')
   },
 
   // 부서 일정
@@ -102,12 +107,6 @@ const routes = [
     component: () => import('@/views/approval/Approval.vue')
   },
 
-  // -----------------------------------------------테스트용
-  // {
-  //   path: '/test/pipe',
-  //   name: 'Pipe',
-  //   component: () => import('@/views/test/PipePage.vue')
-  // }
   {
     path: '/admin',
     component: () => import('@/views/admin/Admin.vue'),
@@ -136,17 +135,43 @@ const routes = [
       }
     ]
   },
+  // 태스크 관련
+  {
+    path: '/task/:taskId',
+    component: () => import('@/views/task/TaskDetail.vue'),
+    children: [
+      {
+        path: '',
+        name: 'TaskInfo',
+        component: () => import('@/components/task/TaskInfoTab.vue')
+      },
+      {
+        path: 'approval',
+        name: 'TaskApproval',
+        component: () => import('@/components/task/TaskApprovalTab.vue')
+      },
+      {
+        path: 'attachments',
+        name: 'TaskAttachment',
+        component: () => import('@/components/task/TaskAttachmentTab.vue')
+      },
+      {
+        path: 'comment',
+        name: 'TaskComment',
+        component: () => import('@/components/task/CommentTab.vue')
+      },
+      {
+        path: 'notice',
+        name: 'TaskNotice',
+        component: () => import('@/components/task/NoticeTab.vue')
+      }
+    ]
+  }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
-})
-
-// router/index.js 하단에 추가
-router.beforeEach((to, from, next) => {
-  console.log('✅ 라우팅 시작:', to.fullPath)
-  next()
 })
 
 router.beforeEach(async (to, from, next) => {
