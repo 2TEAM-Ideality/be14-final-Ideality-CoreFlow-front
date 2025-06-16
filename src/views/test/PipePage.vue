@@ -20,8 +20,8 @@ const props = defineProps({
     required: true
   }
 })
+
 const emit = defineEmits(['save']) // 
-const templateName = defineModel('templateName')
 
 const { zoomTo, fitView, onPaneReady } = useVueFlow()
 
@@ -100,6 +100,7 @@ function onAddNode(parentId) {
     type: 'default'
   })
 }
+
 
 function onCreateNewNode() {
   const newId = nanoid(6)

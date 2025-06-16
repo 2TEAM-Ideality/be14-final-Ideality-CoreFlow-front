@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@dagrejs/dagre": "^1.1.4",
+    "@syncfusion/ej2-vue-gantt": "^29.2.10",
     "@date-io/dayjs": "^3.2.0",
     "@jamescoyle/vue-icon": "^0.1.2",
     "@mdi/font": "^7.4.47",

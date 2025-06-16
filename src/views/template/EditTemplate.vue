@@ -21,9 +21,6 @@ const nodeTypes = {
   custom: markRaw(TemplateViewNode)
 }
 
-// const nodeTypes = {
-//   custom: TemplateViewNode
-// }
 const user = useUserStore() 
 const route = useRoute()
 const router = useRouter()
