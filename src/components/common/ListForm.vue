@@ -65,46 +65,30 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 
+const props = defineProps({
+  headers: {
+    type: Array,
+    required: true
+  },
+  items: {
+    type: Array,
+    required: true
+  }
+})
+
+
 
 const selectAll = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 15
 
-const headers = ref([
-  { title: '파일명', key: 'name' },
-  { title: '관련 태스크', key: 'task' },
-  { title: '파일 유형', key: 'type' },
-  { title: '등록자', key: 'author' },
-  { title: '등록일', key: 'date' },
-  { title: '링크', key: 'link' } // link가 있으면 아이콘 표시됨
-])
-
-const items = ref([
-  {
-    name: '제품기획서.pdf',
-    task: '제품 기획 회의',
-    type: 'PDF',
-    author: '기획팀 김하늘',
-    date: '2025-05-01',
-    link: 'https://example.com/download1', // ✅ 링크 있음
-    selected: false
-  },
-  {
-    name: '원단스펙시트.xlsx',
-    task: '원단 스펙 확정',
-    type: 'XLSX',
-    author: '소재팀 이지수',
-    date: '2025-05-02',
-    selected: false // ❌ 링크 없음
-  }
-])
-
+// props.items로부터 데이터 사용
 const paginatedItems = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
-  return items.value.slice(start, start + itemsPerPage)
+  return props.items.slice(start, start + itemsPerPage)
 })
 
-const pageCount = computed(() => Math.ceil(items.value.length / itemsPerPage))
+const pageCount = computed(() => Math.ceil(props.items.length / itemsPerPage))
 
 function toggleAll(value) {
   paginatedItems.value.forEach(item => (item.selected = value))
@@ -114,6 +98,7 @@ watch(currentPage, () => {
   selectAll.value = false
 })
 </script>
+
 
 <style scoped>
 .v-table {

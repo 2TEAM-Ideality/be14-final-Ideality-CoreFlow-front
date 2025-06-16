@@ -1,18 +1,18 @@
+<!-- 예: FileListView.vue -->
 <template>
-  <div>
-    <ListFrom :headers="customHeaders" :items="fileItems" />
-  </div>
+  <ListForm :headers="customHeaders" :items="fileItems" />
 </template>
 
 <script setup>
-import ListFrom from '@/components/common/ListForm.vue'
+import ListForm from '@/components/common/ListForm.vue'
 
 const customHeaders = [
   { title: '파일명', key: 'name' },
   { title: '관련 태스크', key: 'task' },
   { title: '파일 유형', key: 'type' },
   { title: '등록자', key: 'author' },
-  { title: '등록일', key: 'date' }
+  { title: '등록일', key: 'date' },
+  { title: '링크', key: 'link' } // 다운로드 아이콘 표시 용도
 ]
 
 const fileItems = [
@@ -22,6 +22,7 @@ const fileItems = [
     type: 'PDF',
     author: '기획팀 김하늘',
     date: '2025-05-01',
+    link: 'https://example.com/file1.pdf',
     selected: false
   },
   {
