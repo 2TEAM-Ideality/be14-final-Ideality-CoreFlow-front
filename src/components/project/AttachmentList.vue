@@ -2,7 +2,7 @@
     <div v-if="fileItems.length === 0" class="empty-message">
         📄 해당 프로젝트에 대한 산출물이 없습니다.
     </div>
-    <div v-else>
+    <div v-else class="list-container">
         <SearchBar
             v-model:query="searchQuery"
             :filter-label="selectedDept || '부서 전체'"
@@ -23,12 +23,18 @@ import api from '@/api.js'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const projectId = route.params.id
 
 const userStore = useUserStore()
 const router = useRouter()
 
 const attachmentList = ref([])
 const deptList = ref([])
+
+//  검색
 const searchQuery = ref('')
 const sortLabel = ref('오름차순')
 const selectedDept = ref('부서 전체')
@@ -40,11 +46,32 @@ const customHeaders = [
   { title: '파일 유형', key: 'type' },
   { title: '등록자', key: 'author' },
   { title: '등록일', key: 'date' },
-  { title: '링크', key: 'link' }
+  { title: '파일', key: 'link' }
 ]
 
-const fileItems = computed(() =>
-  attachmentList.value.map(att => ({
+const fileItems = computed(() => {
+  const keyword = searchQuery.value.trim().toLowerCase()
+  const deptFilter = selectedDept.value;
+  
+  let filtered = attachmentList.value.filter(att => {
+    return (
+      att.originName?.toLowerCase().includes(keyword) ||
+      att.taskName?.toLowerCase().includes(keyword) ||
+      att.uploader?.toLowerCase().includes(keyword)
+    )
+  })
+
+  // 정렬
+  filtered = filtered.sort((a, b) => {
+    const nameA = a.originName?.toLowerCase() || ''
+    const nameB = b.originName?.toLowerCase() || ''
+    return sortLabel.value === '오름차순'
+      ? nameA.localeCompare(nameB)
+      : nameB.localeCompare(nameA)
+  })
+
+  // 매핑
+  return filtered.map(att => ({
     name: att.originName,
     task: att.taskName,
     type: att.fileType,
@@ -53,7 +80,8 @@ const fileItems = computed(() =>
     link: att.url,
     selected: false
   }))
-)
+})
+
 
 // 데이터 요청
 const fetchAttachments = () => api.get(`/api/project/${projectId}/attachment/list`)
@@ -76,6 +104,22 @@ onMounted(async () => {
     console.error('자료 로딩 실패:', err)
   }
 })
+
+
+const toggleSort = () => {
+  sortLabel.value = sortLabel.value === '오름차순' ? '내림차순' : '오름차순'
+}
+
 </script>
 
 
+<style scoped>
+*{
+    text-align: left;
+}
+.list-container {
+    display:flex;
+    flex-direction: column;
+    gap: 20px;
+}
+</style>

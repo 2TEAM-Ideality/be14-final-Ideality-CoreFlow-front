@@ -14,7 +14,7 @@
             <th v-for="header in headers" :key="header.key">
             {{ header.title }}
             </th>
-            <th></th> <!-- download 버튼 -->
+            <!-- download 버튼 -->
         </tr>
       </thead>
 
