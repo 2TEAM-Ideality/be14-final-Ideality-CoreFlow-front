@@ -176,6 +176,8 @@ watch(() => route.params.taskId, (newId) => {
   display: flex;
   flex-direction: column;
   gap: 24px;
+
+  margin-top : 32px;
 }
 
 .edit-icon {

@@ -22,12 +22,12 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 
-// ✅ 닉네임 가져오기 (예: 백엔드에서 불러오기 or Pinia 상태에서 가져오기)
+// 닉네임 가져오기 (예: 백엔드에서 불러오기 or Pinia 상태에서 가져오기)
 import { useUserStore } from '@/stores/userStore'
 
 const userStore = useUserStore()
 
-const fullName = `${userStore.deptName}_${userStore.jobRoleName}_${userStore.name}`
+const fullName = `${userStore.deptName}_${userStore.jobRankName}_${userStore.name}`
 
 const input = ref('')
 const textarea = ref(null)
@@ -55,8 +55,8 @@ resizeTextarea()
 <style scoped>
 
 .comment-divider {
-margin-top: 4px; /* 👈 4~8px 정도로 줄이기 */
-margin-bottom: 12px; /* 👈 아래 요소와는 적절히 띄우기 */
+margin-top: 4px;
+margin-bottom: 12px;
 height: 1px;
 background-color: #eee;
 border: none;
@@ -107,7 +107,7 @@ transition: background-color 0.2s;
 margin-top: 10px;
 display: flex;
 align-items: center;
-justify-content: flex-end; /* 👉 오른쪽 정렬 */
+justify-content: flex-end;
 gap: 10px;
 }
 </style>

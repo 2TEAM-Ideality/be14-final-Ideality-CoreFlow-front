@@ -15,7 +15,7 @@
                 class="comment-item"
             >
                 <div class="comment-header">
-                <span class="comment-writer">{{ comment.writer }}</span>
+                <span class="comment-writer">{{ comment.commentWriter }}</span>
                 </div>
 
                 <div class="comment-box">
@@ -23,12 +23,19 @@
 
                 <div class="comment-icons">
                     <img src="@/assets/icons/message.svg" alt="message" class="icon" />
-                    <button @click="toggleDropdown(comment.id)" class="icon-button">
-                    <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" />
+                    <!-- 댓글 드롭다운 열기 -->
+                    <!-- 댓글 드롭다운 열기 버튼 -->
+                    <button
+                      v-if="comment.commentWriter === currentUserName"
+                      @click="toggleDropdown(`comment-${comment.commentId}`)"
+                      class="icon-button"
+                    >
+                      <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" />
                     </button>
                 </div>
-
-                <div v-if="dropdownIndex === comment.id" class="comment-dropdown">
+                
+                <!-- 댓글 드롭다운 -->
+                <div v-if="dropdownIndex === `comment-${comment.commentId}`" class="comment-dropdown">
                     <button>댓글 수정</button>
                     <button>댓글 삭제</button>
                     <button class="highlight">공지로 등록하기</button>
@@ -37,21 +44,33 @@
 
                 <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
                     <div class="reply-header">
-                        <span class="comment-writer">ㄴ {{ reply.writer }}</span>
+                        <span class="comment-writer">ㄴ {{ reply.commentWriter }}</span>
                     </div>
 
                     <div class="comment-box">
                         <span class="comment-content">{{ reply.content }}</span>
                         <div class="comment-icons">
-                        <img src="@/assets/icons/message.svg" alt="message" class="icon" />
-                        <button @click="toggleDropdown(reply.id)" class="icon-button">
-                            <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" />
+                        <img 
+                        src="@/assets/icons/message.svg" 
+                        alt="message" 
+                        class="icon" 
+                        @click="replyTargetId = comment.commentId"/>
+                        <!-- 대댓글 드롭다운 열기 버튼 -->
+                        <button
+                          v-if="reply.commentWriter === currentUserName"
+                          @click="toggleDropdown(`reply-${reply.commentId}`)"
+                          class="icon-button"
+                        >
+                          <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" />
                         </button>
+
                         </div>
-                        <div v-if="dropdownIndex === reply.id" class="comment-dropdown">
-                        <button>댓글 수정</button>
-                        <button>댓글 삭제</button>
-                        <button class="highlight">공지로 등록하기</button>
+                        <!-- 대댓글 드롭다운 -->
+                        <!-- 대댓글에 대한 부모처리는 내일 가서 물어볼 것-->
+                        <div v-if="dropdownIndex === `reply-${reply.commentId}`" class="comment-dropdown">
+                          <button>댓글 수정</button>
+                          <button>댓글 삭제</button>
+                          <button class="highlight">공지로 등록하기</button>
                         </div>
                     </div>
                 </div>
@@ -61,45 +80,85 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
+import axios from 'axios' 
 
 const route = useRoute();
 const userStore = useUserStore();
 const taskId = ref(route.params.taskId);
 
-const comments = ref([
-{
-    id: 1,
-    writer: 'md팀_팀장_권민수',
-    content: '#세부일정1 @md팀_사원_정동환 최종 보고서 마감일 10일까지입니다.',
-    replies: []
-},
-{
-    id: 2,
-    writer: '디자인팀_팀장_Xinyu',
-    content: '#세부일정2 @디자인팀_사원_정민선 외 2인과 논의 후 일정 확정했습니다.',
-    replies: []
-},
-{
-    id: 3,
-    writer: '생산팀_팀장_장시윤',
-    content: '#세부일정3 추가 요청 사항 반영. 변경되었습니다. 부서 전달 부탁드립니다.',
-    replies: [
-    {
-        id: 31,
-        writer: '디자인팀_팀장_Xinyu',
-        content: '이거 공지로 등록하겠습니다!'
+const currentUserName = computed(() => {
+  return `${userStore.deptName}_${userStore.jobRankName}_${userStore.name}`
+});
+
+const comments = ref([]);
+const replyTargetId = ref(null);
+
+const fetchComments = async (id)=> {
+  try {
+    const res = await axios.get(`http://localhost:5000/api/comment/task/${id}`, {
+      headers: {
+        Authorization: `Bearer ${userStore.accessToken}`
+      }
+    });
+    comments.value = convertToTree(res.data.data);
+  } catch (e) {
+    console.error('댓글 조회 실패');
+  }
+};
+
+// 대댓글 부모 구조를 위한 변환
+function convertToTree(flatList) {
+  const map = {}
+  const tree = []
+
+  flatList.forEach(comment => {
+    map[comment.commentId] = { ...comment, replies: [] }
+  })
+
+  flatList.forEach(comment => {
+    const node = map[comment.commentId]
+    if (comment.parentCommentId) {
+      const parent = map[comment.parentCommentId]
+      if (parent) parent.replies.push(node)
+    } else {
+      tree.push(node)
     }
-    ]
+  })
+
+  return tree
 }
-])
+
 
 const dropdownIndex = ref(null)
+
 const toggleDropdown = (id) => {
 dropdownIndex.value = dropdownIndex.value === id ? null : id
 }
+
+const handleClickOutside = (event) => {
+
+  const dropdowns = document.querySelectorAll('.comment-dropdown, .icon-button')
+
+  const clickedInside = Array.from(dropdowns).some((el) =>
+    el.contains(event.target)
+  )
+
+  if (!clickedInside) {
+    dropdownIndex.value = null
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside)
+  fetchComments(taskId.value);
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
@@ -137,9 +196,9 @@ dropdownIndex.value = dropdownIndex.value === id ? null : id
 }
 
 .comment-list {
-  max-height: 500px;         /* 고정 높이 */
-  overflow-y: scroll;        /* ✅ 항상 스크롤바 표시 (윈도우 기준) */
-  padding-right: 6px;        /* 스크롤 너비 여유 */
+  min-height: 400px;         /* 고정 높이 */
+  overflow-y: scroll;        /* 항상 스크롤바 표시 (윈도우 기준) */
+  padding-right: 12px;        /* 스크롤 너비 여유 */
 }
 
 .comment-item {
@@ -151,7 +210,7 @@ dropdownIndex.value = dropdownIndex.value === id ? null : id
 }
 
 .comment-box {
-  position: relative; /* ✅ 드롭다운 기준 */
+  position: relative;
   display: block;
   width: 100%;
   padding: 12px 16px;
@@ -167,6 +226,7 @@ dropdownIndex.value = dropdownIndex.value === id ? null : id
   padding-right: 60px;
   word-wrap: break-word;
   white-space: pre-wrap;
+  font-size: 14px;
 }
 
 .comment-icons {
@@ -200,16 +260,15 @@ dropdownIndex.value = dropdownIndex.value === id ? null : id
 
 .comment-dropdown {
   position: absolute;
-  top: 100%;
+  top: 28px; /* 아이콘 기준 아래로 */
   right: 0;
-  margin-top: 6px;
   width: 160px;
-  z-index: 1000; /* ✅ 위에 뜨도록 충분한 값 */
   background: #fff;
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 6px;
