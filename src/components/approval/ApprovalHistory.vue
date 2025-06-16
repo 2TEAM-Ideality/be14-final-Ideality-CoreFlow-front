@@ -40,13 +40,14 @@ const emit = defineEmits(['select-approval', 'select-tab'])
 
 function selectApproval(id) {
     emit('select-approval', id)
+    emit('select-tab', currentTab.value)
 }
 function clearSelection() {
     emit('select-approval', null)
+    emit('select-tab', null)
 }
 function selectTab(type) {
     currentTab.value = type
-    emit('select-tab', type)
 }
 
 const currentTab = ref('received')
