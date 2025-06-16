@@ -17,10 +17,13 @@
         <div class="info-row">
             <!-- 프로젝트 정보 -->
             <div class="info-card">
-                <h3>프로젝트 정보</h3>
-                <p><strong>생성일:</strong> {{ data.createdDate }}</p>
-                <p><strong>시작일:</strong> {{ data.startBase }}</p>
-                <p><strong>설명:</strong> {{ data.description }}</p>
+                <h3 class="section-title">프로젝트 정보</h3>
+                <hr>
+                <div class="info-row" v-for="(item, i) in projectInfo" :key="i">
+                    <div class="info-label">{{ item.label }}</div>
+                    -
+                    <div class="info-value">{{ item.value }}</div>
+                </div>
             </div>
 
             <!-- 책임자 정보 -->
@@ -84,6 +87,23 @@ const summaryItems = computed(() => [
     }
 ])
 
+const projectInfo = computed(() => [
+    { label: '설명', value: data.value.description },
+    { label: '디렉터', value: `${data.value.director.name} / ${data.value.director.deptName} / ${data.value.director.jobRoleName}` },
+    { label: '프로젝트 생성일', value: data.value.createdDate },
+    { label: '시작 베이스라인', value: data.value.startBase },
+    { label: '마감 베이스라인', value: data.value.endBase },
+    {
+        label: data.value.status === 'PENDING' ? '예상 시작일' : '실제 시작일',
+        value: data.value.status === 'PENDING' ? data.value.startExpect : (data.value.startReal || '-')
+    },
+    {
+        label: '실제 마감일',
+        value: data.value.endReal || '-'
+    }
+])
+
+
 </script>
 
 <style scoped>
@@ -101,7 +121,7 @@ const summaryItems = computed(() => [
 
 .info-row {
     display: flex;
-    gap: 24px;
+    gap: 22px;
     justify-content: space-between;
 }
 .info-card{
@@ -110,5 +130,18 @@ const summaryItems = computed(() => [
     flex: 1;
     padding: 20px;
     border-radius: 8px;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #333;
+    min-width: 120px; /* 고정 너비 또는 flex-basis */
+}
+
+.info-value {
+    color: #666;
+    flex: 1;
+    text-align: left;
+    word-break: break-word;
 }
 </style>
