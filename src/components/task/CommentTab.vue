@@ -1,37 +1,24 @@
 <template>
     <div class="comment-tab">
         <div class="comment-filter">
-        <label># 세부일정</label>
-        <select class="select_box">
-            <option>Value</option>
-            <!-- 옵션 추가 가능 -->
-        </select>
+            <label># 세부일정</label>
+            <select class="select_box">
+                <option>Value</option>
+            </select>
         </div>
 
         <div class="comment-list">
-        <div
-            v-for="(comment, index) in comments"
-            :key="comment.id"
-            class="comment-item"
-        >
-            <div class="comment-header">
-            <span class="comment-writer">{{ comment.writer }}</span>
-            <!-- <div class="comment-actions">
-                <button @click="toggleDropdown(comment.id)">
-                <img src="@/assets/icons/ellipsis-horizontal.svg" alt="more" width="16" />
-                </button>
-                <div
-                v-if="dropdownIndex === comment.id"
-                class="comment-dropdown"
-                >
-                <button>댓글 수정</button>
-                <button>댓글 삭제</button>
-                <button class="highlight">공지로 등록하기</button>
+            <!-- 댓글 -->
+            <div
+                v-for="(comment, index) in comments"
+                :key="comment.id"
+                class="comment-item"
+            >
+                <div class="comment-header">
+                <span class="comment-writer">{{ comment.writer }}</span>
                 </div>
-            </div> -->
-            </div>
 
-            <div class="comment-box">
+                <div class="comment-box">
                 <span class="comment-content">{{ comment.content }}</span>
 
                 <div class="comment-icons">
@@ -41,30 +28,34 @@
                     </button>
                 </div>
 
-                <!-- 드롭다운 -->
-                <div
-                    v-if="dropdownIndex === comment.id"
-                    class="comment-dropdown"
-                >
+                <div v-if="dropdownIndex === comment.id" class="comment-dropdown">
                     <button>댓글 수정</button>
                     <button>댓글 삭제</button>
                     <button class="highlight">공지로 등록하기</button>
-            </div>
-</div>
+                </div>
+                </div>
 
-            <!-- 대댓글 렌더링 -->
-            <div
-            v-for="reply in comment.replies"
-            :key="reply.id"
-            class="reply-item"
-            >
-            <div class="reply-prefix">ㄴ</div>
-            <div>
-                <div class="comment-writer">{{ reply.writer }}</div>
-                <div class="comment-box">{{ reply.content }}</div>
+                <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
+                    <div class="reply-header">
+                        <span class="comment-writer">ㄴ {{ reply.writer }}</span>
+                    </div>
+
+                    <div class="comment-box">
+                        <span class="comment-content">{{ reply.content }}</span>
+                        <div class="comment-icons">
+                        <img src="@/assets/icons/message.svg" alt="message" class="icon" />
+                        <button @click="toggleDropdown(reply.id)" class="icon-button">
+                            <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" />
+                        </button>
+                        </div>
+                        <div v-if="dropdownIndex === reply.id" class="comment-dropdown">
+                        <button>댓글 수정</button>
+                        <button>댓글 삭제</button>
+                        <button class="highlight">공지로 등록하기</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            </div>
-        </div>
         </div>
     </div>
 </template>
@@ -73,7 +64,7 @@
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
-import axios from 'axios' 
+
 const route = useRoute();
 const userStore = useUserStore();
 const taskId = ref(route.params.taskId);
@@ -117,6 +108,7 @@ display: flex;
 flex-direction: column;
 gap: 40px;
 padding-left: 40px;
+padding-right: 24px;
 }
 
 .comment-filter {
@@ -134,10 +126,8 @@ font-size: 12px;
 border: 1px solid #818181;
 border-radius: 6px;
 appearance: none;
--webkit-appearance: none; /* Safari 대응 */
-
-/* 🔽 아이콘 이미지 위치 */
-background-image: url('@/assets/icons/chevron-down.svg'); /* 너가 저장한 아이콘 경로로 바꾸기 */
+-webkit-appearance: none;
+background-image: url('@/assets/icons/chevron-down.svg');
 background-repeat: no-repeat;
 background-position: right 16px center;
 background-size: 16px;
@@ -156,50 +146,42 @@ flex-direction: column;
 gap: 6px;
 }
 
-.comment-header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-}
-
-.comment-writer {
-font-size: 14px;
-}
-
 .comment-box {
-display: flex;
-justify-content: space-between;
-align-items: center;
-
-width: 100%;
-max-width: 300px;
-border: 1px solid #ddd;
-border-radius: 8px;
-padding: 12px;
-padding-top: 32px; 
-font-size: 14px;
-line-height: 1.4;
 position: relative;
+display: flex;
+flex-direction: column;
+justify-content: center;
+max-width: 100%;
+padding: 12px 16px;
+font-size: 14px;
+border: 1px solid #aaa;
+border-radius: 8px;
+line-height: 1.5;
+word-break: break-word;
+background: #fff;
+overflow: visible;
 }
 
 .comment-content {
-flex: 1;
-margin-right: 8px;
+display: block;
+padding-right: 60px; /* 아이콘 공간 확보 */
+word-wrap: break-word;
 white-space: pre-wrap;
-word-break: break-word;
 }
 
 .comment-icons {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  display: flex;
-  gap: 8px;
+position: absolute;
+top: 12px;
+right: 16px;
+display: flex;
+gap: 8px;
 }
 
 .icon {
-width: 16px;
-height: 16px;
+width: 14px;
+height: 14px;
+object-fit: contain;
+cursor: pointer;
 }
 
 .icon-button {
@@ -209,18 +191,22 @@ padding: 0;
 cursor: pointer;
 }
 
+.icon-button img {
+width: 16px;
+height: 16px;
+display: inline-block;
+}
+
 .comment-dropdown {
 position: absolute;
 top: 100%;
 right: 0;
 margin-top: 6px;
-
 background: #fff;
 border: 1px solid #ccc;
 border-radius: 6px;
 padding: 6px;
 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-
 display: flex;
 flex-direction: column;
 gap: 6px;
@@ -242,58 +228,63 @@ color: #d92d20;
 font-weight: bold;
 }
 
-.reply-item {
+.comment-header {
 display: flex;
-gap: 8px;
-margin-left: 16px;
-margin-top: 6px;
-align-items: flex-start;
+justify-content: space-between;
+align-items: center;
+}
+
+.comment-writer {
+font-size: 14px;
+font-weight: bold;
+}
+
+/* 대댓글 */
+.reply-item {
+padding-left: 24px;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.reply-header {
+display: flex;
+align-items: center;
+gap: 4px;
 }
 
 .reply-prefix {
 font-size: 16px;
-color: #888;
-line-height: 1.6;
+color: #999;
 }
 
-.comment-actions {
-position: relative;
+/* ✅ 반응형 */
+@media (max-width: 768px) {
+.comment-tab {
+padding-left: 16px;
+padding-right: 16px;
 }
 
-.comment-actions button {
-background: none;
-border: none;
-padding: 0;
-cursor: pointer;
+.comment-box {
+padding: 12px 12px;
+}
+
+.comment-content {
+padding-right: 48px;
 }
 
 .comment-dropdown {
-position: absolute;
-top: 20px;
-right: 0;
-background: #fff;
-border: 1px solid #ccc;
-border-radius: 6px;
-padding: 6px;
-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-display: flex;
-flex-direction: column;
-gap: 6px;
-z-index: 10;
+right: auto;
+left: 0;
 }
 
-.comment-dropdown button {
-background: none;
-border: none;
-font-size: 13px;
-text-align: left;
-padding: 4px 6px;
-cursor: pointer;
-color: #333;
+.comment-icons {
+top: 10px;
+right: 10px;
 }
 
-.comment-dropdown .highlight {
-color: #d92d20;
-font-weight: bold;
+.reply-item {
+padding-left: 16px;
+}
 }
 </style>

@@ -48,7 +48,6 @@
         <NoticeTab v-if="selectedTab === 'notice'" :taskId="taskId" />
     </div>
 
-    <!-- <hr class="comment-divider" /> -->
     <TaskCommentInput :taskId="taskId" />
     </div>
 </template>
@@ -192,10 +191,4 @@ const commentTabs = [
     gap: 12px;
     }
 
-    .comment-divider {
-    border: none;
-    height: 1px;
-    background-color: #eee;
-    margin: 4px 0;
-    }
 </style>

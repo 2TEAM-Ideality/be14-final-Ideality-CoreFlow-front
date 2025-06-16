@@ -29,6 +29,8 @@
         </div>
     </div>
 
+
+
     <!-- 일정 입력 그룹 -->
     <div class="row group">
         <!-- 이전 태스크 -->
@@ -50,6 +52,7 @@
         </div>
     </div>
 
+
     <div class="row group">
         <!-- 이후 태스크 -->
         <div class="field-horizontal">
@@ -67,6 +70,7 @@
             :disabled="!isEdit"
             v-model="task.selectTask.expectStartDate"
             />
+
             </div>
             <div class="field-vertical">
             <label>예상 종료일</label>
@@ -76,9 +80,11 @@
             :disabled="!isEdit"
             v-model="task.selectTask.expectEndDate"
             />
+
             </div>
         </div>
     </div>
+
 
     <div class="summary-row">
         <div class="summary-item">
@@ -108,7 +114,9 @@
     </div>
 
     </div>
+
 </template>
+
 
 <script setup>
 import { ref, watch, onMounted } from 'vue';
@@ -168,22 +176,6 @@ watch(() => route.params.taskId, (newId) => {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-@media (max-width: 1279px) {
-  .task-info-box {
-    padding: 16px;
-  }
-  .group {
-    flex-direction: column;
-  }
-  .summary-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
 }
 
 .edit-icon {
@@ -210,9 +202,9 @@ watch(() => route.params.taskId, (newId) => {
 }
 
 .department-input-box {
-  width: 100%;
-  max-width: 600px;
+  flex: 1;
 }
+
 .department-input {
   width: 100%;
   padding: 8px 10px;
@@ -224,9 +216,9 @@ watch(() => route.params.taskId, (newId) => {
 }
 
 .description-box {
-  width: 100%;
-  max-width: 600px;
+  flex: 1;
 }
+
 .task-textarea {
   width: 100%;
   height: 100px;
@@ -236,12 +228,6 @@ watch(() => route.params.taskId, (newId) => {
   font-size: 14px;
   line-height: 1.5;
   resize: vertical;
-  box-sizing: border-box;
-}
-
-.input,
-.textarea {
-  width: 100%;
   box-sizing: border-box;
 }
 
@@ -255,18 +241,10 @@ watch(() => route.params.taskId, (newId) => {
   align-items: center;
 }
 
-.row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.row label {
-  min-width: 80px;
-  font-size: 14px;
-}
-
-.input, .textarea {
+.input,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
   border: 1px solid #aaa;
   border-radius: 6px;
   padding: 6px 10px;
@@ -274,44 +252,52 @@ watch(() => route.params.taskId, (newId) => {
 }
 
 .input {
-  width: 100%;
-  max-width: 220px;
+  height: 32px;
 }
 
 .textarea {
-  flex: 1;
-  height: 60px;
   resize: vertical;
 }
 
+/* 🔥 일정 입력 그룹 전체를 flex row로 정리 */
 .group {
   display: flex;
-  flex-wrap: nowrap; /* 줄바꿈 방지 */
-  gap: 32px;
+  flex-direction: row;
   justify-content: flex-start;
-  margin-top: 8px;
   align-items: flex-start;
+  gap: 32px;
+  flex-wrap: nowrap;
 }
 
+/* 🔥 이전/이후 태스크 라벨 + 인풋 */
 .field-horizontal {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 250px;
+  flex: 1;
+  min-width: 200px;
 }
 
+.field-horizontal label {
+  white-space: nowrap;
+  font-size: 14px;
+  min-width: 80px;
+}
+
+/* 🔥 날짜 영역을 flex로 정리 */
+.date-group {
+  display: flex;
+  gap: 24px;
+  flex: 2;
+}
+
+/* 🔥 시작/종료일 하나의 박스 */
 .field-vertical {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 200px;
-  margin-top: -28px;
-}
-
-.date-group {
-  display: flex;
-  gap: 30px;
-  margin-left: 90px;
+  flex: 1;
+  margin-top: 0;
 }
 
 .summary-row {
@@ -357,5 +343,46 @@ watch(() => route.params.taskId, (newId) => {
 }
 .black {
   color: #000;
+}
+
+/* ✅ 반응형 스타일 */
+@media (max-width: 768px) {
+  .task-info-box {
+    padding: 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .group {
+    flex-direction: column;
+  }
+
+  .field-horizontal {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .date-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .field-vertical {
+    width: 100%;
+  }
+
+  .summary-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-right: 0;
+  }
+
+  .summary-box {
+    width: 100%;
+  }
 }
 </style>
