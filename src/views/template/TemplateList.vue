@@ -11,7 +11,7 @@
             :filter-label="selectedDept || '부서 전체'"
             :sort-label="sortLabel"
             :dept-list="allDepts"
-            placeholder="템플릿 이름 검색"
+            :placeholder="placeholderMsg"
             @filter-click="handleDeptFilter"  
             @sort-click="toggleSort"
           />
@@ -74,6 +74,7 @@ const searchQuery = ref('')
 const sortLabel = ref('오름차순')
 const selectedDept = ref('부서 전체')
 const allDepts = ref([])  // 부서 전체 목록
+const placeholderMsg = ref("템플릿 이름 검색")
 
 
 
