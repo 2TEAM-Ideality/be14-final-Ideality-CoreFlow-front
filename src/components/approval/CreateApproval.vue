@@ -2,7 +2,10 @@
     <div class="content-box">
         <div class="left-area">
             <div>
-                <div class="content-title">결재 제목</div>
+                <div class="title-area">
+                    <div class="content-title">결재 제목</div>
+                    <span class="not-null">⚹</span>
+                </div>
                 <input 
                 class="input-box"
                 v-model="title"
@@ -12,7 +15,10 @@
             <div class="two-space">
                 <!-- 프로젝트 드롭다운 -->
                 <div class="box">
-                    <div class="content-title">해당 프로젝트</div>
+                    <div class="title-area">
+                        <div class="content-title">해당 프로젝트</div>
+                        <span class="not-null">⚹</span>
+                    </div>
                     <select v-model="selectedProjectId" id="project" class="input-box">
                         <option 
                             v-for="project in projectList" 
@@ -25,8 +31,11 @@
                 </div>
                 <!-- 태스크 드롭다운 -->
                 <div class="box">
-                    <div class="content-title">해당 태스크</div>
-                    <select v-model="selectedTaskId" id="task" class=input-box :disabled="!selectedProjectId">
+                    <div class="title-area">
+                        <div class="content-title">해당 태스크</div>
+                        <span class="not-null">⚹</span>
+                    </div>
+                        <select v-model="selectedTaskId" id="task" class=input-box :disabled="!selectedProjectId">
                         <option
                         v-for="task in filteredTaskList"
                         :key="task.id"
@@ -39,7 +48,10 @@
             </div>
             <div>
                 <!-- 구분 드롭다운 -->
-                <div class="content-title">구분</div>
+                <div class="title-area">
+                    <div class="content-title">구분</div>
+                    <span class="not-null">⚹</span>
+                </div>
                 <select v-model="approvalType" id="type" class="input-box">
                     <option
                         v-for="type in approvalTypeList"
@@ -54,7 +66,10 @@
             <div v-if="isDelay" class="two-space">
                 <div>
                     <!-- 지연 사유 리스트 -->
-                    <div class="content-title">지연 사유</div>
+                    <div class="title-area">
+                        <div class="content-title">지연 사유</div>
+                        <span class="not-null">⚹</span>
+                    </div>
                     <select v-model="selectedDelayReasonId" id="delayReason" class="input-box">
                         <option
                             v-for="delayReason in delayResons"
@@ -66,12 +81,18 @@
                     </select>
                 </div>
                 <div>
-                    <div class="content-title">태스크 지연일</div>
+                    <div class="title-area">
+                        <div class="content-title">태스크 지연일</div>
+                        <span class="not-null">⚹</span>
+                    </div>
                     <input class="input-box" v-model="delayDays" type="number"/>
                 </div>
             </div>
             <div>
-                <div class="content-title">상세 내용</div>
+                <div class="title-area">
+                    <div class="content-title">상세 내용</div>
+                    <span class="not-null">⚹</span>
+                </div>
                 <textarea  
                 class="input-box" 
                 v-model="content" 
@@ -79,7 +100,10 @@
                 ></textarea>
             </div>
             <div v-if="isDelay">
-                <div class="content-title">조치 내용</div>
+                <div class="title-area">
+                    <div class="content-title">조치 내용</div>
+                    <span class="not-null">⚹</span>
+                </div>
                 <textarea  
                 class="input-box" 
                 v-model="actionDetail" 
@@ -87,7 +111,9 @@
                 ></textarea>
             </div>
             <div>
-                <div class="content-title">첨부 파일</div>
+                <div class="title-area">
+                    <div class="content-title">첨부 파일</div>
+                </div>
                 <input
                     type="file"
                     id="fileInput"
@@ -101,7 +127,10 @@
         <div class="right-area">
             <div class="participant-box">
                 <div class="sub-area">
-                    <div class="participant-title">결재자</div>
+                    <div class="title-area">
+                        <div class="participant-title">결재자</div>
+                        <span class="not-null">⚹</span>
+                    </div>
                     <button @click="openModal('approver')">조회</button>
                 </div>
                 <div class="approval-participant">
@@ -134,13 +163,16 @@
                         </li>
                     </ul>
                 </div>
-                <div>{{ selectedApprover }}</div>
-                <div>{{ selectedViewers }}</div>
             </div>
         </div>
     </div>
     <div style="display:flex; justify-content: end;">
-        <button class="create-btn">보내기</button>
+        <button 
+            class="create-btn" 
+            @click="createApproval"
+        >
+            보내기
+        </button>
     </div>
     <ParticipantSelectModal
         v-if="showModal"
@@ -168,43 +200,20 @@ const approvalTypeList = [ '일반', '산출물', '지연' ]
 const projectIds = ref([])
 // 참여자 리스트
 const participantList = ref([])
+const filteredParticipants = computed(() => {
+    if (!selectedProjectId.value) return []
+    return participantList.value[selectedProjectId.value] || null
+})
 const filteredUserListForModal = computed(() => {
     if (modalType.value === 'viewer' && selectedApprover.value) {
-        return userList.value.filter(user => user.id !== selectedApprover.value.id) 
+        console.log('filterUserList', filteredParticipants.value)
+        return filteredParticipants.value.filter(user => user.id !== selectedApprover.value.id) 
     }
-    return userList.value
+    return filteredParticipants.value
 })
 // 테스트용
 const showModal = ref(false)
 const modalType = ref('') // 'approver','viewer'
-const userList = ref([
-    {id: 1, name:'test1'},
-    {id: 2, name: 'test2'},
-    {id: 3, name: 'test3'},
-    {id: 4, name: 'test4'},
-    {id: 5, name: 'test5'},
-    {id: 6, name: 'test6'},
-    {id: 7, name: 'test7'},
-    {id: 8, name: 'test8'},
-    {id: 9, name: 'test9'},
-    {id: 10, name: 'test10'},
-    {id: 11, name: 'test11'},
-    {id: 12, name: 'test12'},
-    {id: 13, name: 'test13'},
-    {id: 14, name: 'test14'},
-    {id: 15, name: 'test15'},
-    {id: 16, name: 'test16'},
-    {id: 17, name: 'test17'},
-    {id: 18, name: 'test18'},
-    {id: 19, name: 'test19'},
-    {id: 20, name: 'test20'},
-    {id: 21, name: 'test21'},
-    {id: 22, name: 'test22'},
-    {id: 23, name: 'test23'},
-    {id: 24, name: 'test24'},
-    {id: 25, name: 'test25'},
-    {id: 26, name: 'test26'}
-])
 
 // 결재자, 참조자
 const selectedApprover = ref(null)
@@ -239,13 +248,41 @@ const title = ref('')
 const selectedProjectId = ref(null)
 const selectedTaskId = ref(null)
 const approvalType = ref('')
+const approvalTypeMap = {
+    '일반': 'GENERAL',
+    '산출물': 'DELIVERABLE',
+    '지연': 'DELAY'
+}
 const selectedDelayReasonId = ref(null)
-const delayDays = ref(null)
 const content = ref('')
+
+// type이 DELAY일 경우에만 필수
+const delayDays = ref(null)
 const actionDetail = ref('')
 const selectedFiles = ref([])
 
 const isDelay = computed(() => approvalType.value === '지연')
+
+const isFormValid = computed(() => {
+    const type = approvalTypeMap[approvalType.value]
+
+    const baseValid = 
+        title.value.trim() &&
+        content.value.trim() &&
+        selectedProjectId.value !== null &&
+        selectedTaskId.value !== null &&
+        type &&
+        selectedApprover.value?.id
+
+    const delayValid = 
+        type !== 'DELAY' || (
+            delayDays.value !== null &&
+            selectedDelayReasonId.value !== null &&
+            actionDetail.value.trim()
+        )
+    
+    return baseValid && delayValid
+})
 
 function handleFileChange(event) {
     const files = Array.from(event.target.files)
@@ -264,14 +301,63 @@ onMounted(async() => {
     taskList.value = taskResponse.data.data
 
     // 참여자에서 결재자, 참조자 설정
+    const participantResponse = await api.post('/api/projects/participants/list', {
+        projectIds: projectIds.value
+    })
+    participantList.value = participantResponse.data.data
     // Map<Long, User> 형태로 받을 것 프로젝트 ids로 참여자 조회해오기
 })
+
+async function createApproval() {
+    if (!isFormValid.value) {
+        alert('입력하지 않은 영역이 있습니다.')
+        return
+    }
+    const formData = new FormData();
+
+    formData.append('title', title.value)
+    formData.append('projectId', selectedProjectId.value)
+    formData.append('taskId', selectedTaskId.value)
+    formData.append('type', approvalTypeMap[approvalType.value])
+    formData.append('content', content.value)
+    formData.append('approverId', selectedApprover.value.id)
+    
+    selectedViewers.value.forEach(viewer => {
+        formData.append('viewerIds', viewer.id)
+    })
+
+    if (selectedFiles.value && selectedFiles.value.length > 0) {
+        selectedFiles.value.forEach(file => {
+            formData.append('attachment', file)
+        })
+    }
+
+    if (approvalTypeMap[approvalType.value] === 'DELAY') {
+        formData.append('delayDays', delayDays.value)
+        formData.append('delayReasonId', selectedDelayReasonId.value)
+        formData.append('actionDetail', actionDetail.value)
+    }
+
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value)
+    }
+
+    try {
+        const response = await api.post('/api/approval/request', formData)
+
+        alert(response.data.message)
+    } catch (error) {
+        if (error.response) {
+            console.error('에러 응답:', error.response.data);
+            alert(error.response.data.message);
+        }
+    }
+}
 </script>
 
 <style scoped>
     .content-box {
         padding-left: 18px;
-        border: 1px solid black;
         height: 90%;
         display: flex;
     }
@@ -308,7 +394,6 @@ onMounted(async() => {
     }
     .right-area {
         flex: 1;
-        border: 1px solid black;
         display: flex;
         flex-direction: column;
         align-items: end;
@@ -337,5 +422,14 @@ onMounted(async() => {
     }
     .viewer-list-dropdown ul {
         list-style: none;
+    }
+    .title-area {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+    .not-null {
+        color: red;
+        font-weight: bold;
     }
 </style>
