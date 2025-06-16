@@ -1,4 +1,7 @@
 <template>
+  <div class="text-grey text-body-2 mb-4" style="text-align: left;">
+        템플릿 &gt; 템플릿 생성 &gt; 템플릿 편집
+  </div>
   <div class="template-layout">
     <!-- 왼쪽: main -->
     <div class="template-main">
@@ -15,19 +18,20 @@
 <style scoped>
 .template-layout {
   display: grid;
-  grid-template-columns: 7fr 3fr; /* 7:3 비율 */
-  /* gap: 40px; */
-  /* padding: 40px 60px; */
-  padding: 40px 0;
+  grid-template-columns: 9fr 3fr; 
+  padding-left: 15%;
+  padding-right: 15%;
+  padding-top : 5%;
+  padding-bottom: 5%;
 }
 
 .template-main {
   min-width: 0;
-  /* background-color: yellow; */
+  padding-right: 8%;
 }
 
 .template-sidebar {
-  padding: 0 2%;
+  padding-left: 15%;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
 }
 </style>

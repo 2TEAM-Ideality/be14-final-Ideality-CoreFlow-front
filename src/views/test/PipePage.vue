@@ -1,73 +1,90 @@
 <script setup>
-import { nextTick, ref } from 'vue'
+import { nextTick, ref , watch, onMounted } from 'vue'
 import { Panel, VueFlow, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
-import Icon from './Icon.vue'
 import CustomNode from './CustomNode.vue'
 import '@/assets/vue-flow-style.css'
-import { useRouter} from 'vue-router';
-
-// import { initialEdges, initialNodes } from './initial-elements.js'
-import { initialEdges, initialNodes } from './test-elements.js'
+import { useRouter } from 'vue-router';
 import { useLayout } from './useLayout'
+import NodeEditModal from '@/components/common/NodeEditModal.vue'
+import api from '@/api.js'
+import { nanoid } from 'nanoid' 
 
 const props = defineProps({
-  templateName: {
-    type: String,
+  nodes: {
+    type: Array,
+    required: true
+  },
+  edges: {
+    type: Array,
     required: true
   }
 })
+const emit = defineEmits(['save']) // 
+const templateName = defineModel('templateName')
 
+const { zoomTo, fitView, onPaneReady } = useVueFlow()
 
+onPaneReady(() => {
+  zoomTo(0.8)
+})
 
 const router = useRouter() 
-
-const nodes = ref(initialNodes.map(n => ({
-  ...n,
-  position: { x: 0, y: 0 }  // ❗ 모든 노드에 기본값 주기
-})))
-const edges = ref(initialEdges)
+const { layout } = useLayout()
 const nodeTypes = { custom: CustomNode }
 
+const nodes = ref(props.nodes.map(n => ({
+  ...n,
+  position: n.position ?? { x: 0, y: 0 }
+})))
+
+const edges = ref([...props.edges])
 const selectedNode = ref(null)
 const showModal = ref(false)
+const duration = ref(0)  // 총 소요일
+const taskCount = ref(0)  // 전체 태스크 개수 
 
-const { layout } = useLayout()
-const { fitView } = useVueFlow()
+const deptList = ref([])
+
+onMounted(() => {
+  fetchDeptList()
+  
+})
+
+// 부서 목록 가져오기
+const fetchDeptList = async () => {
+  const res = await api.get('/api/dept/all')
+  deptList.value = res.data.data;
+  console.log('부서 목록', res)
+}
+
 
 function onConnect({ source, target }) {
   if (!source || !target) return
 
   const id = `e-${source}-${target}-${Date.now()}`
-  edges.value.push({
-    id,
-    source,
-    target,
-    type: 'default'
-  })
+  edges.value.push({ id, source, target, type: 'default' })
 }
 
-// 노드 위치 재배치
 async function layoutGraph(direction) {
   nodes.value = layout(nodes.value, edges.value, direction)
   nextTick(() => fitView())
 }
 
-// + 버튼으로 노드 추가
 function onAddNode(parentId) {
   const parent = nodes.value.find(n => n.id === parentId)
   if (!parent) return
 
-  const newId = `node-${Date.now()}`
+  const newId = nanoid(6)
   const newNode = {
     id: newId,
     type: 'custom',
     position: {
       x: parent.position.x + 250,
-      y: parent.position.y
+      y: parent.position.y + 100,
     },
     data: {
-      label: '',
+      label: `새 태스크`,
       description: '',
       deptList: [],
       duration: null,
@@ -84,36 +101,45 @@ function onAddNode(parentId) {
   })
 }
 
-// 노드 클릭 시 모달 오픈
+function onCreateNewNode() {
+  const newId = nanoid(6)
+  const newNode = {
+    id: newId,
+    type: 'custom',
+    position: { x: 100, y: 100 + nodes.value.length * 120 },
+    data: {
+      label: `새 태스크`,
+      description: '',
+      deptList: [],
+      duration: null,
+      slackTime: null
+    }
+  }
+  nodes.value.push(newNode)
+}
+
 function onNodeClick(nodeId) {
   const node = nodes.value.find(n => n.id === nodeId)
   if (node) {
-    const cloned = JSON.parse(JSON.stringify(node))
-    cloned.data.deptListString = cloned.data.deptList?.join(', ') ?? ''
-    selectedNode.value = cloned
+    selectedNode.value = JSON.parse(JSON.stringify(node))
     showModal.value = true
   }
 }
 
 
-// 저장 시 실제 노드 데이터 업데이트
-function saveNodeData() {
-  const index = nodes.value.findIndex(n => n.id === selectedNode.value.id)
+function saveNodeDataFromChild(updatedNode) {
+  const index = nodes.value.findIndex(n => n.id === updatedNode.id)
   if (index !== -1) {
-    const updated = { ...selectedNode.value.data }
-    updated.deptList = updated.deptListString
-      ? updated.deptListString.split(',').map(s => s.trim()).filter(Boolean)
-      : []
-    delete updated.deptListString
+    const updatedData = {
+      ...updatedNode.data
+    }
+    delete updatedData.deptListString
 
-    // ✅ 완전히 새로운 객체로 할당 (Vue의 반응성 시스템이 감지하게끔)
-    const oldNode = nodes.value[index]
     const newNode = {
-      ...oldNode,
-      data: { ...updated }
+      ...nodes.value[index],
+      data: { ...updatedData }
     }
 
-    // 🔁 강제 재할당 (얕은 복사 아닌 새 배열로 할당해야 Vue가 갱신)
     nodes.value = [
       ...nodes.value.slice(0, index),
       newNode,
@@ -126,150 +152,185 @@ function saveNodeData() {
 
 
 
-// 전체 저장
+// 소요일 계산
+function calculateTotalDuration(nodeList, edgeList) {
+  const nodeMap = new Map(nodeList.map(n => [n.id, n]))
+  const adj = new Map()
+  const inDegree = new Map()
+
+  nodeList.forEach(n => {
+    adj.set(n.id, [])
+    inDegree.set(n.id, 0)
+  })
+
+  edgeList.forEach(edge => {
+    adj.get(edge.source).push(edge.target)
+    inDegree.set(edge.target, inDegree.get(edge.target) + 1)
+  })
+
+  const queue = []
+  const durationMap = new Map()
+
+  // 초기 노드 설정
+  nodeList.forEach(node => {
+    const id = node.id
+    const baseDuration = Number(node.data.duration || 0)
+    const slack = Number(node.data.slackTime || 0)
+    if (inDegree.get(id) === 0) {
+      queue.push(id)
+      durationMap.set(id, baseDuration + slack)
+    } else {
+      durationMap.set(id, 0)
+    }
+  })
+
+  // 위상 정렬 + 경로 누적 시간 계산
+  while (queue.length > 0) {
+    const current = queue.shift()
+    const currentDuration = durationMap.get(current)
+
+    adj.get(current).forEach(next => {
+      const nextNode = nodeMap.get(next)
+      const base = Number(nextNode.data.duration || 0)
+      const slack = Number(nextNode.data.slackTime || 0)
+      const newDuration = currentDuration + base + slack
+
+      durationMap.set(next, Math.max(durationMap.get(next), newDuration))
+
+      inDegree.set(next, inDegree.get(next) - 1)
+      if (inDegree.get(next) === 0) {
+        queue.push(next)
+      }
+    })
+  }
+
+  return Math.max(...durationMap.values())
+}
+
+
+
 function exportTemplateData() {
-  // 현재 노드 목록에서 deptListString은 제외하고 저장
-  // const nodeList = nodes.value.map(n => ({
-  //   ...n,
-  //   data: {
-  //     ...n.data,
-  //     deptListString: undefined
-  //   }
-  // }))
   const nodeList = nodes.value.map(({ data, id, type, position }) => ({
     id,
     type,
-    position, // 자동 계산된 위치
+    position,
     data: { ...data }
   }))
 
   const edgeList = edges.value
+  const duration = calculateTotalDuration(nodeList, edgeList)
+  const taskCount = nodeList.length
 
-  const payload = { nodeList, edgeList }
+  // 🔍 콘솔에 출력
+  console.log('📦 Exported Template Data')
+  console.log('노드 목록:', nodeList)
+  console.log('간선 목록:', edgeList)
+  console.log('총 소요일:', duration)
+  console.log('태스크 수:', taskCount)
 
-  // ✅ 콘솔에 현재 상태 출력
-  console.log('%c📦 현재 저장되는 노드/엣지 상태:', 'color: #10b981; font-weight: bold;')
-  console.log(JSON.stringify(payload, null, 2))
-}
-
-// 노드 삭제 시 엣지 삭제
-function deleteNode(nodeId) {
-  // 1. 해당 노드를 삭제
-  nodes.value = nodes.value.filter(n => n.id !== nodeId)
-
-  // 2. 해당 노드와 연결된 엣지를 삭제
-  edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
-}
-
-// 노드 연결 정보 업데이트 
-function updateEdge(edgeId, newTargetId) {
-  const index = edges.value.findIndex(e => e.id === edgeId)
-  if (index !== -1) {
-    edges.value[index].target = newTargetId
+  // 유효성 검사
+  if (taskCount === 0) {
+    alert('최소 하나 이상의 태스크가 필요합니다.')
+    return
   }
+
+  if (nodeList.some(n => !n.data.duration)) {
+    alert('모든 태스크에 소요일(duration)을 입력해주세요.')
+    return
+  }
+
+  const payload = {
+    name: props.templateName,
+    description: props.templateDescription,
+    updatedBy: props.updatedBy,
+    duration,
+    taskCount,
+    nodeList,
+    edgeList
+  }
+
+  emit('save', payload)
 }
+
 
 
 async function handleNodesInitialized() {
-  // 1. 렌더링 이후 한 프레임 기다리기
   await nextTick()
   requestAnimationFrame(() => {
-    layoutGraph('LR')  // 정확한 dimensions 기준으로 layout 적용
+    layoutGraph('LR')
   })
 }
 
+watch(() => props.nodes, (newVal) => {
+  nodes.value = newVal.map(n => ({
+    ...n,
+    position: n.position ?? { x: 0, y: 0 }
+  }))
+}, { immediate: true })
+
+watch(() => props.edges, (newVal) => {
+  edges.value = [...newVal]
+}, { immediate: true })
+
 </script>
 
-
 <template>
-    
-    <div class="layout-flow">
-      <VueFlow
-        :nodes="nodes"
-        :edges="edges"
-        :node-types="nodeTypes"
-        :connectable="true"
-        @connect="onConnect"
-        @nodes-initialized="handleNodesInitialized"
-      >
-        <template #node-custom="{ id, data }">
+  <div class="layout-flow">
+    <VueFlow
+      :nodes="nodes"
+      :edges="edges"
+      :node-types="nodeTypes"
+      :connectable="true"
+      @connect="onConnect"
+      @nodes-initialized="handleNodesInitialized"
+    >
+      <template #node-custom="{ id, data }">
         <CustomNode :id="id" :data="data" @addNode="onAddNode" @click="() => onNodeClick(id)" />
-        </template>
-  
-        <Background />
-        <Panel position="top-left" class="left-panel">
+      </template>
 
-            <v-text-field
-              label="템플릿 이름"
-              v-model="props.templateName"
-              variant="outlined"
-              hide-details
-              density="comfortable"
-              class="w-100"
-               style="min-width: 280px; max-width: 400px;"
-            />
-        </Panel>
+      <Background />
+      <Panel position="top-left" class="left-panel">
+        <v-text-field
+          label="템플릿 이름"
+          v-model="props.templateName"
+          variant="outlined"
+          hide-details
+          density="comfortable"
+          class="w-100"
+          style="min-width: 280px; max-width: 400px;"
+        />
+      </Panel>
 
-        <Panel class="process-panel" position="top-right">
-          <div class="layout-panel">
-            <button title="새로운 태스크 생성" @click="layoutGraph('LR')">
-              ➕ 새로운 태스크 생성
-            </button>
-            <button title="전체 저장" @click="exportTemplateData">
+      <Panel class="process-panel" position="top-right">
+        <div class="layout-panel">
+          <button title="새로운 태스크 생성" @click="onCreateNewNode">
+            ➕ 새로운 태스크 생성
+          </button>
+          <button title="정렬" @click="layoutGraph('LR')">
+            ↔️ 정렬
+          </button>
+          <button title="전체 저장" @click="exportTemplateData">
             💾 편집 완료
-            </button>
-            <!-- <button title="set vertical layout" @click="layoutGraph('LR')"></button>
-              <Icon name="vertical" />
-            </button> -->
-            <!-- <button title="set vertical layout" @click="layoutGraph('TB')">
-              <Icon name="vertical" />
-            </button> -->
-             <button title="편집 취소" @click="router.back()">
+          </button>
+          <button title="편집 취소" @click="router.back()">
             ↙️
-            </button>
-          </div>
-        </Panel>
-      </VueFlow>
-  
-      <!-- 편집 모달 -->
-      <div v-if="showModal" class="modal-backdrop">
-        <div class="modal">
-            <h3 class="modal-title">노드 정보 수정</h3>
-
-            <div class="input-group">
-            <label for="label">Label</label>
-            <input id="label" v-model="selectedNode.data.label" placeholder="Label" />
-            </div>
-
-            <div class="input-group">
-            <label for="description">설명</label>
-            <input id="description" v-model="selectedNode.data.description" placeholder="설명" />
-            </div>
-
-            <div class="input-group">
-            <label for="duration">소요일 (일)</label>
-            <input id="duration" v-model.number="selectedNode.data.duration" type="number" placeholder="소요일 (숫자)" />
-            </div>
-
-            <div class="input-group">
-            <label for="slackTime">슬랙 타임 (일)</label>
-            <input id="slackTime" v-model.number="selectedNode.data.slackTime" type="number" placeholder="슬랙 타임 (숫자)" />
-            </div>
-
-            <div class="input-group">
-            <label for="deptList">담당 부서</label>
-            <input id="deptList" v-model="selectedNode.data.deptListString" placeholder="담당 부서 (쉼표 구분)" />
-            </div>
-
-            <div class="modal-actions">
-            <button @click="saveNodeData">저장</button>
-            <button @click="showModal = false">취소</button>
-            </div>
+          </button>
         </div>
-        </div>
+      </Panel>
+    </VueFlow>
 
+    <div v-if="showModal" class="modal-backdrop">
+      <NodeEditModal
+        :show="showModal"
+        :nodeData="selectedNode"
+        :deptList="deptList"
+        @save="saveNodeDataFromChild"
+        @close="showModal = false"
+      />
     </div>
-  </template>
+  </div>
+</template>
+
   
 <style scoped>
 
