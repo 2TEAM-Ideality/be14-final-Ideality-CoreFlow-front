@@ -22,7 +22,7 @@
     "@vue-flow/node-toolbar": "^1.1.1",
     "axios": "^1.9.0",
     "dayjs": "^1.11.13",
-    "html2canvas": "^1.4.1",
+    "chart.js": "^4.5.0",
     "jose": "^6.0.11",
     "ldrs": "^1.1.7",
     "lodash": "^4.17.21",

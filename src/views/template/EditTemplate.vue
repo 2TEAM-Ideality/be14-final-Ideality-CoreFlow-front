@@ -2,7 +2,7 @@
 import BasicLayout from '@/components/layout/BasicLayout.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api from '@/util/api.js'
+import api from '@/api.js'
 import { VueFlow } from '@vue-flow/core'
 import { useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'

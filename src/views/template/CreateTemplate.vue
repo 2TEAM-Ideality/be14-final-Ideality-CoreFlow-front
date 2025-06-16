@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BasicLayout from '@/components/layout/BasicLayout.vue';
-import api from '@/util/api';
+import api from '@/api';
 import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import SelectProjectModal from '@/components/template/SelectProjectModal.vue'
 import { VueFlow } from '@vue-flow/core'

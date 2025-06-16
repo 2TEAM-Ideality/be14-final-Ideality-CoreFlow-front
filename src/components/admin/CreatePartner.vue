@@ -43,7 +43,7 @@
 
 <script setup>
     import { ref, onMounted, nextTick, computed } from 'vue'
-    import api from '@/util/api'
+    import api from '@/api'
     import LoadingModal from '@/components/common/LoadingModal.vue';
 
     const nameInput = ref('')

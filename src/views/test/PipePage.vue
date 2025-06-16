@@ -7,7 +7,7 @@ import '@/assets/vue-flow-style.css'
 import { useRouter } from 'vue-router';
 import { useLayout } from './useLayout'
 import NodeEditModal from '@/components/common/NodeEditModal.vue'
-import api from '@/util/api.js'
+import api from '@/api.js'
 import { nanoid } from 'nanoid' 
 
 const props = defineProps({

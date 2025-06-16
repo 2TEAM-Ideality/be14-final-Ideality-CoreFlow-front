@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api from '@/util/api.js'
+import api from '@/api.js'
 import PipePage from '@/views/test/PipePage.vue'
 import { useUserStore } from '@/stores/userStore'
 

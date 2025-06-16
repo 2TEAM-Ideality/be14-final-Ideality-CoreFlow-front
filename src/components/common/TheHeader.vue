@@ -58,7 +58,7 @@ import { useRouter } from 'vue-router'
 import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
 import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
 import { useNotifications } from '@/components/common/useNotifications.js'
-import api from '@/util/api.js'
+import api from '@/api.js'
 
 const router = useRouter()
 const userStore = useUserStore()

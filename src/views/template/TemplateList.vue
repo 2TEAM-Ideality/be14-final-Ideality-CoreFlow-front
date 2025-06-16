@@ -55,7 +55,7 @@
 import ListLayout from '@/components/layout/ListLayout.vue';
 import TemplateCard from '@/components/template/TemplateCard.vue';
 import SearchBar from '@/components/common/SearchBar.vue'
-import api from '@/util/api.js';
+import api from '@/api.js';
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore' 

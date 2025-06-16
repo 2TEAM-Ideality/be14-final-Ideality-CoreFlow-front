@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NodeToolbar } from '@vue-flow/node-toolbar'
 import { useRoute } from 'vue-router'
-import api from '@/util/api' 
+import api from '@/api' 
 
 
 const route = useRoute()

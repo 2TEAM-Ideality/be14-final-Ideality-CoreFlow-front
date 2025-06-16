@@ -32,7 +32,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import api from '@/util/api.js'
+import api from '@/api.js'
 import BreadCrumb from '@/components/common/BreadCrumb.vue'
 
 const route = useRoute()

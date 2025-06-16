@@ -63,7 +63,7 @@ import TaskNode from '@/components/flow/TaskNode.vue'
 import '@/assets/vue-flow-style.css'
 import { useRouter, useRoute } from 'vue-router'
 import { useLayout } from '@/views/test/useLayout'
-import api from '@/util/api.js'
+import api from '@/api.js'
 import { markRaw } from 'vue'
 import dagre from '@dagrejs/dagre'
 
