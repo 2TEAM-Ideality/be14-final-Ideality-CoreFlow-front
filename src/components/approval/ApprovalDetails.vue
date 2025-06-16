@@ -18,7 +18,7 @@
                     <br/>
                     <div class="info-box">
                         <div class="info-title">구분:</div>
-                        <div>{{ approvalData.type }}</div>
+                        <div>{{ approvalTypeMap[approvalData.type] }}</div>
                     </div>
                     <div class="info-box" v-if="approvalData.type === 'DELAY'">
                         <div class=info-title>지연 사유:</div>
@@ -49,6 +49,9 @@
 <script setup>
     import { ref, computed, onMounted, watch } from 'vue'
     import api from '@/api'
+    import { useUserStore } from '@/stores/userStore'
+    
+    const userStore = useUserStore();
 
     const emit = defineEmits(['close'])
     
@@ -57,6 +60,16 @@
     })
 
     const approvalData = ref(null)
+
+    const approvalTypeMap = {
+        'GENERAL': '일반',
+        'DELIVERABLE': '산출물',
+        'DELAY': '지연'
+    }
+
+    const isApprover = computed(() => {
+
+    })
 
     // 승인자 열람자 계산
     const approvers = computed(() => {
