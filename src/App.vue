@@ -86,6 +86,7 @@ provide('closeNotificationSidebar', closeNotificationSidebar)
     <NotificationSidebar />
     <VMain class="main-content">
       <RouterView />
+      <router-link to="/project/detail/gantt">간트차트</router-link>
     </VMain>
   </VApp>
 </template>
