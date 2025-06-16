@@ -124,6 +124,7 @@ watch(
   padding: 30px 60px;
   border-radius: 8px;
   width: 500px;
+  z-index: 1000;
 }
 .modal input {
   margin-bottom: 10px;
