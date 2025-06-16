@@ -2,9 +2,11 @@
 import {computed} from 'vue'
 // import {format} from 'date-fns'
 import DonutChart from '@/components/common/DonutChart.vue'
+import profileDummy from '@/assets/profileDummy.png'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
 
 const onGoToDetail = () => {
     router.push(`/project/${props.project.id}`) 
@@ -109,7 +111,7 @@ const delayDays = computed(() => props.project.delayDays || 0)
         <div class="card-middle">
             <div class="pm-profile">
                 <v-avatar size="40" class="pm-avatar">
-                    <img :src="project.director.profileImage" alt="프로필 이미지">
+                    <img :src="project.director.profileImage || profileDummy" alt="프로필 이미지">
                 </v-avatar>
             </div>
             <div class="pm-info">
@@ -197,6 +199,7 @@ const delayDays = computed(() => props.project.delayDays || 0)
     flex: 1;
     display: flex;
     flex-direction: row;
+    gap :15px;
 }
 
 .pm-info {

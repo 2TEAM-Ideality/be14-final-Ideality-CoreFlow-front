@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NodeToolbar } from '@vue-flow/node-toolbar'
 import { useRoute } from 'vue-router'
@@ -25,7 +25,7 @@ onBeforeUnmount(() => {
 
 
 
-const props = defineProps(['data', 'id'])
+const props = defineProps(['data', 'id', 'showFullscreenView'])
 const emit = defineEmits(['addNode', 'click', 'openMenu'])
 
 const handleGlobalClick = (e) => {
@@ -152,6 +152,8 @@ const iconColor = computed(() => colorMap[status.value])
 const backgroundColor = computed(() => backgroundMap[status.value])
 const statusActions = computed(() => actionMap[status.value] || ['작업 없음'])
 
+const menuVisible = ref(false)
+
 
 const cardStyle = computed(() => ({
   backgroundColor: backgroundColor.value,
@@ -163,6 +165,9 @@ const handleStyle = {
   height: '8px',
   background: '#1e293b',
 }
+
+
+
 </script>
 
 <template>
@@ -201,12 +206,16 @@ const handleStyle = {
     </v-list>
   </NodeToolbar>
 
+
+
+
+
   <!-- 노드 바디 -->
   <div class="custom-node-horizontal">
     <Handle type="target" :position="Position.Left" :style="handleStyle" />
     <Handle type="source" :position="Position.Right" :style="handleStyle" />
 
-    <v-card flat elevation="0" class="node-card" :style="cardStyle">
+    <div flat elevation="0" class="node-card" :style="cardStyle">
       <!-- 헤더 -->
       <div class="node-header">
         <div class="left-header">
@@ -221,13 +230,52 @@ const handleStyle = {
           </v-btn>
           <span class="title">{{ data.label || '작업 이름' }}</span>
         </div>
-        <v-btn icon size="x-small" variant="text">
-          <v-icon>mdi-dots-horizontal</v-icon>
-        </v-btn>
+        <!-- DOT 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
+        <v-menu
+          v-model="menuVisible"
+          :close-on-content-click="false"
+          location="top"
+          :attach="true"          
+          offset="8"
+          class="dot-menu"
+        >
+          <template #activator="{ props: menuActivatorProps }">
+            <v-btn
+              icon
+              size="x-small"
+              variant="text"
+              v-bind="menuActivatorProps"
+            >
+              <v-icon>mdi-dots-horizontal</v-icon>
+            </v-btn>
+          </template>
+
+          <div class="tooltip-actions">
+            <v-btn
+              icon
+              size="small"
+              variant="text"
+              @click.stop="emit('edit', props.id)"
+            >
+              <v-icon size="18">mdi-pencil-outline</v-icon>
+            </v-btn>
+            <v-btn
+              icon
+              size="small"
+              variant="text"
+              @click.stop="emit('delete', props.id)"
+            >
+              <v-icon size="18">mdi-delete-outline</v-icon>
+            </v-btn>
+          </div>
+        </v-menu>
       </div>
 
       <!-- 날짜 -->
       <div class="date-info">
+        <div v-if="status === 'null'">예상 시작일: {{ data.startExpect || '-' }}</div>
+        <div v-if="status === 'null'">예상 마감일: {{ data.endExpect || '-' }}</div>
+
         <div v-if="status === 'pending'">예상 시작일: {{ data.startExpect || '-' }}</div>
         <div v-if="status === 'pending'">예상 마감일: {{ data.endExpect || '-' }}</div>
 
@@ -272,7 +320,17 @@ const handleStyle = {
           <div :class="['delay-text', delayColor]">{{ delayText }}</div>
         </div>
       </div>
-    </v-card>
+      <v-btn
+        v-if="showFullscreenView"
+        icon
+        size="small"
+        class="add-btn"
+        @click.stop="emit('addNode', props.id)"
+      >
+        <v-icon size="20" color="white">mdi-plus</v-icon>
+      </v-btn>
+    </div>
+    
   </div>
 </template>
 
@@ -350,6 +408,32 @@ const handleStyle = {
 .toolbar-list {
   padding: 0;
   width: 100%;
+}
+.add-btn {
+  position: absolute;
+  right: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #10b981 !important;
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 18px;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.dot-menu {
+  width :150px;
+}
+.tooltip-actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 15px;
+  background-color: rgb(56, 56, 56);
+  color: white;
 }
 
 

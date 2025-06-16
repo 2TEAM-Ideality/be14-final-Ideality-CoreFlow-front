@@ -8,7 +8,7 @@
       <div class="durtaion">🕒 소요: {{ data.duration }}일</div>
       <div v-if="data.slackTime" class="slack">⏱ 여유: {{ data.slackTime }}일</div>
       
-       <div class="dept">📂
+      <div class="dept">📂
         {{
           data.deptList?.slice(0, 2).map(d =>
             typeof d === 'object' ? (d.name || d.deptName || '') : d

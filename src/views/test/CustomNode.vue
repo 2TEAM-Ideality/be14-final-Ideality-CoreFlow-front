@@ -8,7 +8,6 @@ const handleSelect = () => emit('click', props.id)
 </script>
 
 <template>
-  <!-- 노드 전체 클릭 시 'click' 이벤트 발생 -->
   <div class="custom-node" @click.self="handleSelect">
     <Handle type="target" :position="Position.Left" :style="handleStyle" />
     <Handle type="source" :position="Position.Right" :style="handleStyle" />
