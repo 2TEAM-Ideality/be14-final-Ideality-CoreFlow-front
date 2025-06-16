@@ -167,9 +167,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 40px;
   padding-left: 40px;
-  padding-right: 24px;
+  padding-right: 12px;
 
-  min-height: 100%;
+  min-height: 150%;
   overflow: visible;
 }
 
@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
 
 .comment-list {
   min-height: 400px;         /* 고정 높이 */
-  overflow-y: scroll;        /* 항상 스크롤바 표시 (윈도우 기준) */
+  overflow-y: scroll;        /* ✅ 항상 스크롤바 표시 (윈도우 기준) */
   padding-right: 12px;        /* 스크롤 너비 여유 */
 }
 

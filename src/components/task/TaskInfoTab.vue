@@ -1,13 +1,26 @@
 <template>
     <div class="task-info-box">
-    <!-- 수정 아이콘 (우측 상단) -->
-    <img src="@/assets/icons/pentool.svg" 
-    class="edit-icon" 
-    alt="edit" 
-    @click="isEdit = true"
-    />
+    <!-- 수정 아이콘 (isEdit이 false일 때만 표시) -->
+    <!-- 우측 상단 버튼 (isEdit 상태에 따라 교체) -->
+    <div class="edit-toggle">
+      <img
+        v-if="!isEdit"
+        src="@/assets/icons/pentool.svg"
+        class="edit-icon"
+        alt="edit"
+        @click="isEdit = true"
+      />
+      <button
+        v-else
+        class="complete-button"
+        @click="isEdit = false"
+      >
+        완료
+      </button>
+    </div>
 
-<!-- 담당부서 영역 -->
+
+    <!-- 담당부서 영역 -->
     <div class="form-row">
         <label class="form-label">담당부서:</label>
         <div class="department-input-box">
@@ -171,21 +184,49 @@ watch(() => route.params.taskId, (newId) => {
   position: relative;
   border: 1px solid #ddd;
   border-radius: 12px;
-  padding: 24px;
+  padding: 24px 48px 24px 24px; /* 오른쪽 패딩 */
   background: #fff;
   display: flex;
   flex-direction: column;
   gap: 24px;
-
-  margin-top : 32px;
+  margin-top: 32px;
 }
 
-.edit-icon {
+.edit-toggle {
   position: absolute;
   top: 16px;
   right: 16px;
+}
+
+.edit-icon {
   width: 24px;
   height: 24px;
+  cursor: pointer;
+}
+
+.complete-button {
+  background-color: #307cff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+
+.complete-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: #307cff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
 }
 
@@ -203,34 +244,26 @@ watch(() => route.params.taskId, (newId) => {
   padding-top: 6px;
 }
 
-.department-input-box {
-  flex: 1;
-}
-
-.department-input {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #aaa;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1.5;
-  box-sizing: border-box;
-}
-
+.department-input-box,
 .description-box {
   flex: 1;
 }
 
-.task-textarea {
+.department-input,
+.task-textarea,
+.input {
   width: 100%;
-  height: 100px;
-  padding: 10px 12px;
+  box-sizing: border-box;
   border: 1px solid #aaa;
   border-radius: 6px;
+  padding: 8px 10px;
   font-size: 14px;
   line-height: 1.5;
+}
+
+.task-textarea {
+  height: 100px;
   resize: vertical;
-  box-sizing: border-box;
 }
 
 .readonly-text {
@@ -243,22 +276,12 @@ watch(() => route.params.taskId, (newId) => {
   align-items: center;
 }
 
-.input,
-.textarea {
+/* ✅ 날짜 입력 인풋: 줄어들게 허용 */
+.input[type="date"],
+.field-vertical input[type="date"] {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
-  border: 1px solid #aaa;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-}
-
-.input {
-  height: 32px;
-}
-
-.textarea {
-  resize: vertical;
 }
 
 /* 🔥 일정 입력 그룹 전체를 flex row로 정리 */
@@ -271,7 +294,6 @@ watch(() => route.params.taskId, (newId) => {
   flex-wrap: nowrap;
 }
 
-/* 🔥 이전/이후 태스크 라벨 + 인풋 */
 .field-horizontal {
   display: flex;
   align-items: center;
@@ -286,20 +308,18 @@ watch(() => route.params.taskId, (newId) => {
   min-width: 80px;
 }
 
-/* 🔥 날짜 영역을 flex로 정리 */
 .date-group {
   display: flex;
   gap: 24px;
   flex: 2;
 }
 
-/* 🔥 시작/종료일 하나의 박스 */
 .field-vertical {
   display: flex;
   flex-direction: column;
   gap: 4px;
   flex: 1;
-  margin-top: 0;
+  min-width: 0; /* ✅ 중요! */
 }
 
 .summary-row {
@@ -347,7 +367,7 @@ watch(() => route.params.taskId, (newId) => {
   color: #000;
 }
 
-/* ✅ 반응형 스타일 */
+/* ✅ 반응형 */
 @media (max-width: 768px) {
   .task-info-box {
     padding: 16px;

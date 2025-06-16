@@ -12,8 +12,8 @@
         </div>
 
         <div class="comment-panel">
-        <CommentTab v-if="selectedTab === 'comment'" :taskId="taskId" />
-        <NoticeTab v-if="selectedTab === 'notice'" :taskId="taskId" />
+            <CommentTab v-if="selectedTab === 'comment'" :taskId="taskId" />
+            <NoticeTab v-if="selectedTab === 'notice'" :taskId="taskId" />
         </div>
 
         <TaskCommentInput :taskId="taskId" :replyTargetId="replyTargetId" @reset-reply="replyTargetId = null" />
