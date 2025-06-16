@@ -29,7 +29,7 @@
         <v-icon size="18" class="ml-1">mdi-menu-down</v-icon>
       </div>
 
-      <!-- 통합 드롭다운 -->
+      <!-- 드롭다운 -->
       <div v-if="showDropdown.user" class="dropdown-menu" ref="dropdownRef" @click.stop>
         <div class="dropdown-item" @click="triggerFileInput">프로필 변경</div>
         <input type="file" accept="image/*" @change="handleFileChange" ref="fileInput" style="display:none" />
@@ -53,15 +53,22 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useUserStore } from '@/stores/userStore'
 import { useRouter } from 'vue-router'
-import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
-import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
+import { useUserStore } from '@/stores/userStore'
+import { useNotificationStore } from '@/stores/notificationStore'
 import { useNotifications } from '@/components/common/useNotifications.js'
 import api from '@/api.js'
 
+import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
+import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
+
 const router = useRouter()
 const userStore = useUserStore()
+const store = useNotificationStore()
+
+const notificationSidebarOpen = ref(false)
+const notifications = store.notifications
+
 const { connectToSSE } = useNotifications()
 
 const showChangePwdModal = ref(false)
@@ -69,14 +76,9 @@ const fileInput = ref(null)
 const imageUrl = ref(null)
 const profileImage = ref(userStore.profileImage)
 
-const notificationSidebarOpen = ref(false)
-const notifications = ref([])
-
 const showDropdown = ref({ user: false })
 
-const profileBox = ref(null)
 const userBox = ref(null)
-
 const isAdmin = ref(userStore.roles?.includes('ADMIN') ?? false)
 
 const triggerFileInput = () => fileInput.value?.click()
@@ -120,21 +122,32 @@ const closeSidebar = () => {
 
 const fetchNotifications = async () => {
   const token = userStore.accessToken
-  if (!token) return
+  if (!token) {
+    console.error('토큰이 존재하지 않습니다. 로그인 상태를 확인하세요.')
+    return
+  }
 
   try {
     const response = await fetch('/api/notifications', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       }
     })
+
     const data = await response.json()
-    if (data?.data) {
-      notifications.value = data.data
-      const last = data.data[data.data.length - 1]
-      if (last) localStorage.setItem(`lastNotificationId_${userStore.id}`, last.id)
+    if (data && data.data) {
+      data.data.filter(notice => !notice.isAutoDelete).forEach(notification => {
+        store.addNotification(notification)
+      })
+
+      const lastNotification = data.data[0]
+      if (lastNotification) {
+        store.setLastNotificationId(lastNotification.id)
+      }
+    } else {
+      console.warn('알림 데이터가 비어있거나 잘못된 형식입니다.')
     }
   } catch (error) {
     console.error('알림 조회 오류:', error)
@@ -192,10 +205,8 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid #dbdbdb;
   background-color: #fff;
   z-index: 100;
-
-  /* 💡 그림자 추가 */
-  /* box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);  */
 }
+
 .logo img {
   height: 32px;
   object-fit: contain;
