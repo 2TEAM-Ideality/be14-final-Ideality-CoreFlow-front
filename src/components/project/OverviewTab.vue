@@ -18,7 +18,6 @@
             <!-- 프로젝트 정보 -->
             <div class="info-card">
                 <h3 class="section-title">프로젝트 정보</h3>
-                <hr>
                 <div class="info-row" v-for="(item, i) in projectInfo" :key="i">
                     <div class="info-label">{{ item.label }}</div>
                     -
@@ -123,6 +122,7 @@ const projectInfo = computed(() => [
     display: flex;
     gap: 22px;
     justify-content: space-between;
+    margin-bottom: 7px;
 }
 .info-card{
     background: white;
@@ -130,6 +130,7 @@ const projectInfo = computed(() => [
     flex: 1;
     padding: 20px;
     border-radius: 8px;
+    
 }
 
 .info-label {
