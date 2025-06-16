@@ -1,5 +1,5 @@
 <template>
-<BasicLayout>
+<TaskLayout>
 <!-- 📌 좌측 메인 콘텐츠 슬롯 -->
 <template #main>
     <div class="task-main">
@@ -48,21 +48,21 @@
         <NoticeTab v-if="selectedTab === 'notice'" :taskId="taskId" />
     </div>
 
-    <hr class="comment-divider" />
+    <!-- <hr class="comment-divider" /> -->
     <TaskCommentInput :taskId="taskId" />
     </div>
 </template>
-</BasicLayout>
+</TaskLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import BasicLayout from '@/components/layout/BasicLayout.vue'
 import CommentTab from '@/components/task/CommentTab.vue'
 import NoticeTab from '@/components/task/NoticeTab.vue'
 import TaskCommentInput from '@/components/task/TaskCommentInput.vue'
+import TaskLayout from '@/components/layout/TaskLayout.vue'
 
 const route = useRoute()
 const taskId = route.params.taskId
@@ -159,7 +159,7 @@ const commentTabs = [
     .task-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 32px;
     }
 
     .comment-tab-menu {
@@ -196,6 +196,6 @@ const commentTabs = [
     border: none;
     height: 1px;
     background-color: #eee;
-    margin: 8px 0;
+    margin: 4px 0;
     }
 </style>
