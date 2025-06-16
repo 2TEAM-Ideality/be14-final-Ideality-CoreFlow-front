@@ -25,19 +25,24 @@ import { decodeJwt } from 'jose'
   // 앱 시작 시 세션 복원
   onMounted(async () => {
     try {
-      await userStore.restoreFromStorage() // 사용자 확인
+      await userStore.restoreFromStorage()
+      // 로그인 상태고 현재 경로가 login이면 home으로 보내기
+      if (userStore.isLoggedIn && route.path === '/login') {
+        router.push('/')
+      }
       isRestored.value = true
     } catch (e) {
       console.error('복원 중 오류: ', e)
     }
 
-    // 토큰 감시 시작 (로그인 된 경우에만)
     startTokenWatcher()
   })
 
   // 로그인 여부 검사
   watch(() => userStore.isLoggedIn, (isLoggedIn) => {
-    if (!isLoggedIn) {
+    const currentPath = router.currentRoute.value.path
+
+    if (!isLoggedIn && currentPath !== '/login') {
       router.push('/login')
     }
     { immediate: true }
