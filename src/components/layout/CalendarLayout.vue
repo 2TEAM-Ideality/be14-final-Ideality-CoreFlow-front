@@ -8,7 +8,7 @@
       </v-col>
 
       <!-- 중앙 콘텐츠 영역 -->
-      <v-col cols="8">
+      <v-col cols="8" >
         <slot name="center" />
       </v-col>
 
