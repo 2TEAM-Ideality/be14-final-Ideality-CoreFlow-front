@@ -54,14 +54,18 @@ const currentTab = ref('received')
 
 const approvalData = ref([])
 
-onMounted(async() => {
+// API 호출 함수
+const fetchApprovalData = async () => {
     try {
         const response = await api.get('/api/approval/my-approval/all')
         approvalData.value = response.data.data
-    } catch (error) {
-        error(error.message)
+    } catch(error) {
+        error(error.response.data.message)
     }
-    console.log('approval', approvalData.value)
+}
+
+onMounted(() => {
+    fetchApprovalData()
 })
 
 const displayedList = computed(() => {
@@ -85,6 +89,7 @@ function statusClass(status) {
             return '';
     }
 }
+defineExpose({ fetchApprovalData })
 </script>
 
 <style scoped>
