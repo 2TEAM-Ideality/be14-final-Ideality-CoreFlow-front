@@ -7,7 +7,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const onGoToDetail = () => {
-    router.push(`/projects/${props.project.id}`) 
+    router.push(`/project/${props.project.id}`) 
 }
 
 const onEdit = () => {

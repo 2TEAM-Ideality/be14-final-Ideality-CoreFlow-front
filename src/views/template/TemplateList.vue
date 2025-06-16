@@ -25,7 +25,6 @@
         </div>
       </div>
 
-     
       <v-row  dense>
         <template v-for="(template, index) in paginatedTemplates" :key="template.id">
           <v-col cols="12" sm="6" md="6" >
@@ -112,23 +111,38 @@ const fetchDeptList = async () => {
 
 
 const filteredTemplates = computed(() => {
-  const keyword = searchQuery.value.trim().toLowerCase()
-  const deptFilter = selectedDept.value
+  const keyword = searchQuery.value.trim().toLowerCase();
+  const deptFilter = selectedDept.value;
 
-  return templates.value.filter(t => {
+  let result = templates.value.filter(t => {
     const matchesKeyword =
       !keyword ||
       t.name?.toLowerCase().includes(keyword) ||
       t.description?.toLowerCase().includes(keyword) ||
-      t.createdBy?.toLowerCase().includes(keyword)
+      t.createdBy?.toLowerCase().includes(keyword);
 
     const matchesDept =
       deptFilter === '부서 전체' ||
-      t.deptList?.some(dept => dept.name === deptFilter)
+      t.deptList?.some(dept => dept.name === deptFilter);
 
-    return matchesKeyword && matchesDept
-  })
-})
+    return matchesKeyword && matchesDept;
+  });
+
+  // 정렬 적용
+  result = result.sort((a, b) => {
+    const nameA = a.name?.toLowerCase() || '';
+    const nameB = b.name?.toLowerCase() || '';
+
+    if (sortLabel.value === '오름차순') {
+      return nameA.localeCompare(nameB);
+    } else {
+      return nameB.localeCompare(nameA);
+    }
+  });
+
+  return result;
+});
+
 
 
 const paginatedTemplates = computed(() => {
