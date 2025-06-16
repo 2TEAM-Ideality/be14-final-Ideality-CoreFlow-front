@@ -96,7 +96,7 @@ onMounted(async () => {
 }
 
 .content-box {
-  background-color: #ddd;
+  background-color: #ffffff;
   min-height: 600px;
   border-radius: 8px;
   padding: 20px;
