@@ -2,15 +2,15 @@
     <div v-if="data" class="overview-container">
         <!-- 요약 카드 -->
         <div class="summary-cards">
-            <div class="card">프로젝트 경과율<br/><strong>{{ data.passedRate }}%</strong></div>
-            <div class="card">예상 마감일<br/><strong>{{ data.endExpect }}</strong></div>
-            <div class="card">진척률<br/><strong>{{ data.progressRate }}%</strong></div>
-            <div
-            class="card"
-            :class="{ warning: data.delayDays > 0 }"
-            >
-            지연일<br/><strong>{{ data.delayDays > 0 ? '+' + data.delayDays : data.delayDays }}일</strong>
-            </div>
+            <SummaryCard 
+                v-for="(item, i) in summaryItems"
+                :key="i"
+                :title="item.title"
+                :icon="item.icon"
+                :value="item.value"
+                :warning="item.warning"
+                :icon-color="item.iconColor"
+            />
         </div>
 
         <!-- 프로젝트 정보 + 책임자 정보 -->
@@ -39,7 +39,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import SummaryCard from './SummaryCard.vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api.js'
 
@@ -51,6 +52,38 @@ onMounted(async () => {
     const res = await api.get(`/api/projects/${projectId}`)
     data.value = res.data.data
 })
+
+const summaryItems = computed(() => [
+    {
+        title: '예상 마감일',
+        icon: 'mdi-calendar-check-outline',
+        iconColor: '#2196F3',
+        value: data.value.endExpect,
+        warning: false,
+    },
+    {
+        title: '프로젝트 경과율',
+        icon: 'mdi-progress-clock',
+        value: `${data.value.passedRate}%`,
+        iconColor: '#4CAF50',
+        warning: false
+    },
+    {
+        title: '진척률',
+        icon: 'mdi-arrow-right',
+        iconColor: '#FF9800',
+        value: `${data.value.progressRate}%`,
+        warning: false
+    },
+    {
+        title: '지연일',
+        icon: 'mdi-alert-circle-outline',
+        iconColor: '#F44336',   
+        value: data.value.delayDays > 0 ? `+${data.value.delayDays}일` : `${data.value.delayDays}일`,
+        warning: data.value.delayDays > 0
+    }
+])
+
 </script>
 
 <style scoped>
@@ -66,28 +99,6 @@ onMounted(async () => {
     flex-wrap: wrap;
 }
 
-.card {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    flex: 1;
-    text-align: center;
-    font-size: 16px;
-
-    border: 2px solid rgb(207, 207, 207);
-}
-
-.card strong {
-    font-size: 24px;
-    display: block;
-    margin-top: 8px;
-}
-.card.warning {
-    border: 2px solid red;
-    color: red;
-    font-weight: bold;
-}
-
 .info-row {
     display: flex;
     gap: 24px;
@@ -95,6 +106,7 @@ onMounted(async () => {
 }
 .info-card{
     background: white;
+    border: 2px solid rgb(213, 213, 213);
     flex: 1;
     padding: 20px;
     border-radius: 8px;
