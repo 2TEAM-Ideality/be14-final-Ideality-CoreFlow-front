@@ -1,6 +1,5 @@
 <template>
   <ListLayout title="템플릿 목록">
-    <!-- <v-container fluid> -->
       
     <div class="list-container">
       <!-- 검색 섹션 -->
@@ -11,7 +10,7 @@
             :filter-label="selectedDept || '부서 전체'"
             :sort-label="sortLabel"
             :dept-list="allDepts"
-            placeholder="템플릿 이름 검색"
+            :placeholder="placeholderMsg"
             @filter-click="handleDeptFilter"  
             @sort-click="toggleSort"
           />
@@ -25,7 +24,6 @@
         </div>
       </div>
 
-     
       <v-row  dense>
         <template v-for="(template, index) in paginatedTemplates" :key="template.id">
           <v-col cols="12" sm="6" md="6" >
@@ -37,7 +35,6 @@
         </template>
       </v-row>
 
-      <!-- ✅ v-pagination은 v-row 바깥에 위치 -->
       <v-row justify="center" class="mt-4">
         <v-pagination
           v-model="currentPage"
@@ -47,7 +44,6 @@
         />
       </v-row>
     </div>
-    <!-- </v-container> -->
   </ListLayout>
 </template>
 
@@ -72,9 +68,10 @@ const currentPage = ref(1);
 
 /*  검색   */
 const searchQuery = ref('')
-const sortLabel = ref('오름차순')
+const sortLabel = ref('최신순')
 const selectedDept = ref('부서 전체')
 const allDepts = ref([])  // 부서 전체 목록
+const placeholderMsg = ref("템플릿 이름 검색")
 
 
 
@@ -110,27 +107,45 @@ const fetchDeptList = async () => {
   return res;
 }
 
-
+// 검색 결과 적용한 템플릿 리스트
 const filteredTemplates = computed(() => {
-  const keyword = searchQuery.value.trim().toLowerCase()
-  const deptFilter = selectedDept.value
+  const keyword = searchQuery.value.trim().toLowerCase();
+  const deptFilter = selectedDept.value;
 
-  return templates.value.filter(t => {
+  let result = templates.value.filter(t => {
+    // 검색 대상 -> 템플릿 이름만으로 수정 
     const matchesKeyword =
-      !keyword ||
-      t.name?.toLowerCase().includes(keyword) ||
-      t.description?.toLowerCase().includes(keyword) ||
-      t.createdBy?.toLowerCase().includes(keyword)
+      !keyword || t.name?.toLowerCase().includes(keyword);
+    // const matchesKeyword =
+    //   !keyword ||
+    //   t.name?.toLowerCase().includes(keyword) ||
+    //   t.description?.toLowerCase().includes(keyword) ||
+    //   t.createdBy?.toLowerCase().includes(keyword);
 
     const matchesDept =
       deptFilter === '부서 전체' ||
-      t.deptList?.some(dept => dept.name === deptFilter)
+      t.deptList?.some(dept => dept.name === deptFilter);
 
-    return matchesKeyword && matchesDept
-  })
-})
+    return matchesKeyword && matchesDept;
+  });
+
+  // 정렬 적용 - 생성일 기준 오름차순
+  result = result.sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+
+    if (sortLabel.value === '오래된순') {
+      return dateA - dateB;
+    } else {
+      return dateB - dateA;
+    }
+  });
+
+  return result;
+});
 
 
+// 페이지네이션
 const paginatedTemplates = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
@@ -154,7 +169,7 @@ const handleDelete = (id) => {
 }
 
 const toggleSort = () => {
-  sortLabel.value = sortLabel.value === '오름차순' ? '내림차순' : '오름차순'
+  sortLabel.value = sortLabel.value === '최신순' ? '오래된순' : '최신순'
 }
 
 const goToCreateTemplate = () => {

@@ -47,7 +47,7 @@ const routes = [
       {
         path: 'search',
         name: 'ProjectSearch',
-        component: () => import('@/components/project/ResourceSearchTab.vue')
+        component: () => import('@/components/project/AttachmentList.vue')
       },
       {
         path: 'members',
