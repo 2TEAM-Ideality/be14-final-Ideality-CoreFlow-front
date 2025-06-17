@@ -9,7 +9,7 @@
     <!-- 페이지 타이틀 -->
     <h1 class="page-title">
       📁 {{ projectName }}
-      <ProjectStatusMenu
+      <ProjectStatusButton
         :status="projectStatus"
         @start="markAsInProgress"
         @complete="markAsCompleted"
@@ -39,7 +39,7 @@
 
 
 <script setup>
-import ProjectStatusMenu from '@/components/project/ProjectStatusMenu.vue'
+import ProjectStatusButton from '@/components/project/ProjectStatusButton.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api.js'
