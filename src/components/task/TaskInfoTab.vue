@@ -182,10 +182,9 @@ watch(() => route.params.taskId, (newId) => {
 <style scoped>
 .task-info-box {
   position: relative;
-  border: 1px solid #ddd;
-  border-radius: 12px;
+  border: 1px solid #818181;
+  border-radius: 6px;
   padding: 24px 48px 24px 24px; /* 오른쪽 패딩 */
-  background: #fff;
   display: flex;
   flex-direction: column;
   gap: 24px;
