@@ -107,6 +107,17 @@ const routes = [
       component: () => import('@/views/approval/Approval.vue')
     },
 
+  {
+    path: '/detail',
+    name: 'DetailPage',
+    component: () => import('@/components/details/DetailPage.vue') // DetailPage 컴포넌트 임포트
+  },
+
+  {
+    path: '/detailcreate',
+    name: 'DetailPage',
+    component: () => import('@/components/details/DetailCreateModal.vue') // DetailPage 컴포넌트 임포트
+  },
     {
       path: '/admin',
       component: () => import('@/views/admin/Admin.vue'),
