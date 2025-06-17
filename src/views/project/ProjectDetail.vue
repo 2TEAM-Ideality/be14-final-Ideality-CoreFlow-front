@@ -7,7 +7,15 @@
     ]" />
 
     <!-- 페이지 타이틀 -->
-    <h1 class="page-title">📁 {{ projectName }}</h1>
+    <h1 class="page-title">
+      📁 {{ projectName }}
+      <ProjectStatusMenu
+        :status="projectStatus"
+        @start="markAsInProgress"
+        @complete="markAsCompleted"
+        @delete="deleteProject"
+      />
+    </h1>
 
     <!-- 탭 메뉴 -->
     <div class="tab-menu">
@@ -29,7 +37,9 @@
   </div>
 </template>
 
+
 <script setup>
+import ProjectStatusMenu from '@/components/project/ProjectStatusMenu.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api.js'
@@ -37,6 +47,7 @@ import BreadCrumb from '@/components/common/BreadCrumb.vue'
 
 const route = useRoute()
 const projectId = route.params.id
+const projectInfo = ref({});
 const projectName = ref('로딩 중...')
 
 const tabs = [
@@ -48,15 +59,20 @@ const tabs = [
   { name: 'ProjectMembers', label: '참여자 목록', route: `/project/${projectId}/members` }
 ]
 
+const projectStatus = ref('PENDING') // 실제 API 응답에서 받아올 값
+
 onMounted(async () => {
   try {
     const res = await api.get(`/api/projects/${projectId}`)
     projectName.value = res.data.data.name
+    projectInfo.value = res.data.data
+    projectStatus.value = res.data.data.status
   } catch (err) {
     projectName.value = '(불러오기 실패)'
     console.error('프로젝트 정보 가져오기 실패:', err)
   }
 })
+
 </script>
 
 <style scoped>
@@ -70,6 +86,7 @@ onMounted(async () => {
   margin-bottom: 24px;
   display: flex;
   align-items: center;
+  gap: 5px;
 }
 
 .tab-menu {
