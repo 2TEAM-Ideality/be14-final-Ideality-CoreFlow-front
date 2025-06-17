@@ -23,7 +23,9 @@
 
                 <!-- 아이콘들 공통 스타일 icon 적용 -->
                 <div class="comment-icons">
-                  <img src="@/assets/icons/message.svg" alt="message" class="icon" />
+                  <button @click="emitSetReply(comment.commentId)">
+                    <img src="@/assets/icons/message.svg" alt="message" class="icon" />
+                  </button>
                   <!-- 댓글 드롭다운 열기 -->
                   <button
                     v-if="comment.userId === userStore.id"
@@ -51,15 +53,17 @@
                       <div class="comment-box">
                         <span class="comment-content">{{ reply.content }}</span>
                         <div class="comment-icons">
-                        <img src="@/assets/icons/message.svg" alt="message" class="icon" />
-                        <!-- 대댓글 드롭다운 열기 -->
-                        <button
-                          v-if="reply.userId === userStore.id"
-                          @click="toggleDropdown(`reply-${reply.commentId}`)"
-                          class="icon-button"
-                        >
-                          <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" class="icon" />
-                        </button>
+                          <button @click="emitSetReply(reply.parentCommentId)">
+                            <img src="@/assets/icons/message.svg" alt="message" class="icon" />
+                          </button>
+                          <!-- 대댓글 드롭다운 열기 -->
+                          <button
+                            v-if="reply.userId === userStore.id"
+                            @click="toggleDropdown(`reply-${reply.commentId}`)"
+                            class="icon-button"
+                          >
+                            <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" class="icon" />
+                          </button>
                       </div>
                         <!-- 대댓글 드롭다운 -->
                         <!-- 대댓글에 대한 부모처리는 내일 가서 물어볼 것-->
@@ -232,7 +236,7 @@ onBeforeUnmount(() => {
 })
 
 // 댓글 수정 emit
-const emit = defineEmits(['edit-comment']);
+const emit = defineEmits(['edit-comment', 'set-reply']);
 
 const props = defineProps({
   taskId: {
@@ -248,6 +252,11 @@ const onEditComment = (comment) => {
     isNotice: false
   });
 };
+
+const emitSetReply = (commentId) => {
+  emit('set-reply', commentId)
+}
+
 </script>
 
 <style scoped>
@@ -316,7 +325,7 @@ const onEditComment = (comment) => {
   padding-right: 60px;
   word-wrap: break-word;
   white-space: pre-wrap;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .comment-icons {
@@ -384,7 +393,7 @@ const onEditComment = (comment) => {
 }
 
 .comment-writer {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 /* 대댓글 */

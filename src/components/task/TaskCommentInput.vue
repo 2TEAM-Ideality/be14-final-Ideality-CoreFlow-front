@@ -11,6 +11,16 @@
             rows="1"
             @input="resizeTextarea"
             />
+
+            <!-- 이미지 아이콘 버튼 -->
+            <img
+                src="@/assets/icons/paperclip.svg"
+                class="image-icon"
+                @click="triggerFileInput"
+                alt="이미지 업로드"
+            />
+            <!-- 숨겨진 파일 업로드 input -->
+            <input type="file" ref="fileInput" class="hidden-file-input" @change="handleFileChange" />
         </div>
         <div class="options">
             <label><input type="checkbox" v-model="isNotice" /> 공지</label>
@@ -30,20 +40,19 @@ const userStore = useUserStore()
 const fullName = `${userStore.deptName}_${userStore.jobRankName}_${userStore.name}`
 
 const props = defineProps({
-  taskId: [String, Number],
-  replyTargetId: Number,
-  editData: {
+taskId: [String, Number],
+replyTargetId: Number,
+editData: {
     type: Object,
     default: null
-  }
+}
 })
 
 const input = ref('')
 const isNotice = ref(false)
 const editingCommentId = ref(null)
 const textarea = ref(null);
-const taskId = ref(null);
-const replyTargetId = ref(null);
+const fileInput = ref(null);
 
 watch(() => props.editData, (newVal) => {
     if (newVal) {
@@ -74,6 +83,16 @@ onMounted(() => {
 resizeTextarea()
 })
 
+const triggerFileInput = () => {
+    fileInput.value?.click()
+}
+
+const handleFileChange = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+    console.log('선택한 파일:', file)
+    }
+}
 </script>
 
 <style scoped>
@@ -136,4 +155,24 @@ align-items: center;
 justify-content: flex-end;
 gap: 10px;
 }
+
+.image-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.image-icon:hover {
+  opacity: 1;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
 </style>

@@ -13,19 +13,27 @@
 
         <div class="comment-panel">
             <CommentTab
-                v-if="selectedTab === 'comment'"
-                :taskId="taskId"
-                @edit-comment="handleEditComment"
+            v-if="selectedTab === 'comment'"
+            :taskId="taskId"
+            @edit-comment="handleEditComment"
+            @set-reply="handleSetReply"
             />
-            <NoticeTab v-if="selectedTab === 'notice'" :taskId="taskId" />
+
+            <NoticeTab
+            v-if="selectedTab === 'notice'"
+            :taskId="taskId"
+            @edit-comment="handleEditComment"
+            @set-reply="handleSetReply"
+            />
         </div>
 
         <TaskCommentInput
-            :taskId="taskId"
-            :replyTargetId="replyTargetId"
-            :editData="editData"
-            @reset-reply="replyTargetId = null"
+        :taskId="taskId"
+        :replyTargetId="replyTargetId"
+        :editData="editData"
+        @reset-reply="replyTargetId = null"
         />
+
     </div>
 </template>
 
@@ -35,10 +43,15 @@ import CommentTab from './CommentTab.vue'
 import NoticeTab from './NoticeTab.vue'
 import TaskCommentInput from './TaskCommentInput.vue'
 
-const editData = ref(null)
+const editData = ref(null);
+const replyTargetId = ref(null);
 
 const handleEditComment = (data) => {
     editData.value = data
+}
+
+const handleSetReply = (parentId) => {
+    replyTargetId.value = parentId
 }
 
 const selectedTab = ref('comment')
