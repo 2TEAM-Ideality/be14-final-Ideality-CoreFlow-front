@@ -41,7 +41,7 @@
                     <!-- 담당 부서 -->
                     <div>
                         <label for="department">담당 부서:</label>
-                        <select id="department" v-model="form.department">
+                        <select id="department" class="depart" v-model="form.department">
                             <option value="md팀">md팀</option>
                             <option value="개발팀">개발팀</option>
                             <option value="디자인팀">디자인팀</option>
@@ -94,7 +94,7 @@
                     </div>
 
                     <!-- 제출 버튼 -->
-                    <button type="submit">추가</button>
+                    <button type="submit" class="submit-btn">추가</button>
                 </form>
             </div>
         </div>
@@ -162,7 +162,7 @@ export default {
     background-color: white;
     padding: 20px 40px;
     border-radius: 0px;
-    width: 800px;
+    width: 700px;
     max-height: 80vh;
     overflow-y: auto;
     margin-top: 50px;
@@ -222,7 +222,6 @@ hr {
     display: flex;
     justify-content: space-between;
     gap: 30px;
-    margin-bottom: 10px;
 }
 
 .field-container {
@@ -233,6 +232,25 @@ hr {
     margin-top: 5px;
     display: flex;
     align-items: center;
+}
+
+/* 날짜 선택 부분을 flex로 가로 정렬 */
+.inline-fields-baseline {
+    display: flex;
+    justify-content: space-between;
+}
+
+.baseline-group {
+    margin-top: 5px;
+}
+
+.date-group {
+    flex: 1;
+}
+
+.depart {
+    width: 200px;
+    margin-left: 10px;
 }
 
 .label-container {
@@ -262,4 +280,18 @@ hr {
 form > div {
     margin-bottom: 20px;
 }
+
+.submit-btn {
+    background-color: white;
+    color: black;
+    border: 1px solid #000;
+    border-radius: 5px;
+    padding: 8px 20px;
+    position: absolute;  /* 위치를 절대 위치로 설정 */   
+    right: 40px; 
+}
+
+.submit-btn:hover {
+    background-color: grey;}
+
 </style>
