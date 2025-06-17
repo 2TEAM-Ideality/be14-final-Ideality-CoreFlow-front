@@ -1,18 +1,32 @@
 <script setup>
 import { ref, nextTick, onMounted, computed } from 'vue'
 import CalendarLayout from '@/components/layout/CalendarLayout.vue'
+import { dummySchedule } from '@/data/dummySchedule' 
 import VueCal from 'vue-cal'
 import { useUserStore } from '@/stores/userStore'
 import 'vue-cal/dist/vuecal.css'
 import api from '@/api'
 
 const userStore = useUserStore()
-
+const miniCalRef = ref(null)
 const vueCalRef = ref(null)
 const selectedEvent = ref(null)
 const showEventModal = ref(false)
+
 const scheduleList = ref([]) // 개인 일정 리스트
-const showCalendar = ref(false)
+const departmentScheduleList = ref([])// 부서 일정 리스트
+
+// 오늘의 일정
+const todayList = computed(() => {
+  const today = new Date().toISOString().split('T')[0]
+
+  return mergedEvents.value.filter(event => {
+    const start = event.start
+    const end = event.end ?? event.start
+    return start <= today && today <= end
+  })
+})    
+const showCalendar = ref(false) 
 
 const currentViewDate = ref({})
 
@@ -33,27 +47,32 @@ async function fetchMonthlySchedule(year, month) {
     console.log('📅 일정 응답:', res.data)
 
     scheduleList.value = (res.data.data || []).map(item => {
-    const start = new Date(item.startAt)
-    const end = new Date(item.endAt)
+      const start = new Date(item.startAt)
+      const end = new Date(item.endAt)
+      const format = (date) => date.toISOString().split('T')[0]
 
-    const format = (date) => date.toISOString().split('T')[0]  // YYYY-MM-DD
-
-    return {
-      title: item.name,
-      content: item.content,
-      start: format(start),
-      end: format(end),
-      class: 'event-green',
-      attributes: {
-        title: `${item.name}\n${item.content}`
+      return {
+        title: item.name,
+        content: item.content,
+        start: format(start),
+        end: format(end),
+        class: 'event-green',
+        attributes: {
+          title: `${item.name}\n${item.content}`
+        }
       }
-    }
-  })
-  console.log('📆 최종 이벤트 목록:', scheduleList.value)
+    })
+
+    console.log('📆 최종 이벤트 목록:', scheduleList.value)
   } catch (err) {
     console.error('❌ 일정 조회 실패:', err)
+
+    // 🔽 실패 시 더미 데이터 주입
+    scheduleList.value = dummySchedule
+    console.warn('📄 더미 일정으로 대체됨')
   }
 }
+
 
 const mergedEvents = computed(() => {
   const events = []
@@ -121,15 +140,33 @@ const onEventClick = (event) => {
 
 <template>
   <CalendarLayout>
-    <template #left >
-      <VueCal
-        date-picker
-        :disable-views="['week', 'day']"
-        default-view="month"
-        style="height: 300px; font-size: 12px; border: none; width: 100%;"
-      />
+    <template #left>
+      <div style="width: 100%; padding: 14px;">
+        <VueCal
+          class="mini-calendar"
+          ref="miniCalRef"
+          date-picker
+          view="month"    
+          :views="['month']"
+          :selected-date="new Date()"
+          default-view="month"
+          :available-views="['month']"
+          hide-view-selector
+          time="24"
+          @ready="() => miniCalRef?.switchView('month')"
+          style="height: 300px; font-size: 12px; border: none; width: 100%; margin: 0 auto;"
+          locale="ko"
+          :locales="{
+            ko: {
+              weekdays: ['일', '월', '화', '수', '목', '금', '토'],
+              months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+              firstDayOfWeek: 0 // 일요일: 0, 월요일: 1
+            }
+          }"
+        />
+      </div>
     </template>
-    
+        
     <template #center>
       <h2>개인 일정</h2>
       <div>{{ currentViewDate.year }} {{ currentViewDate.month }}</div>
@@ -162,7 +199,15 @@ const onEventClick = (event) => {
           @view-change="onViewChange"
           @cell-click="onCellClick"
           @event-click="onEventClick"
-          style="height: 100%; font-family: 'Noto Sans KR', sans-serif;"
+          style="height: 100%; font-family: 'Noto Sans KR', sans-serif; border: none;"
+          locale="ko"
+          :locales="{
+            ko: {
+              weekdays: ['일', '월', '화', '수', '목', '금', '토'],
+              months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+              firstDayOfWeek: 0 // 일요일: 0, 월요일: 1
+            }
+          }"
         />
       </div>
 
@@ -183,7 +228,17 @@ const onEventClick = (event) => {
     </template>
 
     <template #right>
-      <div style="background-color: #f5f5f5; height: 100vh;">우측</div>
+      <div style="background-color: #f5f5f5; min-height: 100vh; padding: 20px;">
+        <!-- 오늘의 일정 -->
+        <div v-if="todayList.length" class="mb-4">
+          <h4>📌 오늘의 일정</h4>
+          <ul>
+            <li v-for="event in todayList" :key="event.title" style="font-size: 14px;">
+              {{ event.title }} - {{ event.content }}
+            </li>
+          </ul>
+        </div>
+      </div>
     </template>
   </CalendarLayout>
 </template>
@@ -245,7 +300,8 @@ const onEventClick = (event) => {
   height: 20px;
   border-radius: 4px;
   background-color: gray;
-  color: white;
+  /* color: white; */
+  color: black;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -257,7 +313,7 @@ const onEventClick = (event) => {
   justify-content: flex-start;
 }
 .event-green {
-  background-color: #4caf50;
+  background-color: #FFF0F8;
 }
 .event-orange {
   background-color: #ff9800;
@@ -286,4 +342,12 @@ const onEventClick = (event) => {
   flex: 8.4;
   padding: 24px;
 }
+.mini-calendar {
+  border: none !important;
+  box-shadow: none !important;
+}
+.mini-calendar .vuecal__cell-date {
+  font-size: 8px;
+}
+
 </style>

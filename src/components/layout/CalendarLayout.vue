@@ -1,18 +1,19 @@
+<!-- src/components/layout/ThreeColumnLayout.vue -->
 <template>
   <v-container fluid class="container">
     <v-row class="three-column" no-gutters>
       <!-- 왼쪽 영역 -->
-      <v-col class="col-left">
+      <v-col cols="2">
         <slot name="left" />
       </v-col>
 
       <!-- 중앙 콘텐츠 영역 -->
-      <v-col class="col-center">
+      <v-col cols="8" >
         <slot name="center" />
       </v-col>
 
       <!-- 오른쪽 영역 -->
-      <v-col class="col-right">
+      <v-col cols="2">
         <slot name="right" />
       </v-col>
     </v-row>
@@ -26,16 +27,6 @@
   min-height: 100vh;
 }
 .three-column {
-  gap: 0;
-  display: flex;
-}
-.col-left {
-  flex: 1.8;
-}
-.col-center {
-  flex: 8.4;
-}
-.col-right {
-  flex: 1.8;
+    gap: 0;
 }
 </style>
