@@ -48,30 +48,38 @@
                         </select>
                     </div>
 
-                    <!-- 선행일정 / 후행일정 (한 줄에 배치) -->
+                    <!-- 선행일정 / 후행일정 -->
                     <div class="inline-fields">
-                        <label for="preceding-task">선행 일정:</label>
-                        <div class="field-group">
-                            <select id="preceding-task" v-model="form.precedingTask">
-                                <option v-for="task in tasks" :key="task.id" :value="task.name">
-                                    {{ task.name }}
-                                </option>
-                            </select>
+                        <!-- 선행일정 -->
+                        <div class="field-container">
+                            <div class="label-container">
+                                <label for="preceding-task">선행 일정:</label>
+                                <button type="button" class="add-btn" @click="addPrecedingTask">+</button>
+                            </div>
+                            <div v-for="(preceding, index) in form.precedingTasks" :key="'preceding-' + index" class="field-group">
+                                <select v-model="form.precedingTasks[index]">
+                                    <option v-for="task in tasks" :key="task.id" :value="task.name">
+                                        {{ task.name }}
+                                    </option>
+                                </select>
+                            </div>
                         </div>
-                        <button type="button" class="add-btn" @click="addFollowingTask">+</button>
 
-
-                        <label for="following-task">후행 일정:</label>
-                        <div class="field-group">
-                            <select id="following-task" v-model="form.followingTask[index]">
-                                <option v-for="task in tasks" :key="task.id" :value="task.name">
-                                    {{ task.name }}
-                                </option>
-                            </select>
+                        <!-- 후행일정 -->
+                        <div class="field-container">
+                            <div class="label-container">
+                                <label for="following-task">후행 일정:</label>
+                                <button type="button" class="add-btn" @click="addFollowingTask">+</button>
+                            </div>
+                            <div v-for="(following, index) in form.followingTasks" :key="'following-' + index" class="field-group">
+                                <select v-model="form.followingTasks[index]">
+                                    <option v-for="task in tasks" :key="task.id" :value="task.name">
+                                        {{ task.name }}
+                                    </option>
+                                </select>
+                            </div>
                         </div>
-                        <button type="button" class="add-btn" @click="addFollowingTask">+</button>
                     </div>
-
 
                     <!-- 책임자 -->
                     <div>
@@ -104,8 +112,8 @@ export default {
                 startDate: "",
                 endDate: "",
                 department: "md팀",
-                precedingTask: "",
-                followingTask: "",
+                precedingTasks: [""], // 초기값 하나로 수정
+                followingTasks: [""], // 초기값 하나로 수정
                 responsible: "",
                 participants: "",
             },
@@ -125,14 +133,14 @@ export default {
             // 폼 제출 처리 로직을 추가하세요 (예: 서버로 전송)
             this.closeModal();
         },
-    addPrecedingTask() {
-      // 선행일정 배열에 빈 값 추가
-      this.form.precedingTasks.push("");
-    },
-    addFollowingTask() {
-      // 후행일정 배열에 빈 값 추가
-      this.form.followingTasks.push("");
-    },
+        addPrecedingTask() {
+            // 선행일정 배열에 빈 값 추가
+            this.form.precedingTasks.push("");
+        },
+        addFollowingTask() {
+            // 후행일정 배열에 빈 값 추가
+            this.form.followingTasks.push("");
+        },
     },
 };
 </script>
@@ -159,7 +167,6 @@ export default {
     overflow-y: auto;
     margin-top: 50px;
     position: relative;
-    
 }
 
 button {
@@ -176,7 +183,6 @@ button:hover {
 }
 
 label {
-    display: block;
     margin-top: 10px;
     font-weight: bold;
 }
@@ -186,14 +192,12 @@ select,
 textarea {
     width: 100%;
     padding: 1px 6px;
-    /* 상하 좌우 줄이기 위해 패딩 조정 */
     margin-top: 3px;
     border: 1px solid #ddd;
 }
 
 textarea {
     height: 80px;
-    /* 텍스트 영역 세로 길이 줄이기 */
 }
 
 hr {
@@ -214,37 +218,30 @@ hr {
     padding: 5px;
 }
 
-/* 스타일 개선: 한 줄에 배치하기 위한 스타일 */
 .inline-fields {
     display: flex;
     justify-content: space-between;
-    gap: 20px;
-    /* 더 넓은 간격 */
+    gap: 30px;
+    margin-bottom: 10px;
 }
 
-
-.inline-fields-baseline {
-    display: flex;
-    justify-content: space-between;
-    gap: 25px;
+.field-container {
+    flex: 1;
 }
 
 .field-group {
-    margin-top:5px;
+    margin-top: 5px;
     display: flex;
-    align-items: center;/* 버튼과 입력 필드가 수평으로 배치 */
-    flex: 1;
+    align-items: center;
 }
 
-
-.baseline-group {
-    margin-top:5px;
+.label-container {
     display: flex;
-    flex: 1;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .add-btn {
-    margin-top: 10px;
     background-color: transparent;
     border: 2px solid black;
     border-radius: 50%;
@@ -262,8 +259,7 @@ hr {
     background-color: #f0f0f0;
 }
 
-/* 레이블과 입력칸 묶음 간 간격 조정 */
 form > div {
-  margin-bottom: 20px; /* 레이블과 입력칸 묶음 사이의 간격을 20px로 설정 */
+    margin-bottom: 20px;
 }
 </style>
