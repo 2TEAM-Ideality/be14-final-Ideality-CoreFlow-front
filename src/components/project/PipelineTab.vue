@@ -1,89 +1,44 @@
-<template>
-  <div class="layout-flow" style="position: relative; overflow: visible">
-    <VueFlow
-      ref="vueFlowRef"
-      :nodes="nodes"
-      :edges="edges"
-      :node-types="nodeTypes"
-      :connectable="false"
-      :default-edge-options="{ type: 'smoothstep', animated: true }"
-      @connect="onConnect"
-      @nodes-initialized="handleNodesInitialized"
-    >
-      <template #node-task="{ id, data }">
-        <TaskNode :id="id" :data="data" @click="() => console.log('Clicked', id)" />
-      </template>
-
-      <Background />
-
-      <Panel class="process-panel" position="top-right">
-        <div class="layout-panel">
-          <button title="정렬" @click="layoutGraph('LR')">
-            ↔️ 정렬
-          </button>
-          <button title="전체 보기" @click="showFullscreenView = true">
-            🔍 전체 보기
-          </button>
-        </div>
-      </Panel>
-    </VueFlow>
-
-    <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
-      <v-card class="pa-4">
-        <div class="d-flex justify-space-between align-center mb-2">
-          <h3 class="text-h6">📌 전체 프로세스 보기</h3>
-          <v-btn icon @click="showFullscreenView = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </div>
-        
-        <VueFlow
-          :nodes="nodes"
-          :edges="edges"
-          :node-types="nodeTypes"
-          :connectable="false"
-          fit-view
-          style="height: calc(100vh - 100px);"
-        >
-          <Background />
-        </VueFlow>
-      </v-card>
-    </v-dialog>
-
-  </div>
-</template>
-
-
 
 <script setup>
-import { nextTick, ref, onMounted } from 'vue'
+import { nextTick, ref, onMounted, watch } from 'vue'
 import { Panel, VueFlow, useVueFlow, Position } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import TaskNode from '@/components/flow/TaskNode.vue'
+import NodeEditModal from '@/components/common/NodeEditModal.vue'
+import NewTaskModal from '@/components/common/NewTaskModal.vue'
+
 import '@/assets/vue-flow-style.css'
 import { useRouter, useRoute } from 'vue-router'
 import { useLayout } from '@/views/test/useLayout'
 import api from '@/api.js'
 import { markRaw } from 'vue'
 import dagre from '@dagrejs/dagre'
+import { nanoid } from 'nanoid' 
 
 const nodeTypes = {
   task: markRaw(TaskNode)
 }
 
-const router = useRouter()
-const route = useRoute()
-const projectId = route.params.id
-
-const showFullscreenView = ref(false)
-const vueFlowRef = ref(null)
-
-const nodes = ref([])
-const edges = ref([])
-
-
 const { layout } = useLayout()
 const { fitView, zoomTo } = useVueFlow()
+
+const route = useRoute()
+const projectId = route.params.id
+const projectName = ref('')
+const nodes = ref([])   // 원본 노드 데이터 
+const edges = ref([])   // 원본 엣지 데이터 
+
+const deptList = ref([])    // 부서 목록 
+
+const showFullscreenView = ref(false)   // 전체 보기 
+const vueFlowRef = ref(null)    // 
+
+const showEditModal = ref(false)    // 수정 모달 
+const showNewTask = ref(false)      // 태스크 생성 모달 
+const editingNode = ref(null)       // 수정 대상 태스크  
+
+const newTasks = ref([])        // 생성할 태스크 목록 
+
 
 
 // 프로젝트 파이프라인 데이터 가져오기
@@ -94,7 +49,8 @@ async function fetchPipeline() {
     })
     const data = res.data.data
     console.log(data)
-
+    projectName.value = data.name
+    
     const rawNodes = data.nodeList
     const rawEdges = data.edgeList
 
@@ -170,9 +126,18 @@ async function fetchPipeline() {
   }
 }
 
+// 부서 목록 가져오기
+const fetchDeptList = async () => {
+  const res = await api.get('/api/dept/all')
+  deptList.value = res.data.data;
+  console.log('부서 목록', res)
+}
+
 onMounted(() => {
   fetchPipeline()
+  fetchDeptList() 
 })
+
 
 function onConnect({ source, target }) {
   if (!source || !target) return
@@ -194,7 +159,285 @@ async function handleNodesInitialized() {
 }
 
 
+function getParentIds(nodeId) {
+  return edges.value
+    .filter(e => e.target === nodeId)
+    .map(e => Number(e.source));
+}
+
+function getChildIds(nodeId) {
+  return edges.value
+    .filter(e => e.source === nodeId)
+    .map(e => Number(e.target));
+}
+
+
+
+
+// 태스크 수정 모달 
+function onEditNode(nodeId) {
+  console.log(`${nodeId} 번 태스크를 수정합니다.`)
+  console.log(editingNode.value)
+
+  const node = nodes.value.find(n => n.id === nodeId)
+  if (node) {
+    editingNode.value = node
+    showEditModal.value = true
+  }
+}
+
+// 태스크 정보 수정
+function handleUpdateTask(updatedData) {
+  if (!updatedData || !updatedData.id) return
+
+  const node = nodes.value.find(n => n.id === updatedData.id)
+  if (!node) return
+
+ // 실제 데이터 수정
+  Object.assign(node.data, {
+    label: updatedData.label,
+    description: updatedData.description,
+    startBase: updatedData.startBase,
+    endBase: updatedData.endBase,
+    deptList: updatedData.deptList
+  })
+
+  // TODO. 태스트 수정 요청 
+  // await api.put(`/api/task/${updatedData.id}`, {
+  //   label: updatedData.label,
+  //   description: updatedData.description,
+  //   startBaseLine: updatedData.startBase,
+  //   endBaseLine: updatedData.endBase,
+  //   deptList: updatedData.deptList.map(d => typeof d === 'object' ? d.id : d),
+  // })
+
+  // // 다시 불러와서 반영
+  // await fetchPipeline()
+
+  // 반영 후 레이아웃 재적용 (선택)
+  showEditModal.value = false
+  editingNode.value = null
+
+  nextTick(() => layoutGraph('LR'))
+}
+
+
+// 태스크 노드 생성
+function onAddNode(parentId = null) {
+  const newId = nanoid(6)
+  const newNode = {
+    id: newId,
+    type: 'task',
+    position: { x: 200, y: 200 + nodes.value.length * 100 },
+    data: {
+      label: `새 태스크`,
+      description: '',
+      deptList: [],
+      duration: null,
+      slackTime: null,
+      status: 'pending',
+      progressRate: 0,
+      passedRate: 0,
+      delayDays: 0,
+      toolbarVisible: false
+    }
+  }
+
+  nodes.value.push(newNode)
+  newTasks.value.push(newNode) // 🔥 저장 대상에 추가
+
+  if (parentId) {
+    edges.value.push({
+      id: `e-${parentId}-${newId}`,
+      source: parentId,
+      target: newId,
+      type: 'bezier',
+      animated: true,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left
+    })
+  }
+
+  nextTick(() => {
+    layoutGraph('LR')
+  })
+}
+
+
+// 태스크 전체 편집 완료 
+async function onSaveTasks() {
+  try {
+    showFullscreenView.value = false;
+
+    console.log("태스크 편집 완료")
+    console.log("새롭게 추가한 태스크 목록", newTasks.value)
+
+    for (const node of newTasks.value) {
+      const { label, startBase, endBase, deptList } = node.data
+      console.log("태스크 단위로", node)
+
+      if (!label || !label.trim()) {
+        alert(`태스크 이름이 비어있습니다: ${node.id}`)
+        continue
+      }
+      if (!startBase || !endBase) {
+        alert(`"${label}" 태스크의 베이스라인 시작/종료일이 누락되었습니다.`)
+        continue
+      }
+      if (!deptList || deptList.length === 0) {
+        alert(`"${label}" 태스크에 담당 부서가 없습니다.`)
+        continue
+      }
+
+      const body = {
+        label: label.trim(),
+        description: node.data.description || '',
+        startBaseLine: startBase,
+        endBaseLine: endBase,
+        projectId: Number(projectId),
+        deptList: deptList.map(d => Number(typeof d === 'object' ? d.id : d)),
+        source: getParentIds(node.id),
+        target: getChildIds(node.id)
+      }
+
+      console.log(body)
+
+      await api.post('/api/task', body)
+      console.log("요청 보냄")
+    }
+
+    newTasks.value = [] // 저장 후 초기화
+    fetchPipeline()
+
+  } catch (err) {
+    console.error('태스크 저장 실패:', err)
+    alert('태스크 저장 중 오류 발생')
+  }
+}
+
+
+watch(showFullscreenView, async (isOpen) => {
+  if (!isOpen) {
+    nodes.value.forEach(n => {
+      n.data.toolbarVisible = false
+    })
+    await nextTick() // DOM 반영 이후
+    layoutGraph('LR') // 💡 정렬
+    fitView()         // 💡 전체 보기로 줌
+  }
+})
+
+
 </script>
+
+
+<template>
+
+  <div class="layout-flow" style="position: relative; overflow: visible">
+    <VueFlow
+      ref="vueFlowRef"
+      :nodes="nodes"
+      :edges="edges"
+      :node-types="nodeTypes"
+      :connectable="false"
+      :default-edge-options="{ type: 'smoothstep', animated: true }"
+      @connect="onConnect"
+      @nodes-initialized="handleNodesInitialized"
+    >
+      <template #node-task="{ id, data }">
+        <TaskNode
+          :id="id"
+          :data="data"
+          @click="() => console.log('Clicked', id)"
+          @addNode="onAddNode"
+        />
+      </template>
+
+      <Background />
+
+      <Panel class="process-panel" position="top-right">
+        <div class="layout-panel">
+          <button title="태스크 편집">
+            태스크 편집 
+          </button>
+          <button title="정렬" @click="layoutGraph('LR')">
+            ↔️ 정렬
+          </button>
+          <button title="전체 보기" @click="showFullscreenView = true">
+            🔍 전체 보기
+          </button>
+        </div>
+      </Panel>
+    </VueFlow>
+
+    <!-- 전체 보기 :  노드 생성 / 수정 임시 상태 -->
+    <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
+      <NewTaskModal
+        v-model:show="showEditModal"
+        :deptList="deptList"
+        :existingNodes="nodes"
+        :initialData="editingNode"
+        @update="handleUpdateTask"
+        @close="showEditModal = false"
+      />
+      <v-card class="pa-4">
+        <div class="d-flex justify-space-between align-center mb-2">
+          <h3 class="text-h6">📌 {{ projectName }}</h3>
+          <v-btn icon @click="showFullscreenView = false" variant="plain">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </div>
+        
+        <VueFlow
+        :nodes="nodes"
+        :edges="edges"
+        :node-types="nodeTypes"
+        :connectable="false"
+        fit-view
+        style="height: calc(100vh - 100px);"
+      >
+        <template #node-task="{ id, data }">
+          <TaskNode
+            :id="id"
+            :data="data"
+            :showFullscreenView="showFullscreenView"
+            @addNode="onAddNode"
+            @edit="onEditNode"
+          />
+        </template>
+
+        <Background />
+          <Panel class="process-panel" position="top-right">
+            <div class="dialog-panel">
+              <button title="태스크 생성" @click="showNewTask = true">
+                📝 태스크 생성
+              </button>
+              <!-- <button title="태스크 생성" @click="onAddNode">
+                📝 태스크 생성
+              </button> -->
+              <button title="정렬" @click="layoutGraph('LR')">
+                🔀 정렬
+              </button>
+              <!-- <button title="편집 취소" @click="showFullscreenView = false">
+                ❌ 편집 취소
+              </button> -->
+              <button title="편집 완료" @click="onSaveTasks">
+                ✅ 편집 완료
+              </button>
+              <!-- <button title="편집하기" @click="showFullscreenView = false">
+                ✅ 편집 완료
+              </button> -->
+            </div>
+          </Panel>
+          
+        </VueFlow>
+      </v-card>
+    </v-dialog>
+
+  </div>
+</template>
+
+
 
 
 
@@ -244,5 +487,15 @@ async function handleNodesInitialized() {
   z-index: auto !important; /* 또는 적당히 높은 수치 */
 }
 
+.layout-panel {
+  display: flex;
+  flex-direction : row;
+  gap : 10px;
+}
 
+.dialog-panel {
+  display: flex;
+  flex-direction : row;
+  gap : 10px;
+}
 </style>

@@ -1,6 +1,6 @@
 <template>
     <div v-if="fileItems.length === 0" class="empty-message">
-        📄 해당 프로젝트에 대한 지연 사유서가 없습니다.
+        📄 해당 프로젝트에 대한 산출물이 없습니다.
     </div>
     <div v-else class="list-container">
         <SearchBar
@@ -31,73 +31,61 @@ const projectId = route.params.id
 const userStore = useUserStore()
 const router = useRouter()
 
-const delayList = ref([])
+const attachmentList = ref([])
 const deptList = ref([])
-
 
 //  검색
 const searchQuery = ref('')
 const sortLabel = ref('오름차순')
 const selectedDept = ref('부서 전체')
-const placeholderMsg = ref("지연사유서 검색")
-
-
+const placeholderMsg = ref("자료 이름 검색")
 
 const customHeaders = [
-  { title: '지연 사유 번호', key: 'id' },
-  { title: '관련 태스크', key: 'taskName' },
-  { title: '요청자', key: 'approverName' },
-  { title: '직위', key: 'approverJobRank' },
-  { title: '직책', key: 'approvalJobRole' },
-  { title: '지연 사유', key: 'delayReason' },
-  { title: '요청 지연일', key: 'delayDays' },
-  { title: '등록일자', key: 'createdDate' },
-  { title: '파일', key: 'url' }
+  { title: '파일명', key: 'name' },
+  { title: '관련 태스크', key: 'task' },
+  { title: '파일 유형', key: 'type' },
+  { title: '등록자', key: 'author' },
+  { title: '등록일', key: 'date' },
+  { title: '파일', key: 'link' }
 ]
 
 const fileItems = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase()
   const deptFilter = selectedDept.value;
-
-  let filtered = delayList.value.filter(item => {
+  
+  let filtered = attachmentList.value.filter(att => {
     return (
-      item.taskName?.toLowerCase().includes(keyword) ||
-      item.approverName?.toLowerCase().includes(keyword) ||
-      item.delayReason?.toLowerCase().includes(keyword)
+      att.originName?.toLowerCase().includes(keyword) ||
+      att.taskName?.toLowerCase().includes(keyword) ||
+      att.uploader?.toLowerCase().includes(keyword)
     )
   })
 
   // 정렬
   filtered = filtered.sort((a, b) => {
-    const nameA = a.taskName?.toLowerCase() || ''
-    const nameB = b.taskName?.toLowerCase() || ''
+    const nameA = a.originName?.toLowerCase() || ''
+    const nameB = b.originName?.toLowerCase() || ''
     return sortLabel.value === '오름차순'
       ? nameA.localeCompare(nameB)
       : nameB.localeCompare(nameA)
   })
 
-  return filtered.map(item => ({
-    id: item.id,
-    taskName: item.taskName,
-    approverName: item.approverName,
-    approverJobRank: item.approverJobRank,
-    approvalJobRole: item.approvalJobRole,
-    delayReason: item.delayReason,
-    delayDays: item.delayDays + '일',
-    createdDate: item.createdDate, // 이미 LocalDate로 나옴
-    url: item.url
+  // 매핑
+  return filtered.map(att => ({
+    name: att.originName,
+    task: att.taskName,
+    type: att.fileType,
+    author: att.uploader,
+    date: att.uploadAt?.split('T')[0],
+    link: att.url,
+    selected: false
   }))
 })
 
 
-
-
-// 지연 사유서 가져오기
-const fetchDelayList = () => {
-  return api.get(`/api/approval/project/${projectId}/delay/list`)
-}
+// 데이터 요청
+const fetchAttachments = () => api.get(`/api/project/${projectId}/attachment/list`)
 const fetchDeptList = () => api.get('/api/dept/all')
-
 
 // 초기 로드
 onMounted(async () => {
@@ -106,24 +94,32 @@ onMounted(async () => {
     return
   }
   try {
-    const [delays, depts] = await Promise.all([
-      fetchDelayList(),
+    const [attachments, depts] = await Promise.all([
+      fetchAttachments(),
       fetchDeptList()
     ])
-    delayList.value = delays.data.data
+    attachmentList.value = attachments.data.data
     deptList.value = depts.data.data
   } catch (err) {
     console.error('자료 로딩 실패:', err)
   }
 })
 
+
 const toggleSort = () => {
   sortLabel.value = sortLabel.value === '오름차순' ? '내림차순' : '오름차순'
 }
+
 </script>
 
+
 <style scoped>
-.empty-message {
-    text-align: center;
+*{
+    text-align: left;
+}
+.list-container {
+    display:flex;
+    flex-direction: column;
+    gap: 20px;
 }
 </style>

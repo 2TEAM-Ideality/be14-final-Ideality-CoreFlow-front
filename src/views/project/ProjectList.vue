@@ -21,7 +21,6 @@ const statusOptions = [
 const selectedStatuses = ref([])
 const showFilterDropdown = ref(false)
 const userStore = useUserStore()
-const token = userStore.accessToken
 
 
 onMounted(async () => {
