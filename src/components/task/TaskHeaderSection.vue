@@ -6,21 +6,6 @@
         <span class="status-badge">진행중</span>
         <h1 class="task-title">TASK {{ taskId }} : 봉제 공정</h1>
         </div>
-
-        <!-- <div class="tab-row">
-        <div class="tab-menu">
-            <router-link
-            v-for="tab in tabs"
-            :key="tab.name"
-            :to="tab.route"
-            class="tab-button"
-            :class="{ active: $route.name === tab.name }"
-            >
-            {{ tab.label }}
-            </router-link>
-        </div>
-        <button class="schedule-button">+ 세부일정 생성</button>
-        </div> -->
     </div>
 </template>
 
