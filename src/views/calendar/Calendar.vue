@@ -154,7 +154,7 @@ const onEventClick = (event) => {
           hide-view-selector
           time="24"
           @ready="() => miniCalRef?.switchView('month')"
-          style="height: 300px; font-size: 12px; border: none; width: 100%; margin: 0 auto;"
+          style="height: 250px; font-size: 12px; border: none; width: 100%; margin: 0 auto;"
           locale="ko"
           :locales="{
             ko: {
@@ -168,64 +168,43 @@ const onEventClick = (event) => {
     </template>
         
     <template #center>
-      <h2>개인 일정</h2>
-      <div>{{ currentViewDate.year }} {{ currentViewDate.month }}</div>
-      <div class="d-flex align-center gap-4 mb-2">
-        <v-checkbox
-          v-model="showPersonal"
-          label="👤 개인일정 보기"
-          hide-details
-          density="compact"
-        />
-        <v-checkbox
-          v-model="showDepartment"
-          label="🏢 부서일정 보기"
-          hide-details
-          density="compact"
-        />
-      </div>
-      <v-btn color="primary" @click="goToToday">Today</v-btn>
-      <div style="height: 100%;">
-        <div></div>
-        <VueCal
-          v-if="showCalendar"
-          ref="vueCalRef"
-          default-view="month"
-          :available-views="['month', 'week', 'day']"
-          :events="scheduleList"
-          events-on-month-view
-          :views="{ days: { cols: 5, rows: 1 }, month: {} }"
-          time="24"
-          @view-change="onViewChange"
-          @cell-click="onCellClick"
-          @event-click="onEventClick"
-          style="height: 100%; font-family: 'Noto Sans KR', sans-serif; border: none;"
-          locale="ko"
-          :locales="{
-            ko: {
-              weekdays: ['일', '월', '화', '수', '목', '금', '토'],
-              months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
-              firstDayOfWeek: 0 // 일요일: 0, 월요일: 1
-            }
-          }"
-        />
-      </div>
+      <div style="height: 100%; display: flex; flex-direction: column;">
+        <h2>개인 일정</h2>
+        <div>{{ currentViewDate.year }} {{ currentViewDate.month }}</div>
+        <div class="d-flex align-center gap-4 mb-2">
+          <v-checkbox v-model="showPersonal" label="👤 개인일정 보기" hide-details density="compact" />
+          <v-checkbox v-model="showDepartment" label="🏢 부서일정 보기" hide-details density="compact" />
+        </div>
+        <v-btn color="white" @click="goToToday" style="width: fit-content">Today</v-btn>
 
-      <!-- 일정 디테일 모달 -->
-      <v-dialog v-model="showEventModal" max-width="400">
-        <v-card>
-          <v-card-title>{{ selectedEvent?.title }}</v-card-title>
-          <v-card-text>
-            <p>{{ selectedEvent?.content }}</p>
-            <p><strong>날짜:</strong> {{ selectedEvent?.start }}</p>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn color="primary" text @click="showEventModal = false">닫기</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+        <div style="flex: 1; overflow: hidden;">
+          <VueCal
+            class="main-cal"
+            v-if="showCalendar"
+            ref="vueCalRef"
+            default-view="month"
+            :available-views="['month', 'week', 'day']"
+            :events="scheduleList"
+            events-on-month-view
+            :views="{ days: { cols: 5, rows: 1 }, month: {} }"
+            time="24"
+            @view-change="onViewChange"
+            @cell-click="onCellClick"
+            @event-click="onEventClick"
+            style="height: 100%;"
+            locale="ko"
+            :locales="{
+              ko: {
+                weekdays: ['일', '월', '화', '수', '목', '금', '토'],
+                months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                firstDayOfWeek: 0
+              }
+            }"
+          />
+        </div>
+      </div>
     </template>
+
 
     <template #right>
       <div style="background-color: #f5f5f5; min-height: 100vh; padding: 20px;">
@@ -344,7 +323,7 @@ const onEventClick = (event) => {
 }
 .left-cal{
   width: 100%;
-  padding: 14px;
+  /* padding: 14px; */
   background-color: #F7F7F7;
   /* height: 100%; */
   min-height: 100%;
@@ -353,9 +332,16 @@ const onEventClick = (event) => {
 .mini-calendar {
   border: none !important;
   box-shadow: none !important;
+  padding: 0;
+  background-color: rgba(0,0,0,0);
 }
 .mini-calendar .vuecal__cell-date {
   font-size: 8px;
+}
+
+.main-cal {
+  border: none !important;
+  box-shadow: none !important;
 }
 
 </style>
