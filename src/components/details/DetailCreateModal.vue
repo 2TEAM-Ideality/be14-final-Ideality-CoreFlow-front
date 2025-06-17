@@ -42,9 +42,10 @@
                     <div>
                         <label for="department">담당 부서:</label>
                         <select id="department" class="depart" v-model="form.department">
-                            <option value="md팀">md팀</option>
-                            <option value="개발팀">개발팀</option>
-                            <option value="디자인팀">디자인팀</option>
+                            <option value="" disabled selected>부서명을 선택해주세요</option> 
+                            <option v-for="(department, index) in departments" :key="index" :value="department.id">
+                                {{ department.name }}
+                            </option>
                         </select>
                     </div>
 
@@ -56,8 +57,10 @@
                                 <label for="preceding-task">선행 일정:</label>
                                 <button type="button" class="add-btn" @click="addPrecedingTask">+</button>
                             </div>
-                            <div v-for="(preceding, index) in form.precedingTasks" :key="'preceding-' + index" class="field-group">
+                            <div v-for="(preceding, index) in form.precedingTasks" :key="'preceding-' + index"
+                                class="field-group">
                                 <select v-model="form.precedingTasks[index]">
+                                    <option value="" disabled selected>선행일정을 선택해주세요</option> 
                                     <option v-for="task in tasks" :key="task.id" :value="task.name">
                                         {{ task.name }}
                                     </option>
@@ -71,8 +74,10 @@
                                 <label for="following-task">후행 일정:</label>
                                 <button type="button" class="add-btn" @click="addFollowingTask">+</button>
                             </div>
-                            <div v-for="(following, index) in form.followingTasks" :key="'following-' + index" class="field-group">
+                            <div v-for="(following, index) in form.followingTasks" :key="'following-' + index"
+                                class="field-group">
                                 <select v-model="form.followingTasks[index]">
+                                    <option value="" disabled selected>후행일정을 선택해주세요</option> 
                                     <option v-for="task in tasks" :key="task.id" :value="task.name">
                                         {{ task.name }}
                                     </option>
@@ -111,12 +116,13 @@ export default {
                 description: "",
                 startDate: "",
                 endDate: "",
-                department: "md팀",
+                department: "",
                 precedingTasks: [""], // 초기값 하나로 수정
                 followingTasks: [""], // 초기값 하나로 수정
                 responsible: "",
                 participants: "",
             },
+      departments: [], // 백엔드로부터 받은 부서 데이터를 저장할 배열
             tasks: [
                 { id: 1, name: "Task 1" },
                 { id: 2, name: "Task 2" },
@@ -125,6 +131,15 @@ export default {
         };
     },
     methods: {
+    async fetchDepartments() {
+      try {
+        const response = await fetch("https://api.example.com/departments"); // 실제 API URL로 수정 필요
+        const data = await response.json(); // 받은 데이터를 JSON으로 파싱
+        this.departments = data; // 받아온 부서 데이터를 departments 배열에 저장
+      } catch (error) {
+        console.error("부서 데이터를 불러오는 데 실패했습니다:", error); // 오류 처리
+      }
+    },
         closeModal() {
             this.showModal = false;
         },
@@ -277,7 +292,7 @@ hr {
     background-color: #f0f0f0;
 }
 
-form > div {
+form>div {
     margin-bottom: 20px;
 }
 
@@ -287,11 +302,12 @@ form > div {
     border: 1px solid #000;
     border-radius: 5px;
     padding: 8px 20px;
-    position: absolute;  /* 위치를 절대 위치로 설정 */   
-    right: 40px; 
+    position: absolute;
+    /* 위치를 절대 위치로 설정 */
+    right: 40px;
 }
 
 .submit-btn:hover {
-    background-color: grey;}
-
+    background-color: grey;
+}
 </style>
