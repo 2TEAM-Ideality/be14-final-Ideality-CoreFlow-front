@@ -59,8 +59,6 @@ defineProps({
 
 const emit = defineEmits(['delete', 'tag']);
 
-const onDelete = () => emit('delete');
-const onTag = () => emit('tag');
 
 const formatDate = (dateStr) => {
   return dateStr?.split('T')[0] ?? dateStr;
