@@ -28,12 +28,15 @@
             <!-- 책임자 정보 -->
             <div class="info-card">
                 <h3>부서별 책임자</h3>
-                <p><strong>디렉터:</strong> {{ data.director.name }} / {{ data.director.deptName }} / {{ data.director.jobRoleName }}</p>
-                <ul>
-                    <li v-for="leader in data.leaders" :key="leader.userId">
-                        {{ leader.name }} - {{ leader.deptName }} / {{ leader.jobRoleName }}
-                    </li>
-                </ul>
+                <UserInfoCard
+                    v-for="(leader, i) in data.leaders"
+                    :key="leader.userId"
+                    :name="leader.name"
+                    :dept="leader.deptName"
+                    :role="leader.jobRoleName"
+                    :profileImage="leader.profileImage"
+                    class="user-info"
+                />
             </div>
         </div>
 
@@ -42,6 +45,8 @@
 
 <script setup>
 import SummaryCard from './SummaryCard.vue'
+import UserInfoCard from '../common/UserInfoCard.vue'
+
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api.js'
@@ -144,5 +149,8 @@ const projectInfo = computed(() => [
     flex: 1;
     text-align: left;
     word-break: break-word;
+}
+.user-info{
+    margin-bottom: 7px;
 }
 </style>
