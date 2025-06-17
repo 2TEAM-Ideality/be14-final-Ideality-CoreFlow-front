@@ -141,7 +141,7 @@ const onEventClick = (event) => {
 <template>
   <CalendarLayout>
     <template #left>
-      <div style="width: 100%; padding: 14px;">
+      <div class="left-cal">
         <VueCal
           class="mini-calendar"
           ref="miniCalRef"
@@ -341,6 +341,14 @@ const onEventClick = (event) => {
 .col-center {
   flex: 8.4;
   padding: 24px;
+}
+.left-cal{
+  width: 100%;
+  padding: 14px;
+  background-color: #F7F7F7;
+  /* height: 100%; */
+  min-height: 100%;
+  height: 100%;
 }
 .mini-calendar {
   border: none !important;
