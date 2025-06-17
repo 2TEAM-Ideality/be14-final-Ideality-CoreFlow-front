@@ -170,6 +170,7 @@ export const useUserStore = defineStore('user', () => {
             return false
         }
     }
+    
     async function updateUserInfo(userId) {
         console.log('savedUser', userId)
         try {

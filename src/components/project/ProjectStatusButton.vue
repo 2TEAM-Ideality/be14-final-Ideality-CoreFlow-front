@@ -2,10 +2,21 @@
 import { computed, ref } from 'vue'
 import CompleteProjectModal from '@/components/project/CompleteProjectModal.vue'
 
-
 const props = defineProps({
   status: {
     type: String,
+    required: true
+  },
+  projectInfo : {
+    type: Object, 
+    required: true
+  },
+  allTaskList : {
+    type: Array,
+    required: true
+  },
+  completedTaskList: {
+    type: Array,
     required: true
   }
 })
@@ -44,7 +55,7 @@ const statusIcon = computed(() => {
         <v-list-item-title>프로젝트 시작</v-list-item-title>
       </v-list-item>
 
-      <v-list-item v-if="status === 'PROGRESS'" @click="showCompleteModal = true">
+      <v-list-item v-if="status === 'PROGRESS' || 'PENDING'" @click="showCompleteModal = true">
         <v-list-item-title>프로젝트 완료</v-list-item-title>
       </v-list-item>
 
@@ -60,10 +71,9 @@ const statusIcon = computed(() => {
   <!-- ✅ 프로젝트 완료 모달 -->
   <CompleteProjectModal
     v-model:show="showCompleteModal"
-    :projectName="'25SS 파셀 자켓'"
-    :total="12"
-    :done="12"
-    :expected="'2025-05-20'"
+    :projectInfo="props.projectInfo"
+    :allTaskList="props.allTaskList"
+    :completedTaskList="props.completedTaskList"
     @complete="() => {
       showCompleteModal = false
       emit('complete')
