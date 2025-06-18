@@ -89,11 +89,11 @@
         </div>
 
         <!-- 자세히 버튼 -->
-        <div class="delayExpectModal" v-if="showDelayExpect" v-for="(value, key) in approvalData.delayDaysByTaskName" :key="key">
+        <div class="delayExpectModal" v-if="showDelayExpect">
             <div style="display: flex; justify-content: end; margin: 6px 0;">
                 <button @click="showDelayExpect = false">x</button>
             </div>
-            <div style="display: flex; justify-content: center; gap: 6px; font-size: 14px;">
+            <div v-for="(value, key) in approvalData.delayDaysByTaskName" :key="key" style="display: flex; gap: 6px; font-size: 14px;">
                 <div style="font-weight: bold;">{{ value.name }}:</div>
                 <div>{{ value.delayDays }}일</div>
             </div>
@@ -214,6 +214,7 @@
 
     onMounted(() => {
         fetchApprovalData(props.approvalId)
+        console.log('taskCountByDelay', approvalData.taskCountByDelay)
     })
 
     watch(() => props.approvalId, (newId, oldId) => {
