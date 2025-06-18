@@ -310,9 +310,10 @@ const emitSetReply = (commentId, name) => {
 .comment-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
   flex-shrink: 0;
   min-height: fit-content;
+  /* margin-top: 32px; */
 }
 
 .comment-box {
