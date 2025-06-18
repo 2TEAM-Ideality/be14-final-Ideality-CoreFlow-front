@@ -24,6 +24,10 @@ export const useUserStore = defineStore('user', () => {
     // const isLoggedIn = computed(() => !!id.value)
     const refreshToken = ref(null)
     const schemaName = ref(null)
+    // 로그인 상태 판단
+    const isLoggedIn = computed(() =>
+        !!id.value && !!accessToken.value && !forcedLogout.value
+    )
 
     function setUserData(data) {
         id.value = data.id
@@ -166,6 +170,7 @@ export const useUserStore = defineStore('user', () => {
             return false
         }
     }
+    
     async function updateUserInfo(userId) {
         console.log('savedUser', userId)
         try {
@@ -216,6 +221,7 @@ export const useUserStore = defineStore('user', () => {
         }
     }
 
+
     return {
         id,
         accessToken,
@@ -234,7 +240,7 @@ export const useUserStore = defineStore('user', () => {
 
         forcedLogout,
         restoreFromStorage,
-        // isLoggedIn,
+        isLoggedIn,
 
         refreshToken,
         schemaName,

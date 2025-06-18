@@ -176,13 +176,21 @@ function getChildIds(nodeId) {
 
 // 태스크 수정 모달 
 function onEditNode(nodeId) {
-  console.log(`${nodeId} 번 태스크를 수정합니다.`)
-  console.log(editingNode.value)
-
   const node = nodes.value.find(n => n.id === nodeId)
   if (node) {
-    editingNode.value = node
-    showEditModal.value = true
+    const parentIds = getParentIds(nodeId)
+    const childIds = getChildIds(nodeId)
+
+    editingNode.value = {
+      ...node,
+      data: {
+        ...node.data,
+        parentIds: getParentIds(nodeId),
+        childIds: getChildIds(nodeId)
+      }
+    }
+
+    showNewTask.value = true
   }
 }
 
@@ -373,12 +381,12 @@ watch(showFullscreenView, async (isOpen) => {
     <!-- 전체 보기 :  노드 생성 / 수정 임시 상태 -->
     <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
       <NewTaskModal
-        v-model:show="showEditModal"
+        v-model:show="showNewTask"
         :deptList="deptList"
         :existingNodes="nodes"
         :initialData="editingNode"
         @update="handleUpdateTask"
-        @close="showEditModal = false"
+        @close="showNewTask = false"
       />
       <v-card class="pa-4">
         <div class="d-flex justify-space-between align-center mb-2">
@@ -412,21 +420,12 @@ watch(showFullscreenView, async (isOpen) => {
               <button title="태스크 생성" @click="showNewTask = true">
                 📝 태스크 생성
               </button>
-              <!-- <button title="태스크 생성" @click="onAddNode">
-                📝 태스크 생성
-              </button> -->
               <button title="정렬" @click="layoutGraph('LR')">
                 🔀 정렬
               </button>
-              <!-- <button title="편집 취소" @click="showFullscreenView = false">
-                ❌ 편집 취소
-              </button> -->
               <button title="편집 완료" @click="onSaveTasks">
                 ✅ 편집 완료
               </button>
-              <!-- <button title="편집하기" @click="showFullscreenView = false">
-                ✅ 편집 완료
-              </button> -->
             </div>
           </Panel>
           

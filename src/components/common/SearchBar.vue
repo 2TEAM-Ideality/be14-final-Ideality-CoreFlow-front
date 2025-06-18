@@ -28,13 +28,12 @@
       </v-list>
     </v-menu>
 
-     <!-- 검색 input -->
+    <!-- 검색 input -->
     <input
       class="search-new"
       type="text"
       v-model="searchInput"
       :placeholder="placeholder"
-      @input="$emit('update:query', searchInput)"
     />
 
 
@@ -63,8 +62,14 @@ const props = defineProps({
 const emit = defineEmits(['update:query', 'filter-click', 'sort-click'])
 
 const searchInput = ref(props.query || '')
+
 watch(() => props.query, (val) => {
   searchInput.value = val
+})
+
+// 입력을 감지하고 즉시 상위로 emit
+watch(searchInput, (val) => {
+  emit('update:query', val)
 })
 
 // 부서 선택 드롭다운용
