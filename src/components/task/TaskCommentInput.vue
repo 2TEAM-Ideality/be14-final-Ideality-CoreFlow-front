@@ -303,11 +303,13 @@ const handleSubmit = async () => {
     }
 
         // 초기화
+        // 댓글 등록 or 수정 후
         input.value = ''
         isNotice.value = false
         editingCommentId.value = null
         selectedMentions.value.clear()
         selectedDetails.value.clear()
+        selectedFileName.value = null 
         if (fileInput.value) fileInput.value.value = ''
         resizeTextarea()
 
