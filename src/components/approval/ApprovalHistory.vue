@@ -30,10 +30,17 @@
             </tbody>
         </table>
     </div>
+    <div class="pagination">
+        <button class="pagination-btn" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">이전</button>
+        <input type="number" v-model="targetPage" style="width: 40px; border: 1px solid black; border-radius: 6px; text-align: end;"/>
+        <span>/ {{ totalPages }}</span>
+        <button class="pagination-btn" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">다음</button>
+        <button class="pagination-btn" @click="goToPage(targetPage)">이동</button>
+    </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/api'
 
 const emit = defineEmits(['select-approval', 'select-tab'])
@@ -50,7 +57,11 @@ function selectTab(type) {
     currentTab.value = type
 }
 
-const currentTab = ref('received')
+const props = defineProps ({
+    selectedTab: String
+})
+
+const currentTab = ref(null)
 
 const approvalData = ref([])
 
@@ -69,6 +80,7 @@ const fetchApprovalData = async () => {
 
 onMounted(() => {
     fetchApprovalData()
+    currentTab.value = props.selectedTab
 })
 
 const displayedList = computed(() => {
@@ -92,12 +104,37 @@ function statusClass(status) {
             return '';
     }
 }
-// defineExpose({ fetchApprovalData })
+const currentPage = ref(1)
+const pageSize = 7
+const targetPage=ref(1)
+
+const paginatedApprovals = computed(() => {
+    if (!displayedList.value || displayedList.value.length === 0) return []
+    const start = (currentPage.value - 1) * pageSize
+    return displayedList.value.slice(start, start + pageSize)
+})
+
+const totalPages = computed(() => {
+    if (!displayedList.value || displayedList.value.length === 0) return 1
+    return Math.ceil(paginatedApprovals.value.length / pageSize)
+})
+
+function goToPage(page) {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page
+    } else {
+        alert('요청하신 페이지 값이 올바르지 않습니다.')
+    }
+}
+
+watch(currentPage, (newVal) => {
+    targetPage.value = newVal
+})
 </script>
 
 <style scoped>
 .container {
-    height: calc(100vh - 100px);
+    height: calc(100vh - 180px);
 }
 .tabs {
   display: flex;
@@ -164,4 +201,19 @@ function statusClass(status) {
     border-radius: 12px;
     border: 1px solid #020725;
 }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 12px;
+    }
+    .pagination-btn {
+        border-radius: 6px;
+        border: 1px solid black;
+        padding: 0 6px;
+    }
+    .pagination-btn:hover {
+        background-color: black;
+        color: white
+    }
 </style>

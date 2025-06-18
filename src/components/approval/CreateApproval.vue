@@ -190,6 +190,8 @@ import api from '@/api';
 import { ref, onMounted, computed, watch } from 'vue'
 import ParticipantSelectModal from './ParticipantSelectModal.vue';
 
+const emit = defineEmits(['remount'])
+
 const delayResons = ref([])
 const projectList = ref([])
 const taskList = ref([])
@@ -234,7 +236,7 @@ function handleUserSelect(selectedUsers) {
     if (modalType.value === 'approver') {
         selectedApprover.value = selectedUsers || null
     } else {
-        selectedViewers.value = selectedUsers
+        selectedViewers.value = selectedUsers || null
     }
     showModal.value = false
 }
@@ -346,6 +348,7 @@ async function createApproval() {
         const response = await api.post('/api/approval/request', formData)
 
         alert(response.data.message)
+        emit('remount')
     } catch (error) {
         if (error.response) {
             console.error('에러 응답:', error.response.data);
@@ -378,6 +381,7 @@ async function createApproval() {
         background-color: #9090ff;
         color: white;
         border-radius: 6px;
+        width: 100px;
     }
     .create-btn:hover {
         background-color: black;

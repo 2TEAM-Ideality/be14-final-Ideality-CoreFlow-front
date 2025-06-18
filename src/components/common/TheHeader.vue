@@ -205,6 +205,7 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid #dbdbdb;
   background-color: #fff;
   z-index: 100;
+  height: 50px;
 }
 
 .logo img {

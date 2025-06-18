@@ -6,7 +6,13 @@ import ApprovalDetails from '@/components/approval/ApprovalDetails.vue';
 import CreateApproval from '@/components/approval/CreateApproval.vue';
 
 const selectedApprovalId = ref(null)
-const selectedTab = ref(null)
+const selectedTab = ref('received')
+
+const approvalHistoryRender = ref(0)
+
+function handleReRender() {
+    approvalHistoryRender.value++ // 강제 remount
+}
 
 function handelShowDetails() {
   selectedApprovalId.value = null
@@ -58,7 +64,12 @@ const currentTabLabel = ref('결재 상세 조회')
     <template #left>
       <div style="background: white; height: calc(100vh - 50px); padding: 50px; border-right: 1px solid black">
         <div style="height: 100%">  
-          <ApprovalHistory @select-approval="handleSelectApproval" @select-tab="handleSelectTab"/>
+          <ApprovalHistory 
+            :key="approvalHistoryRender" 
+            :selectedTab=selectedTab
+            @select-approval="handleSelectApproval" 
+            @select-tab="handleSelectTab"
+          />
         </div>
         <div style="display: flex; justify-content: right;">
           <button class="create-btn" @click="handelShowCreateApproval">결재 요청하기</button>
@@ -75,8 +86,8 @@ const currentTabLabel = ref('결재 상세 조회')
             <button @click="handelShowDetails" class="close-btn">X</button>
         </div>
         <div class="divide"/>
-        <ApprovalDetails v-if="showDetails" :approvalId = selectedApprovalId />
-        <CreateApproval v-if="showCreateApproval" />
+        <ApprovalDetails v-if="showDetails" :approvalId = selectedApprovalId @remount="handleReRender" />
+        <CreateApproval v-if="showCreateApproval" @remount="handleReRender" />
       </div>
     </template>
   </ApprovalLayout>
