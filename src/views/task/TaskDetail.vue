@@ -2,13 +2,13 @@
     <TaskLayout>
         <!-- 📌 메인 -->
         <template #main>
-        <TaskHeaderSection :taskId="taskId" />
-        <TaskMainTab :taskId="taskId" />
+            <TaskHeaderSection :taskId="taskId" />
+            <TaskMainTab :taskId="taskId" />
         </template>
 
         <!-- 📌 사이드바 -->
         <template #sidebar>
-        <SidebarCommentSection :taskId="taskId" />
+            <SidebarCommentSection :taskId="taskId" />
         </template>
     </TaskLayout>
 </template>

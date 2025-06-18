@@ -12,26 +12,32 @@
         </div>
 
         <div class="comment-panel">
-            <CommentTab
+        <CommentTab
             v-if="selectedTab === 'comment'"
+            :key="`comment-${refreshKey}`"
             :taskId="taskId"
             @edit-comment="handleEditComment"
             @set-reply="handleSetReply"
-            />
+            @comment-updated="refreshKey++" 
+        />
 
-            <NoticeTab
+        <NoticeTab
             v-if="selectedTab === 'notice'"
+            :key="`notice-${refreshKey}`" 
             :taskId="taskId"
             @edit-comment="handleEditComment"
             @set-reply="handleSetReply"
-            />
+            @comment-updated="refreshKey++"
+        />
         </div>
 
         <TaskCommentInput
         :taskId="taskId"
         :replyTargetId="replyTargetId"
+        :replyTargetUser="replyTargetUser"
         :editData="editData"
-        @reset-reply="replyTargetId = null"
+        @reset-reply="resetReply"
+        @comment-updated="refreshKey++"
         />
 
     </div>
@@ -52,13 +58,21 @@ const props = defineProps({
 
 const editData = ref(null);
 const replyTargetId = ref(null);
+const replyTargetUser = ref('')
+const refreshKey = ref(0)
+
+const resetReply = () => {
+  replyTargetId.value = null
+  replyTargetUser.value = ''
+}
 
 const handleEditComment = (data) => {
   editData.value = data
 }
 
-const handleSetReply = (parentId) => {
-  replyTargetId.value = parentId
+const handleSetReply = (commentId, userName) => {
+  replyTargetId.value = commentId
+  replyTargetUser.value = userName
 }
 
 const selectedTab = ref('comment')

@@ -14,16 +14,19 @@
                 :key="comment.id"
                 class="comment-item"
             >
-                <div class="comment-header">
-                  <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
-                </div>
+            <div class="comment-header">
+              <div class="writer-with-modify">
+                <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
+                <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
+              </div>
+            </div>
 
                 <div class="comment-box">
                   <span class="comment-content">{{ comment.content }}</span>
 
                 <!-- 아이콘들 공통 스타일 icon 적용 -->
                 <div class="comment-icons">
-                  <button @click="emitSetReply(comment.commentId)">
+                  <button @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)">
                     <img src="@/assets/icons/message.svg" alt="message" class="icon" />
                   </button>
                   <!-- 댓글 드롭다운 열기 -->
@@ -47,13 +50,16 @@
 
                 <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
                     <div class="reply-header">
+                      <div class="writer-with-modify">
                         <span class="comment-writer">ㄴ {{ reply.deptName + '_' + reply.name }}</span>
+                        <span class="modify-comment" v-if="reply.isModify">(수정됨)</span>
+                      </div>
                     </div>
 
                       <div class="comment-box">
                         <span class="comment-content">{{ reply.content }}</span>
                         <div class="comment-icons">
-                          <button @click="emitSetReply(reply.parentCommentId)">
+                          <button @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)">
                             <img src="@/assets/icons/message.svg" alt="message" class="icon" />
                           </button>
                           <!-- 대댓글 드롭다운 열기 -->
@@ -191,6 +197,7 @@ const deleteComment = async () => {
     })
     closeDeleteModal()
     fetchComments(taskId.value)
+    emit('comment-updated')
   } catch (error) {
     const status = error.response?.status;
     const message = error.code;
@@ -218,6 +225,7 @@ const updateNoticeComment = async (id) => {
     });
     alert(res.data?.message);
     fetchComments(taskId.value)
+    emit('comment-updated')
   } catch (error) {
     const status = error.response?.status;
     const message = error.code;
@@ -246,14 +254,14 @@ const props = defineProps({
 
 const onEditComment = (comment) => {
   emit('edit-comment', {
-    id: comment.id,
+    id: comment.commentId,
     content: comment.content,
     isNotice: false
   });
 };
 
-const emitSetReply = (commentId) => {
-  emit('set-reply', commentId)
+const emitSetReply = (commentId, name) => {
+  emit('set-reply', commentId, name)
 }
 
 </script>
@@ -515,5 +523,16 @@ const emitSetReply = (commentId) => {
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.modify-comment {
+  font-size: 13px;
+  color: #888;
+}
+
+.writer-with-modify {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 </style>

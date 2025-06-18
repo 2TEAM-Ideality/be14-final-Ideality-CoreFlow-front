@@ -184,7 +184,7 @@ watch(() => route.params.taskId, (newId) => {
   position: relative;
   border: 1px solid #818181;
   border-radius: 6px;
-  padding: 24px 48px 24px 24px; /* 오른쪽 패딩 */
+  padding: 24px 48px 24px 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -202,18 +202,6 @@ watch(() => route.params.taskId, (newId) => {
   height: 24px;
   cursor: pointer;
 }
-
-.complete-button {
-  background-color: #307cff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
 
 .complete-button {
   position: absolute;
@@ -275,20 +263,25 @@ watch(() => route.params.taskId, (newId) => {
   align-items: center;
 }
 
-/* ✅ 날짜 입력 인풋: 줄어들게 허용 */
+/* ✅ 날짜 입력 input 스타일 개선 */
 .input[type="date"],
 .field-vertical input[type="date"] {
   width: 100%;
-  min-width: 0;
+  height: 36px;
+  line-height: 36px;
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
   box-sizing: border-box;
 }
 
-/* 🔥 일정 입력 그룹 전체를 flex row로 정리 */
+/* 🔥 일정 입력 그룹 전체 정리 */
 .group {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: stretch; /* ✅ 모든 항목 높이 맞춤 */
   gap: 32px;
   flex-wrap: nowrap;
 }
@@ -310,7 +303,7 @@ watch(() => route.params.taskId, (newId) => {
 .date-group {
   display: flex;
   gap: 24px;
-  flex: 2;
+  flex: 1; /* ✅ 줄어들게 수정 */
 }
 
 .field-vertical {
@@ -318,7 +311,7 @@ watch(() => route.params.taskId, (newId) => {
   flex-direction: column;
   gap: 4px;
   flex: 1;
-  min-width: 0; /* ✅ 중요! */
+  min-width: 0;
 }
 
 .summary-row {
@@ -366,7 +359,7 @@ watch(() => route.params.taskId, (newId) => {
   color: #000;
 }
 
-/* ✅ 반응형 */
+/* ✅ 반응형 대응 */
 @media (max-width: 768px) {
   .task-info-box {
     padding: 16px;
