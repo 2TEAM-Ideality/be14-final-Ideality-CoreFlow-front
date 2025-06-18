@@ -19,7 +19,7 @@
       </thead>
 
       <tbody style="font-size: 13px;">
-         <tr v-for="(item, index) in paginatedItems" :key="index">
+        <tr v-for="(item, index) in paginatedItems" :key="index">
         <td>
             <v-checkbox
             v-model="item.selected"
