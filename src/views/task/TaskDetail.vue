@@ -3,7 +3,7 @@
         <!-- 📌 메인 -->
         <template #main>
         <TaskHeaderSection :taskId="taskId" />
-       <TaskMainTab :taskId="taskId" @openModal="showModal = true" />
+       <TaskMainTab :taskId="taskId" @openModal="openModal" />
         </template>
 
         <!-- 📌 사이드바 -->
@@ -12,7 +12,7 @@
         </template>
 
         <!-- 세부일정 생성 모달 -->
-    <DetailCreateModal v-if="showModal" @close="showModal = false" />
+    <DetailCreateModal v-show="showModal" @close="showModal = false" />
     </TaskLayout>
 </template>
 
@@ -30,9 +30,14 @@ const route = useRoute()
 const taskId = route.params.taskId
 
 // showModal 상태를 상위 부모에서 관리
-const showModal = ref(false)  // 모달 열기/닫기 상태
-// openModal 메서드로 showModal을 true로 설정
+const showModal = ref(false);
 
-// showModal 값이 true로 설정되었을 때 모달이 조건부로 렌더링되도록 확인
-console.log('showModal:', showModal.value);  // showModal 값 확인
+const openModal = () => {
+  showModal.value = true;
+  setTimeout(() => {
+    console.log("모달 열림: ", showModal.value);
+  }, 2000);
+};
+
+
 </script>

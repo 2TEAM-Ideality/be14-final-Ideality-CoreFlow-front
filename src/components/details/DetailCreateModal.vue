@@ -213,6 +213,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+     z-index: 9999; /* z-index를 높여서 다른 요소들보다 위에 표시되도록 설정 */
 }
 
 .modal-content {
@@ -224,6 +225,7 @@ export default {
     overflow-y: auto;
     margin-top: 50px;
     position: relative;
+    z-index: 10000; /* 모달 내용의 z-index를 올려서 보이도록 설정 */
 }
 
 button {

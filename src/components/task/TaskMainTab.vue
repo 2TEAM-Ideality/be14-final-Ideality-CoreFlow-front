@@ -30,10 +30,9 @@ import { defineEmits } from 'vue'
 const emit = defineEmits() // 이벤트를 부모로 전달하기 위한 정의
 
 const openModal = () => {
-  console.log("버튼 클릭됨!"); // 클릭 시 로그 찍어보세요
+  console.log("버튼 클릭됨!");
   emit('openModal'); // 부모로 openModal 이벤트 전달
 };
-
 const props = defineProps({ taskId: String })
 
 const tabs = [

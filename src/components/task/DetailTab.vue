@@ -81,7 +81,6 @@ export default {
         const taskInfoData = await taskInfoResponse.json();
         const progressData = await progressResponse.json();
 
-        console.log(progressData.data);
         this.items = progressData.data; // 작업 상세 데이터 저장
         this.totalProgress = taskInfoData.data.selectTask.progressRate; // 총 진척률 값 저장
       } catch (error) {
