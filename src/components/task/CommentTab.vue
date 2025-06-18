@@ -15,7 +15,7 @@
                 class="comment-item"
             >
                 <div class="comment-header">
-                  <span class="comment-writer">{{ comment.commentWriter }}</span>
+                  <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
                 </div>
 
                 <div class="comment-box">
@@ -47,7 +47,7 @@
 
                 <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
                     <div class="reply-header">
-                        <span class="comment-writer">ㄴ {{ reply.commentWriter }}</span>
+                        <span class="comment-writer">ㄴ {{ reply.deptName + '_' + reply.name }}</span>
                     </div>
 
                       <div class="comment-box">
@@ -108,7 +108,6 @@ const isDeleteModalOpen = ref(false);
 const deleteTargetId = ref(null);
 
 const comments = ref([]);
-const replyTargetId = ref(null);
 
 const fetchComments = async (id)=> {
   try {

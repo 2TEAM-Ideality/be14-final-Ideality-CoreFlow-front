@@ -16,7 +16,7 @@
               class="comment-item"
           >
               <div class="comment-header">
-                <span class="comment-writer">📌 {{ comment.commentWriter }}</span>
+                <span class="comment-writer">📌 {{ comment.deptName + '_' + comment.name }}</span>
               </div>
 
               <div class="comment-box">

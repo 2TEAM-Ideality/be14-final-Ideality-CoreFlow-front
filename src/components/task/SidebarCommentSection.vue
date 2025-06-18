@@ -43,22 +43,29 @@ import CommentTab from './CommentTab.vue'
 import NoticeTab from './NoticeTab.vue'
 import TaskCommentInput from './TaskCommentInput.vue'
 
+const props = defineProps({
+  taskId: {
+    type: [Number, String],
+    required: true
+  }
+})
+
 const editData = ref(null);
 const replyTargetId = ref(null);
 
 const handleEditComment = (data) => {
-    editData.value = data
+  editData.value = data
 }
 
 const handleSetReply = (parentId) => {
-    replyTargetId.value = parentId
+  replyTargetId.value = parentId
 }
 
 const selectedTab = ref('comment')
 
 const commentTabs = [
-{ name: 'comment', label: '댓글' },
-{ name: 'notice', label: '공지' }
+  { name: 'comment', label: '댓글' },
+  { name: 'notice', label: '공지' }
 ]
 </script>
 
