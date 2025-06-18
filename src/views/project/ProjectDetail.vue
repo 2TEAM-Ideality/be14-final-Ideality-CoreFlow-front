@@ -17,6 +17,7 @@
         @start="markAsInProgress"
         @complete="markAsCompleted"
         @delete="deleteProject"
+        @report="downloadReport"
       />
     </h1>
 
@@ -45,10 +46,14 @@
 import ProjectStatusButton from '@/components/project/ProjectStatusButton.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/userStore.js'
 import api from '@/api.js'
 import BreadCrumb from '@/components/common/BreadCrumb.vue'
-
+const userStore = useUserStore()
+const token = userStore.accessToken
 const route = useRoute()
+
+
 const projectId = route.params.id
 const projectInfo = ref({});
 const projectName = ref('로딩 중...')
@@ -115,6 +120,30 @@ const markAsCompleted = async () => {
     alert('완료 처리에 실패했습니다.')
   }
 }
+
+// 프로젝트 분석 리포트 다운로드 
+const downloadReport = async () => {
+  try {
+    const response = await api.get(`/api/projects/report/${projectId}`, {
+      responseType: 'blob',
+      headers: {
+        Authorization: `Bearer ${userStore.accessToken}`  // 이거 꼭!
+      }
+    });
+
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '프로젝트_분석_리포트.pdf';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('PDF 다운로드 실패:', err);
+    alert('PDF 생성에 실패했습니다.');
+  }
+};
 
 </script>
 
