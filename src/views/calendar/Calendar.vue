@@ -19,12 +19,30 @@ const deptScheduleList = ref([])      // 부서 일정 리스트
 
 const deptProjectList = ref([])   // 부서 참여 프로젝트 리스트 
 const selectedProjectIds = ref([]) // 선택된 프로젝트 ID 목록
+const view = ref('month')
 
 // 선택한 이벤트 상세 보기
 const eventDetailPanel = ref(null)  
 const editableStart = ref('')
 const editableEnd = ref('')
 const isAllDay = ref(false)   // 종일인지 여부
+
+const showCalendar = ref(false) 
+const showPersonal = ref(true)
+const showDepartment = ref(true)
+
+const currentViewDate = ref({})
+
+const showAddPanel = ref(false)
+const newScheduleTitle = ref('')
+const newScheduleContent = ref('')
+const newScheduleStart = ref('')
+const newScheduleEnd = ref('')
+const newScheduleIsAllDay = ref(true)
+
+
+
+
 
 // 오늘의 일정
 const todayList = computed(() => {
@@ -36,12 +54,7 @@ const todayList = computed(() => {
     return start <= today && today <= end
   })
 })    
-const showCalendar = ref(false) 
 
-const currentViewDate = ref({})
-
-const showPersonal = ref(true)
-const showDepartment = ref(true)
 
 // 개인 일정 불러오기
 async function fetchMonthlySchedule(year, month) {
@@ -124,6 +137,10 @@ async function fetchDeptSchedule () {
 
 }
 
+watch(view, (val) => {
+  console.log('📌 현재 뷰:', val)
+})
+
 // 부서 + 개인 일정 조합
 const mergedEvents = computed(() => {
   const events = []
@@ -162,6 +179,25 @@ const goToToday = () => {
     fetchMonthlySchedule(year, month)
   }
 }
+// 오늘 날짜
+const todayFormatted = computed(() => {
+  const today = new Date()
+  const month = today.getMonth() + 1
+  const date = today.getDate()
+  const weekday = ['일', '월', '화', '수', '목', '금', '토'][today.getDay()]
+  return `${month}월 ${date}일 ${weekday}요일`
+})
+
+// 메인 달력 뷰 변경
+function switchToYearView() {
+  view.value = 'year'
+  vueCalRef.value?.switchView('year')
+}
+
+function switchToYearsView() {
+  view.value = 'years'
+  vueCalRef.value?.switchView('years')
+}
 
 
 // ✅ 뷰 변경 시 월별 일정 다시 요청
@@ -199,6 +235,8 @@ onMounted(async () => {
 
 // 셀 클릭 처리
 const onCellClick = ({ date, events }) => {
+  console.log(selectedDate.value)
+
   console.log('📌 날짜 클릭:', date, events)
 }
 // 이벤트 클릭 처리 
@@ -208,17 +246,35 @@ const onEventClick = (event) => {
   eventDetailPanel.value = true
 }
 
+const onCellDblClick = ({ date }) => {
+  const formatted = toDateInputString(selectedDate.value)
+
+  selectedDate.value = formatted // ✅ 선택된 날짜 저장
+  selectedEvent.value = null
+  showAddPanel.value = true
+
+  newScheduleTitle.value = ''
+  newScheduleContent.value = ''
+  newScheduleStart.value = formatted   // ✅ 시작일
+  newScheduleEnd.value = formatted     // ✅ 종료일도 동일하게
+  newScheduleIsAllDay.value = true
+}
+
 //  선택한 일정 상세 보기
 const handleClickOutside = (e) => {
   const isInsideEvent = e.target.closest('.vuecal__event')
-  if (isInsideEvent) return
+  const isInsidePanel = eventDetailPanel.value?.contains(e.target)
 
-  if (
-    selectedEvent.value &&
-    eventDetailPanel.value &&
-    !eventDetailPanel.value.contains(e.target)
-  ) {
+  if (isInsideEvent || isInsidePanel) return
+
+  // 이벤트 상세 닫기
+  if (selectedEvent.value) {
     selectedEvent.value = null
+  }
+
+  // 새 일정 생성 패널 닫기
+  if (showAddPanel.value) {
+    showAddPanel.value = false
   }
 }
 
@@ -253,6 +309,34 @@ function toDateInputString(date) {
   return `${year}-${month}-${day}` // YYYY-MM-DD
 }
 
+const submitNewSchedule = () => {
+  if (!newScheduleTitle.value || !newScheduleStart.value) {
+    alert('제목과 시작일은 필수입니다.')
+    return
+  }
+
+  // 이벤트 생성
+  const newEvent = {
+    title: newScheduleTitle.value,
+    content: newScheduleContent.value,
+    start: newScheduleStart.value,
+    end: newScheduleEnd.value || newScheduleStart.value,
+    class: 'event-personal',
+    attributes: {
+      title: `${newScheduleTitle.value}\n${newScheduleContent.value}`
+    }
+  }
+
+  // 예시: 로컬에 추가 (실제 앱에서는 API POST)
+  scheduleList.value.push(newEvent)
+
+  // 초기화
+  showAddPanel.value = false
+  newScheduleTitle.value = ''
+  newScheduleContent.value = ''
+}
+
+
 
 watch(selectedEvent, (event) => {
   if (event) {
@@ -263,7 +347,13 @@ watch(selectedEvent, (event) => {
     }
   }
 })
+function goPrevMonth() {
+  vueCalRef.value?.previous()
+}
 
+function goNextMonth() {
+  vueCalRef.value?.next()
+}
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
@@ -282,6 +372,13 @@ watch(selectedDate, async (newDate) => {
 
 watch(selectedProjectIds, (val) => {
   console.log('✅ 선택된 프로젝트 IDs:', val)
+})
+
+watch(selectedEvent, (event) => {
+  if (event) {
+    editableStart.value = toDateInputString(event.start)
+    editableEnd.value = toDateInputString(event.end) // ✅ 여기서 NaN 방지
+  }
 })
 
 </script>
@@ -316,7 +413,6 @@ watch(selectedProjectIds, (val) => {
             }"
           />
         </div>
-       
         <div style="height: 300px;">
           <h5
             @click="toggleAllProjects"
@@ -359,13 +455,28 @@ watch(selectedProjectIds, (val) => {
         
     <template #center>
       <div style="height: 100%; display: flex; flex-direction: column;">
-        <h2>{{ currentViewDate.year }} {{ currentViewDate.month }}</h2>
-        <div class="d-flex align-center gap-4 mb-2">
-          <v-checkbox v-model="showPersonal" label="👤 개인일정 보기" hide-details density="compact" />
-          <v-checkbox v-model="showDepartment" label="🏢 부서일정 보기" hide-details density="compact" />
+
+        <div style="display: flex; flex-direction:row;  gap: 8px; margin-bottom: 12px;">
+          <h2 style="font-weight: normal; margin: 0; cursor:pointer;" @click="switchToYearsView"> {{ currentViewDate.year }}년 </h2>
+          <h2 style="cursor:pointer;" @click="switchToYearView">{{ currentViewDate.month }}월</h2>
         </div>
-        <div style="display: flex; flex-direction: row; justify-content: flex-end;">
-        <v-btn color="white" @click="goToToday" style="width: fit-content">Today</v-btn>
+
+
+        <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
+          <div class="d-flex align-center gap-4 mb-2">
+            <v-checkbox v-model="showPersonal" label="👤 개인일정 보기" hide-details density="compact" />
+            <v-checkbox v-model="showDepartment" label="🏢 부서일정 보기" hide-details density="compact" />
+          </div>
+          <div>
+            <v-btn icon variant="text" @click="goPrevMonth">
+              <v-icon>mdi-chevron-left</v-icon>
+            </v-btn>
+            <v-btn color="black" @click="goToToday" style="width: fit-content" variant="plain">Today</v-btn>
+            <v-btn icon variant="text" @click="goNextMonth">
+              <v-icon>mdi-chevron-right</v-icon>
+            </v-btn>
+          </div>
+          
         </div>
 
         <div style="flex: 1; overflow: hidden;">
@@ -373,17 +484,25 @@ watch(selectedProjectIds, (val) => {
             class="main-cal"
             v-if="showCalendar"
             ref="vueCalRef"
+            v-model:view="view"
+            :views="{
+              month: {},
+              year: {},
+              yaers: {}
+            }"
+            :available-views="['month', 'year', 'years']"
             default-view="month"
-            :available-views="['month', 'week', 'day']"
             :events="mergedEvents"
+            :prevent-event-details="true"
+            :disable-views="['day', 'week']"
+            :disable-views-transition="true"
             :selected-date="selectedDate"
-            :split-multi-day-events="false" 
             events-on-month-view
-            :views="{ days: { cols: 5, rows: 1 }, month: {} }"
             time="24"
             @cell-focus="selectedDate = $event"
             @view-change="onViewChange"
             @cell-click="onCellClick"
+            @cell-dblclick="onCellDblClick"
             @event-click="onEventClick"
             style="height: 100%;"
             locale="ko"
@@ -395,6 +514,7 @@ watch(selectedProjectIds, (val) => {
               }
             }"
           />
+
         </div>
       </div>
     </template>
@@ -414,12 +534,12 @@ watch(selectedProjectIds, (val) => {
             <div>
               <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
               <span class="mr-3"><strong>시작일</strong></span>
-              <input type="date" v-model="editableStart" /> 
+              <input type="date" v-model="editableStart" readonly/> 
             </div>
             <div>
               <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
               <span class="mr-3"><strong>마감일</strong></span>
-              <input type="date" v-model="editableEnd" />
+              <input type="date" v-model="editableEnd" readonly/>
             </div>
           </div>
           <v-switch 
@@ -433,12 +553,53 @@ watch(selectedProjectIds, (val) => {
             color="success" />
           
         </div>
+        <div v-else-if="showAddPanel" class="event-detail-panel" @click.stop>
+          <h4>📌 새 일정 생성</h4>
+          <v-text-field
+            v-model="newScheduleTitle"
+            label="제목"
+            dense
+            hide-details
+          />
+          
+          <v-textarea
+            v-model="newScheduleContent"
+            label="내용"
+            rows="2"
+            dense
+            hide-details
+          />
+          <div class="mt-2" style="display:flex; flex-direction: row; gap: 8px;">
+            <span><strong>시작일</strong></span>
+            <input type="date" v-model="newScheduleStart" />
+          </div>
+          <div style="display:flex; flex-direction: row; gap: 8px;">
+            <span><strong>종료일</strong></span>
+            <input type="date" v-model="newScheduleEnd" />
+          </div>
+          <v-switch
+            label="종일"
+            v-model="newScheduleIsAllDay"
+            density="compact"
+            hide-details
+            color="success"
+            class="small-switch mt-2 custom-switch"
+          />
+          <div class="mt-4">
+            <v-btn color="primary" @click="submitNewSchedule">생성</v-btn>
+            <v-btn class="ml-2" variant="text" @click="showAddPanel = false">취소</v-btn>
+          </div>
+        </div>
         
         <div v-else>
-          <h4>📌 오늘의 일정</h4>
+          <h4 style="color: #818181; display: flex; align-items: center; gap: 6px;">
+            <v-icon size="18" icon="mdi-calendar" />
+            예정된 이벤트
+          </h4>
+          <h4 style="color: #FF4545;">{{ todayFormatted }}</h4>
           <div v-if="todayList.length && !selectedEvent" class="mb-4"> 
-            <ul>
-              <li v-for="event in todayList" :key="event.title" style="font-size: 14px;">
+            <ul style="list-style: none; padding-left: 0;">
+              <li v-for="event in todayList" :key="event.title" style="font-size: 12px;">
                 {{ event.title }} - {{ event.content }}
               </li>
             </ul>
@@ -447,6 +608,8 @@ watch(selectedProjectIds, (val) => {
             일정이 없습니다.
           </div>
         </div>
+
+        
       </div>
     </template>
   </CalendarLayout>
@@ -461,21 +624,28 @@ watch(selectedProjectIds, (val) => {
   --vc-border-color: #d0d7de;
 }
 .vuecal__title-bar {
+  display: none !important;
+  /* display: flex !important;  */
   background-color: #ececec;
   color: rgb(41, 41, 41);
   font-weight: bold;
   font-size: 16px;
   border-radius: 4px 4px 0 0;
-  display: flex;
-  justify-content: flex-start; /* ⬅️ 여기 추가 */
-  align-items: center;
-}
-.vuecal__title {
-  text-align: left !important;     /* 텍스트 왼쪽 정렬 */
-}
-.vuecal__flex .vuecal__title {
-  text-align: left;
   justify-content: flex-start;
+  align-items: center;display: none !important;
+  padding-left: 12px;
+  height: 40px;
+}
+.vuecal__title .button {
+  display: none !important; /* ⛔ 뷰 전환 버튼 숨김 */
+}
+
+.vuecal__title {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+.vuecal__title span {
+  display: none !important;
 }
 .vuecal__cell-content {
   display: flex;
@@ -497,6 +667,9 @@ watch(selectedProjectIds, (val) => {
   font-size: 13px;
   text-align: left;
   padding-left: 4px;
+}
+.vuecal__view {
+  transition: none !important;
 }
 .vuecal__event {
   text-align: left;
@@ -585,11 +758,13 @@ watch(selectedProjectIds, (val) => {
   background-color: rgba(0,0,0,0);
   margin-bottom: 20px;
 }
+
 .mini-calendar .vuecal__title-bar {
   background-color: rgba(0,0,0,0);
   font-size: 12px;
   /* pointer-events: none; */
 }
+
 .mini-calendar .vuecal__flex .vuecal__title {
   pointer-events: none;
 }
@@ -609,10 +784,10 @@ watch(selectedProjectIds, (val) => {
   gap: 10px;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
+/* input[type="date"]::-webkit-calendar-picker-indicator {
   display: none;
   -webkit-appearance: none;
-}
+} */
 .custom-switch .v-label {
   font-size: 13px !important; /* ✅ 라벨 글자 크기 */
 }
