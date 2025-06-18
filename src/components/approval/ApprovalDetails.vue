@@ -64,6 +64,16 @@
                     {{ approvalData.content }}
                 </div>
             </div>
+            <div v-if="approvalData?.attachmentPreviewInfo?.length">
+                <div 
+                    v-for="(file, index) in approvalData.attachmentPreviewInfo"
+                    :key="index"
+                    class="file-link"
+                    @click="openInNewTab(file.url)"
+                >
+                    📎{{ file.originName }}
+                </div>
+            </div>
         </div>
         <div class="btn-area">
             <div v-if="approver && approvalData.status === 'PENDING'" class="approved-area">
@@ -292,6 +302,10 @@
         selectedViewers.value = selectedUsers
         showAddViewer.value = false
     }
+
+    function openInNewTab(url) {
+        window.open(url, '_blank');
+    }
 </script>
 
 <style scoped>
@@ -317,7 +331,7 @@
         border: 1px solid black;
         overflow-y: auto;
         padding-left: 6px;
-        height: 130px;
+        height: 100px;
     }
     .content-title {
         font-weight: bold;
@@ -449,5 +463,13 @@
     }
     .add-viewer {
         background-color: gray;
+    }
+    .file-link {
+        cursor: pointer;
+        color: black;
+        font-size: 14px;
+    }
+    .file-link:hover {
+        color: #0b59d8;
     }
 </style>
