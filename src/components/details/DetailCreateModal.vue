@@ -107,6 +107,8 @@
 </template>
 
 <script>
+import { useUserStore } from '@/stores/userStore'
+
 export default {
     data() {
         return {
@@ -130,12 +132,36 @@ export default {
             ],
         };
     },
+    mounted() {
+        // 컴포넌트가 마운트된 후 부서 데이터를 불러옵니다.
+        this.fetchDepartments();
+    },
     methods: {
         async fetchDepartments() {
+            const userStore = useUserStore();
+            const token = userStore.accessToken;
+
+            if (!token) {
+                console.error("토큰이 없습니다.");
+                return;
+            }
+            
             try {
-                const response = await fetch("https://localhost:5000/api/dept/all"); // 실제 API URL로 수정 필요
-                const data = await response.json(); // 받은 데이터를 JSON으로 파싱
-                this.departments = data; // 받아온 부서 데이터를 departments 배열에 저장
+                // Authorization 헤더에 Bearer 토큰 추가
+                const response = await fetch("http://localhost:5000/api/dept/all", {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`, // Bearer 토큰을 Authorization 헤더에 추가
+                        'Content-Type': 'application/json',  // 필요한 경우 Content-Type 설정
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json(); // 받은 데이터를 JSON으로 파싱
+                    this.departments = data; // 받아온 부서 데이터를 departments 배열에 저장
+                } else {
+                    console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status);
+                }
             } catch (error) {
                 console.error("부서 데이터를 불러오는 데 실패했습니다:", error); // 오류 처리
             }
