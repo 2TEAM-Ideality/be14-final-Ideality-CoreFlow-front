@@ -43,8 +43,10 @@
                         <label for="department">담당 부서:</label>
                         <select id="department" class="depart" v-model="form.department">
                             <option value="" disabled selected>부서명을 선택해주세요</option>
-                            <option v-for="(department, index) in departments" :key="index" :value="department.id">
-                                {{ department.name }}
+                            <!-- 부서 데이터 렌더링 -->
+                            <option v-for="department in departments" :key="department.deptId"
+                                :value="department.deptId">
+                                {{ department.deptName }}
                             </option>
                         </select>
                     </div>
@@ -145,7 +147,7 @@ export default {
                 console.error("토큰이 없습니다.");
                 return;
             }
-            
+
             try {
                 // Authorization 헤더에 Bearer 토큰 추가
                 const response = await fetch("http://localhost:5000/api/dept/all", {
@@ -158,7 +160,7 @@ export default {
 
                 if (response.ok) {
                     const data = await response.json(); // 받은 데이터를 JSON으로 파싱
-                    this.departments = data; // 받아온 부서 데이터를 departments 배열에 저장
+                    this.departments = data.data; // 받아온 부서 데이터를 departments 배열에 저장
                 } else {
                     console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status);
                 }
