@@ -50,7 +50,6 @@ import { useUserStore } from '@/stores/userStore.js'
 import api from '@/api.js'
 import BreadCrumb from '@/components/common/BreadCrumb.vue'
 const userStore = useUserStore()
-const token = userStore.accessToken
 const route = useRoute()
 
 

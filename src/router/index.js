@@ -3,22 +3,20 @@ import { useUserStore } from '@/stores/userStore'
 
 const routes = [
   {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/views/main/Home.vue')
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/user/Login.vue')
   },
   {
-    path: '/',
+    path: '/project/list',
     name: 'Project',
     component: () => import('@/views/project/ProjectList.vue')
   },
-
-  // 프로젝트
-  // {
-  //   path: '/project',
-  //   name: 'Project',
-  //   component: () => import('@/views/project/ProjectList.vue')
-  // },
   {
     path: '/project/:id',
     component: () => import('@/views/project/ProjectDetail.vue'),
