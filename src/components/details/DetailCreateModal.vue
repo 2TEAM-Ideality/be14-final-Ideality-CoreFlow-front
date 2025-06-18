@@ -1,10 +1,7 @@
 <template>
     <div>
-        <!-- 버튼을 클릭하여 모달을 열 수 있음 -->
-        <button @click="showModal = true">세부 일정 생성</button>
-
         <!-- 모달이 열릴 때만 표시 -->
-        <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-overlay" @click.self="closeModal">
             <div class="modal-content">
 
                 <h2>세부 일정 생성</h2>
@@ -169,7 +166,7 @@ export default {
             }
         },
         closeModal() {
-            this.showModal = false;
+            this.$emit("close"); // 부모로 모달 닫기 이벤트 전송
         },
         submitForm() {
             // 필수 입력 항목 체크

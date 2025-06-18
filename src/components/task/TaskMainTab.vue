@@ -11,10 +11,11 @@
           {{ tab.label }}
         </button>
       </div>
-      <button class="schedule-button">+ 세부일정 생성</button>
+      <button class="schedule-button"  @click="openModal">+ 세부일정 생성</button>
     </div>
 
     <component :is="selectedComponent" :taskId="taskId" />
+  
   </div>
 </template>
   
@@ -24,6 +25,14 @@ import TaskInfoTab from '@/components/task/TaskInfoTab.vue'
 import TaskApprovalTab from '@/components/task/TaskApprovalTab.vue'
 import TaskAttachmentTab from '@/components/task/TaskAttachmentTab.vue' 
 import DetailTab from './DetailTab.vue'
+import { defineEmits } from 'vue'
+
+const emit = defineEmits() // 이벤트를 부모로 전달하기 위한 정의
+
+const openModal = () => {
+  console.log("버튼 클릭됨!"); // 클릭 시 로그 찍어보세요
+  emit('openModal'); // 부모로 openModal 이벤트 전달
+};
 
 const props = defineProps({ taskId: String })
 
