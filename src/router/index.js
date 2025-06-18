@@ -140,6 +140,13 @@ const routes = [
     path: '/task/:taskId',
     name: 'TaskDetail',
     component: () => import('@/views/task/TaskDetail.vue')
+  },
+
+  // erp_master
+  {
+    path: '/master',
+    name: 'MasterPage',
+    component: () => import('@/views/master/ErpMaster.vue')
   }
 ]
 
@@ -150,14 +157,27 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
+  const schema = localStorage.getItem('schemaName')
 
-  if (to.path === '/admin') {
+  if (to.path.startsWith('/admin')) {
     const hasAdminRole = userStore.roles.includes('ADMIN')
     if (!hasAdminRole) {
       alert('관리자만 접근할 수 있습니다.')
       return next('/')
     }
   }
+
+  // master 전용 페이지 접근 제한
+  if (to.path.startsWith('/master') && schema !== 'master') {
+    alert('master 전용 페이지입니다.')
+    return next('/')
+  }
+
+  if (schema === 'master' && !to.path.startsWith('/master')) {
+    alert('master 계정은 이 페이지에 접근할 수 없습니다.')
+    return next('/master')
+  }
+
   next()
 })
 
