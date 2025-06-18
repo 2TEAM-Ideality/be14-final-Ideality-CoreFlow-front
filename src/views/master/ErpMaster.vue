@@ -1,13 +1,34 @@
 <template>
     <div class="container">
         <div class="content">
-            ㅇㅅㅇ
+            {{ tenantList }}
         </div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import api from '@/api';
+
+const searchTenant = ref('')
+const tenantList = ref([])
+
+async function fetchTenant() {
+    try {
+        const response = await api.get('/api/tenant/find-all')
+        tenantList.value = response.data.data
+        console.log('tenentList', tenantList.value)
+    } catch (error) {
+        if(error.response) {
+            alert(error.response.data.message)
+        }
+    }
+}
+
+onMounted(() => {
+    fetchTenant()
+})
+
 </script>
 
 <style scoped>
