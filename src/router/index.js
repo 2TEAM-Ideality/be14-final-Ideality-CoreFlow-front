@@ -61,80 +61,86 @@ const routes = [
     ]
   },
 
-    // 템플릿
-    {
-      path: '/template',
-      name: 'Template',
-      component: () => import('@/views/template/TemplateList.vue')
-    },
-    {
-      path: '/template/detail/:id',
-      name: 'TemplateDetail',
-      component: () => import('@/views/template/TemplateDetail.vue')
-    },
-    {
-      path: '/template/edit/:id',
-      name: 'EditTemplate',
-      component: () => import('@/views/template/EditTemplate.vue')
-    },
-    {
-      path: '/template/edit/task/:id',
-      name: 'EditTemplateTask',
-      component: () => import('@/views/template/EditTemplateTask.vue')
-    },
-    {
-      path: '/template/create',
-      name: 'CreateTemplate',
-      component: () => import('@/views/template/CreateTemplate.vue')
-    },
-    {
-      path: '/template/create/task',
-      name: 'CreateTemplateTask',
-      component: () => import('@/views/template/CreateTemplateTask.vue')
-    },
-    
-    // 부서 일정
-    {
-      path: '/calendar',
-      name: 'Calendar',
-      component: () => import('@/views/calendar/Calendar.vue')
-    },
+  // 템플릿
+  {
+    path: '/template',
+    name: 'Template',
+    component: () => import('@/views/template/TemplateList.vue')
+  },
+  {
+    path: '/template/detail/:id',
+    name: 'TemplateDetail',
+    component: () => import('@/views/template/TemplateDetail.vue')
+  },
+  {
+    path: '/template/edit/:id',
+    name: 'EditTemplate',
+    component: () => import('@/views/template/EditTemplate.vue')
+  },
+  {
+    path: '/template/edit/task/:id',
+    name: 'EditTemplateTask',
+    component: () => import('@/views/template/EditTemplateTask.vue')
+  },
+  {
+    path: '/template/create',
+    name: 'CreateTemplate',
+    component: () => import('@/views/template/CreateTemplate.vue')
+  },
+  {
+    path: '/template/create/task',
+    name: 'CreateTemplateTask',
+    component: () => import('@/views/template/CreateTemplateTask.vue')
+  },
 
-    // 결재
-    {
-      path: '/approval',
-      name: 'Approval',
-      component: () => import('@/views/approval/Approval.vue')
-    },
+  // 부서 일정
+  {
+    path: '/calendar',
+    name: 'Calendar',
+    component: () => import('@/views/calendar/Calendar.vue')
+  },
 
-    {
-      path: '/admin',
-      component: () => import('@/views/admin/Admin.vue'),
-      children: [
-        {
-          path: 'user',
-          name: 'ManagingUser',
-          component: () => import('@/components/admin/ManagingUser.vue'),
-          meta: {
-            title: '사용자 관리',
-            needUserList: true
-          }
-        },
-        {
-          path: 'org',
-          name: 'ManagingOrg',
-          component: () => import('@/components/admin/ManagingOrg.vue'),
-          meta: {
-            title: '조직 관리',
-            needUserList: false
-          }
-        },
-        {
-          path:'',
-          redirect: { name: 'ManagingUser' }
+  // 결재
+  {
+    path: '/approval',
+    name: 'Approval',
+    component: () => import('@/views/approval/Approval.vue')
+  },
+
+  {
+    path: '/admin',
+    component: () => import('@/views/admin/Admin.vue'),
+    children: [
+      {
+        path: 'user',
+        name: 'ManagingUser',
+        component: () => import('@/components/admin/ManagingUser.vue'),
+        meta: {
+          title: '사용자 관리',
+          needUserList: true
         }
-      ]
-    },
+      },
+      {
+        path: 'org',
+        name: 'ManagingOrg',
+        component: () => import('@/components/admin/ManagingOrg.vue'),
+        meta: {
+          title: '조직 관리',
+          needUserList: false
+        }
+      },
+      {
+        path: '',
+        redirect: { name: 'ManagingUser' }
+      }
+    ]
+  },
+  // 태스크 관련
+  {
+    path: '/task/:taskId',
+    name: 'TaskDetail',
+    component: () => import('@/views/task/TaskDetail.vue')
+  }
 ]
 
 const router = createRouter({
@@ -147,7 +153,7 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.path === '/admin') {
     const hasAdminRole = userStore.roles.includes('ADMIN')
-    if(!hasAdminRole) {
+    if (!hasAdminRole) {
       alert('관리자만 접근할 수 있습니다.')
       return next('/')
     }
