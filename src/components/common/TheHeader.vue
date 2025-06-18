@@ -6,7 +6,7 @@
       </router-link>
     </div>
 
-    <nav class="nav">
+    <nav class="nav" v-if="isMaster">
       <router-link to="/">프로젝트</router-link>
       <router-link to="/template">템플릿</router-link>
       <router-link to="/calendar">부서 일정</router-link>
@@ -52,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationStore } from '@/stores/notificationStore'
@@ -80,6 +80,10 @@ const showDropdown = ref({ user: false })
 
 const userBox = ref(null)
 const isAdmin = ref(userStore.roles?.includes('ADMIN') ?? false)
+
+const isMaster = computed(() => {
+  return localStorage.getItem("schemaName") !== 'master'
+})
 
 const triggerFileInput = () => fileInput.value?.click()
 

@@ -21,8 +21,6 @@ export const useUserStore = defineStore('user', () => {
     const roles = ref([])
 
     const forcedLogout = ref(false)
-    // const isLoggedIn = computed(() => !!id.value)
-    const refreshToken = ref(null)
     const schemaName = ref(null)
     // 로그인 상태 판단
     const isLoggedIn = computed(() =>
@@ -47,7 +45,6 @@ export const useUserStore = defineStore('user', () => {
 
     async function login(responseLogin) {
         accessToken.value = responseLogin.accessToken
-        refreshToken.value = responseLogin.refreshToken
 
         setUserData(responseLogin)
 
@@ -68,7 +65,6 @@ export const useUserStore = defineStore('user', () => {
             jobRoleName: jobRoleName.value,
             roles: roles.value
         }))
-        localStorage.setItem('refreshToken', refreshToken.value)
         localStorage.setItem('schemaName', schemaName.value)
         sessionStorage.setItem('accessToken', accessToken.value)
     }
@@ -107,13 +103,9 @@ export const useUserStore = defineStore('user', () => {
         jobRoleName.value = ''
         roles.value = []
 
-        // isLoggedIn.value = false
-
-        refreshToken.value = null
         schemaName.value = null
 
         localStorage.removeItem('user')
-        localStorage.removeItem('refreshToken')
         sessionStorage.removeItem('accessToken')
         localStorage.removeItem('schemaName')
     }
@@ -121,20 +113,16 @@ export const useUserStore = defineStore('user', () => {
     async function tryReissueToken() {
         const savedUser = localStorage.getItem('user')
         const parsedUser = JSON.parse(savedUser);
-        const refreshToken = localStorage.getItem('refreshToken')
         const schemaName = localStorage.getItem('schemaName')
         
         if (!savedUser || !refreshToken) return
 
         try {
             const response = await axios.post('/api/auth/reissue', {
-                'refreshToken': refreshToken,
-                'userId': parsedUser.id,
-                'companySchema': schemaName
+                userId: parsedUser.id,
+                companySchema: schemaName
             }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                withCredentials: true
             })
 
             const reissueResponse = response.data.data
@@ -170,6 +158,11 @@ export const useUserStore = defineStore('user', () => {
             return false
         }
     }
+
+    function setAccessToken(token) {
+        accessToken.value = token;
+        sessionStorage.setItem('accessToken', token)
+    }
     
     async function updateUserInfo(userId) {
         console.log('savedUser', userId)
@@ -204,16 +197,14 @@ export const useUserStore = defineStore('user', () => {
 
     async function restoreFromStorage() {
         const savedUser = localStorage.getItem('user')
-        const savedRefreshToken = localStorage.getItem('refreshToken')
         const savedSchemaName = localStorage.getItem('schemaName')
         const savedAccessToken = sessionStorage.getItem('accessToken') // 저장되어 있다면 복원
 
-        if (savedUser && savedRefreshToken) {
+        if (savedUser) {
             const parsedUser = JSON.parse(savedUser)
 
             setUserData(parsedUser)
 
-            refreshToken.value = savedRefreshToken
             schemaName.value = savedSchemaName
             accessToken.value = savedAccessToken
         } else {
@@ -242,7 +233,7 @@ export const useUserStore = defineStore('user', () => {
         restoreFromStorage,
         isLoggedIn,
 
-        refreshToken,
+        setAccessToken,
         schemaName,
         login,
         logout,
