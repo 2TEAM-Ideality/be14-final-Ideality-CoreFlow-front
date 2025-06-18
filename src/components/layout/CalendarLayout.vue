@@ -17,7 +17,7 @@
 
       <!-- 오른쪽 영역 -->
       <v-col cols="2">
-        <div class="col-content bg-light">
+        <div class="col-content right-content">
           <slot name="right" />
         </div>
       </v-col>
@@ -36,14 +36,16 @@
 
 .col-content {
   height: 100%;
-  padding: 20px;
+  padding: 10px;
   box-sizing: border-box;
-
   display: flex;
   flex-direction: column;
 }
 
 .bg-light {
   background-color: #f5f5f5;
+}
+.right-content {
+  border-left: #e6e6e6 solid 1px;
 }
 </style>
