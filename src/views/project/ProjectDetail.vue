@@ -92,6 +92,30 @@ onMounted(async () => {
   }
 })
 
+// 프로젝트 시작 처리
+const markAsInProgress = async () => {
+  try {
+    await api.patch(`/api/projects/${projectId}/status/progress`)
+    projectStatus.value = 'PROGRESS'
+    alert('프로젝트가 성공적으로 시작 처리되었습니다!')
+  } catch (err) {
+    console.error('프로젝트 시작 처리 실패:', err)
+    alert('시작 처리에 실패했습니다.')
+  }
+}
+
+// 프로젝트 완료 처리
+const markAsCompleted = async () => {
+  try {
+    await api.patch(`/api/projects/${projectId}/status/completed`)
+    projectStatus.value = 'COMPLETED'
+    alert('프로젝트가 성공적으로 완료 처리되었습니다!')
+  } catch (err) {
+    console.error('프로젝트 완료 처리 실패:', err)
+    alert('완료 처리에 실패했습니다.')
+  }
+}
+
 </script>
 
 <style scoped>

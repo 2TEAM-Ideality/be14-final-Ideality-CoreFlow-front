@@ -58,6 +58,10 @@ const statusIcon = computed(() => {
       <v-list-item v-if="status === 'PROGRESS' || 'PENDING'" @click="showCompleteModal = true">
         <v-list-item-title>프로젝트 완료</v-list-item-title>
       </v-list-item>
+      
+      <v-list-item v-if="status === 'COMPLETED'" @click="showCompleteModal = true">
+        <v-list-item-title>분석 리포트 다운로드</v-list-item-title>
+      </v-list-item>
 
       <v-list-item
         v-if="status !== 'DELETED' && status !== 'CANCELLED'"
