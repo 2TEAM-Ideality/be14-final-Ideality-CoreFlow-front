@@ -1,5 +1,5 @@
 <script setup>
-import { ref,provide } from 'vue';
+import { ref, provide  } from 'vue';
 import TheHeader from '@/components/common/TheHeader.vue';
 import { useRoute, useRouter } from 'vue-router'
 import Breadcrumb from '@/components/common/BreadCrumb.vue'
@@ -91,7 +91,6 @@ provide('closeNotificationSidebar', closeNotificationSidebar)
     <NotificationSidebar />
     <VMain class="main-content">
       <RouterView />
-      <router-link to="/project/detail/gantt">간트차트</router-link>
     </VMain>
   </VApp>
 </template>
