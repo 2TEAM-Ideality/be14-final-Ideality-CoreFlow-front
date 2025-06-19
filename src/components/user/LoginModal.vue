@@ -161,7 +161,11 @@
                 // 임시 비번 변경 모달창
             ]
             await nextTick();
-            router.push('/');
+            if (localStorage.getItem("schemaName") !== 'master') {
+                router.push('/');
+            } else {
+                router.push('/master')
+            }
         } catch (error) {
             if (error.response) {
             console.error('에러 응답:', error.response.data);
