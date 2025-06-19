@@ -18,28 +18,33 @@
             <!-- 프로젝트 정보 -->
             <div class="info-card">
                 <h3 class="section-title">프로젝트 정보</h3>
-                <div class="info-row" v-for="(item, i) in projectInfo" :key="i">
-                    <div class="info-label">{{ item.label }}</div>
-                    -
-                    <div class="info-value">{{ item.value }}</div>
+                <div class="info-table">
+                    <div class="info-row" v-for="(item, i) in projectInfo" :key="i">
+                        <div class="info-label">{{ item.label }}</div>
+                        <div class="info-separator">-</div>
+                        <div class="info-value">{{ item.value }}</div>
+                    </div>
                 </div>
             </div>
 
             <!-- 책임자 정보 -->
             <div class="info-card">
                 <h3 class="section-title">부서별 책임자</h3>
-                <div class="info-row" v-for="(leader, i) in data.leaders" :key="i">
-                    <div class="info-label">{{ leader.deptName }}</div>
-                    -
-                    <div class="info-value">
-                        <UserInfoCard 
-                        :name="leader.name"
-                        :dept="leader.deptName"
-                        :role="leader.jobRoleName"
-                        :profileImage="leader.profileImage"
-                        />
+                <div class="info-table">
+                    <div class="info-row" v-for="(leader, i) in data.leaders" :key="i">
+                        <div class="info-label">{{ leader.deptName }}</div>
+                        <div class="info-separator">-</div>
+                        <div class="info-value">
+                            <UserInfoCard 
+                            :name="leader.name"
+                            :dept="leader.deptName"
+                            :role="leader.jobRoleName"
+                            :profileImage="leader.profileImage"
+                            />
+                        </div>
                     </div>
                 </div>
+                
             </div>
         </div>
 
@@ -127,10 +132,11 @@ const projectInfo = computed(() => [
 }
 
 .info-row {
-    display: flex;
+    /* display: flex; */
+    display: table-row;
     gap: 22px;
     justify-content: space-between;
-    margin-bottom: 7px;
+    margin-bottom: 0px;
 }
 
 .info-section {
@@ -152,7 +158,8 @@ const projectInfo = computed(() => [
 .info-label {
     font-weight: 600;
     color: #333;
-    min-width: 120px; /* 고정 너비 또는 flex-basis */
+    /* min-width: 120px; 고정 너비 또는 flex-basis */
+    white-space: nowrap;
 }
 
 .info-value {
@@ -166,5 +173,18 @@ const projectInfo = computed(() => [
 }
 .section-title{
     margin-bottom: 10px;
+}
+
+.info-table {
+    display: table;
+    width: 100%;
+}
+
+.info-label,
+.info-separator,
+.info-value {
+    display: table-cell;
+    padding: 4px 8px;
+    vertical-align: top;
 }
 </style>
