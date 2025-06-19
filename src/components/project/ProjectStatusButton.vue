@@ -20,7 +20,7 @@ const props = defineProps({
     required: true
   }
 })
-const emit = defineEmits(['start', 'delete']) // 'complete' 제거 (모달 내부에서 emit할 예정)
+const emit = defineEmits(['start', 'delete', 'report']) // 'complete' 제거 (모달 내부에서 emit할 예정)
 
 const menuOpen = ref(false)
 const showCompleteModal = ref(false)
@@ -35,6 +35,9 @@ const statusIcon = computed(() => {
     default: return { icon: 'mdi-help-circle', color: '#9E9E9E' }
   }
 })
+
+
+
 </script>
 
 <template>
@@ -57,6 +60,10 @@ const statusIcon = computed(() => {
 
       <v-list-item v-if="status === 'PROGRESS' || 'PENDING'" @click="showCompleteModal = true">
         <v-list-item-title>프로젝트 완료</v-list-item-title>
+      </v-list-item>
+      
+      <v-list-item v-if="status === 'COMPLETED'" @click="emit('report')">
+        <v-list-item-title>분석 리포트 다운로드</v-list-item-title>
       </v-list-item>
 
       <v-list-item

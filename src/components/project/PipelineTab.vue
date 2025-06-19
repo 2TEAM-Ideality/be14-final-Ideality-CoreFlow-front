@@ -108,7 +108,9 @@ async function fetchPipeline() {
     dagre.layout(g)
 
     // 위치 반영
-    nodes.value = convertedNodes.map(n => {
+    nodes.value = convertedNodes
+    .filter(n => n.data.status?.toLowerCase() !== 'deleted')
+    .map(n => {
       const pos = g.node(n.id)
       return {
         ...n,
@@ -172,6 +174,58 @@ function getChildIds(nodeId) {
 }
 
 
+function handleCreateNewNode(newNodeData) {
+  const newId = nanoid(6)
+
+  const node = {
+    id: newId,
+    type: 'task',
+    position: { x: 200, y: 200 + nodes.value.length * 100 },
+    data: {
+      ...newNodeData,
+      toolbarVisible: false,
+      status: 'pending',
+      progressRate: 0,
+      passedRate: 0,
+      delayDays: 0,
+    }
+  }
+
+  nodes.value.push(node)
+  newTasks.value.push(node)
+
+  // 🔗 연결할 선행 태스크가 있으면 edge 생성
+  const parentIds = newNodeData.parentIds || []
+  parentIds.forEach(parentId => {
+    edges.value.push({
+      id: `e-${parentId}-${newId}`,
+      source: String(parentId),
+      target: newId,
+      type: 'bezier',
+      animated: true,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left
+    })
+  })
+
+  // 🔗 연결할 후행 태스크가 있으면 edge 생성
+  const childIds = newNodeData.childIds || []
+  childIds.forEach(childId => {
+    edges.value.push({
+      id: `e-${newId}-${childId}`,
+      source: newId,
+      target: String(childId),
+      type: 'bezier',
+      animated: true,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left
+    })
+  })
+
+  showNewTask.value = false
+  nextTick(() => layoutGraph('LR'))
+}
+
 
 
 // 태스크 수정 모달 
@@ -191,6 +245,24 @@ function onEditNode(nodeId) {
     }
 
     showNewTask.value = true
+  }
+}
+
+// 태스크 삭제 연결
+async function handleDeleteTask(nodeId) {
+  console.log("태스크 삭제하러 옴")
+  try {
+    // 서버에 삭제 요청 (실제로는 soft-delete 처리)
+    await api.patch(`/api/task/delete/${nodeId}`)
+
+    // 성공 시: 로컬 노드/엣지에서 제거
+    nodes.value = nodes.value.filter(n => n.id !== nodeId)
+    edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
+
+    console.log(`태스크 ${nodeId} 삭제 완료`)
+  } catch (err) {
+    console.error('태스크 삭제 실패:', err)
+    alert('태스크 삭제에 실패했습니다.')
   }
 }
 
@@ -385,6 +457,7 @@ watch(showFullscreenView, async (isOpen) => {
         :deptList="deptList"
         :existingNodes="nodes"
         :initialData="editingNode"
+        @create="handleCreateNewNode" 
         @update="handleUpdateTask"
         @close="showNewTask = false"
       />
@@ -411,6 +484,7 @@ watch(showFullscreenView, async (isOpen) => {
             :showFullscreenView="showFullscreenView"
             @addNode="onAddNode"
             @edit="onEditNode"
+            @delete="handleDeleteTask"
           />
         </template>
 
