@@ -14,7 +14,7 @@
         </div>
 
         <!-- 프로젝트 정보 + 책임자 정보 -->
-        <div class="info-row">
+        <div class="info-section">
             <!-- 프로젝트 정보 -->
             <div class="info-card">
                 <h3 class="section-title">프로젝트 정보</h3>
@@ -27,16 +27,19 @@
 
             <!-- 책임자 정보 -->
             <div class="info-card">
-                <h3>부서별 책임자</h3>
-                <UserInfoCard
-                    v-for="(leader, i) in data.leaders"
-                    :key="leader.userId"
-                    :name="leader.name"
-                    :dept="leader.deptName"
-                    :role="leader.jobRoleName"
-                    :profileImage="leader.profileImage"
-                    class="user-info"
-                />
+                <h3 class="section-title">부서별 책임자</h3>
+                <div class="info-row" v-for="(leader, i) in data.leaders" :key="i">
+                    <div class="info-label">{{ leader.deptName }}</div>
+                    -
+                    <div class="info-value">
+                        <UserInfoCard 
+                        :name="leader.name"
+                        :dept="leader.deptName"
+                        :role="leader.jobRoleName"
+                        :profileImage="leader.profileImage"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -129,6 +132,14 @@ const projectInfo = computed(() => [
     justify-content: space-between;
     margin-bottom: 7px;
 }
+
+.info-section {
+    display: flex;
+    gap: 22px;
+    justify-content: space-between;
+    margin-bottom: 7px;
+}
+
 .info-card{
     background: white;
     border: 2px solid rgb(213, 213, 213);
@@ -152,5 +163,8 @@ const projectInfo = computed(() => [
 }
 .user-info{
     margin-bottom: 7px;
+}
+.section-title{
+    margin-bottom: 10px;
 }
 </style>
