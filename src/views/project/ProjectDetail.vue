@@ -223,12 +223,16 @@ const downloadReport = async () => {
 <style scoped>
 .project-layout {
   padding: 40px 200px;
+  /* display: flex;
+  flex-direction: column;
+  gap: 5%; */
 }
 
 .page-title {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 24px;
+  margin-top: 5%;
+  margin-bottom: 3%;
   display: flex;
   align-items: center;
   gap: 5px;
