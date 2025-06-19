@@ -71,11 +71,11 @@ export const useUserStore = defineStore('user', () => {
 
     async function logout() {
         try {
-            if (accessToken.value) {
-                await axios.post('/api/auth/logout', null, {
-                    headers: {Authorization: `Bearer ${accessToken.value}` }
-                })
-            }
+            console.log('로그아웃 요청')
+            const response = await api.post('/api/auth/logout')
+            console.log('로그아웃 요청 완료')
+            console.log(response.data.data)
+            alert(response.data.message);
         } catch (e) {
             console.warn("로그아웃 실패 무시")
         }
