@@ -24,8 +24,8 @@ const onGenerateReport = () => {
     if (project.status === 'COMPLETED') {
         console.log('분석 리포트 생성', project.id)
     }
-}
 
+}
 
 const props = defineProps({
     project:{

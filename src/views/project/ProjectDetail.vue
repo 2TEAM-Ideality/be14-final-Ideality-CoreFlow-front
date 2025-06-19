@@ -13,6 +13,7 @@
         :status="projectStatus"
         :projectInfo="projectInfo"
         :allTaskList="allTaskList"
+        :isDirector="isDirector"
         :completedTaskList = "completedTaskList"
         @start="markAsInProgress"
         @complete="markAsCompleted"
@@ -49,9 +50,12 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore.js'
 import api from '@/api.js'
 import BreadCrumb from '@/components/common/BreadCrumb.vue'
-const userStore = useUserStore()
+
 const route = useRoute()
 
+// 유저
+const userStore = useUserStore()
+const isDirector = ref(false)
 
 const projectId = route.params.id
 const projectInfo = ref({});
@@ -78,7 +82,12 @@ onMounted(async () => {
     projectName.value = res.data.data.name
     projectInfo.value = res.data.data
     projectStatus.value = res.data.data.status
-    console.log(projectInfo)
+    console.log("✅ 프로젝트 정보 확인", projectInfo)
+
+    if(projectInfo.value.director.userId === userStore.id){
+      isDirector.value = true
+    }
+    console.log("✅ 디렉터 정보 확인", isDirector.value)
 
     // 프로젝트 전체 태스크 목록 가져오기 
     const taskRes = await api.get(`/api/task/${projectId}`)
