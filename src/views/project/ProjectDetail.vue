@@ -17,8 +17,11 @@
         :completedTaskList = "completedTaskList"
         @start="markAsInProgress"
         @complete="markAsCompleted"
-        @delete="deleteProject"
+        @deleted="markAsDeleted"
         @report="downloadReport"
+        @restart="markAsRestart"
+        @restore="markAsRestore"
+        @canceled="markAsCanceled"
       />
     </h1>
 
@@ -92,12 +95,13 @@ onMounted(async () => {
     // 프로젝트 전체 태스크 목록 가져오기 
     const taskRes = await api.get(`/api/task/${projectId}`)
     allTaskList.value = taskRes.data.data;
-    console.log(allTaskList)
+    console.log("✅ 전체 태스크 정보 확인",allTaskList)
 
+    
     // 완료된 태스크 목록 가져오기
     const completetdTaskRes = await api.get(`/api/task/completed/${projectId}`)
     completedTaskList.value = completetdTaskRes.data.data;
-    console.log(completedTaskList)
+    console.log("✅ 완료된 태스크 목록 정보 확인", completedTaskList)
 
   } catch (err) {
     projectName.value = '(불러오기 실패)'
@@ -105,29 +109,88 @@ onMounted(async () => {
   }
 })
 
-// 프로젝트 시작 처리
+// 프로젝트 삭제 처리 ( ? -> DELETED)
+const markAsDeleted = async () => {
+  try {
+    console.log("✅ 프로젝트 삭제 요청")
+    await api.patch(`/api/projects/${projectId}/status/deleted`)
+    projectStatus.value = 'DELETED'
+    alert('프로젝트가 성공적으로 삭제 처리되었습니다!')
+  } catch (err) {
+    console.error('프로젝트 삭제 처리 실패:', err)
+    alert('삭제 처리에 실패했습니다.')
+  }
+}
+
+// 프로젝트 취소 처리 ( ? -> CANCELED)
+const markAsCanceled = async () => {
+  try {
+    console.log("✅ 프로젝트 취소 요청")
+    await api.patch(`/api/projects/${projectId}/status/canceled`)
+    projectStatus.value = 'CANCELED'
+    alert('프로젝트가 성공적으로 취소 처리되었습니다!')
+  } catch (err) {
+    console.error('프로젝트 취소 처리 실패:', err)
+    alert('취소 처리에 실패했습니다.')
+  }
+}
+
+// 프로젝트 시작 처리 (PENDING -> PROGRESS)
 const markAsInProgress = async () => {
   try {
+    console.log("✅ 프로젝트 시작 요청")
     await api.patch(`/api/projects/${projectId}/status/progress`)
     projectStatus.value = 'PROGRESS'
-    alert('프로젝트가 성공적으로 시작 처리되었습니다!')
+    alert('✅프로젝트가 성공적으로 시작 처리되었습니다!')
   } catch (err) {
     console.error('프로젝트 시작 처리 실패:', err)
     alert('시작 처리에 실패했습니다.')
   }
 }
 
-// 프로젝트 완료 처리
+// 프로젝트 완료 처리 (PROGRESS -> COMPLETED)
 const markAsCompleted = async () => {
   try {
+    console.log("✅ 프로젝트 완료 요청")
     await api.patch(`/api/projects/${projectId}/status/completed`)
     projectStatus.value = 'COMPLETED'
     alert('프로젝트가 성공적으로 완료 처리되었습니다!')
+    console.log("✅ 프로젝트 완료 처리 성공")
   } catch (err) {
     console.error('프로젝트 완료 처리 실패:', err)
     alert('완료 처리에 실패했습니다.')
   }
 }
+
+// 프로젝트 재시작 처리 (CANCELED -> PROGRESS)
+const markAsRestart = async () => {
+  console.log("✅ 프로젝트 재시작 요청")
+  try {
+    await api.patch(`/api/projects/${projectId}/status/progress`)
+    projectStatus.value = 'PROGRESS' 
+    alert('프로젝트가 성공적으로 시작 처리되었습니다!')
+    console.log("✅ 프로젝트 재시작 성공")
+  } catch(err) {
+    console.error('프로젝트 재시작 처리 실패:', err)
+    alert('재시작 처리에 실패했습니다.')
+  }
+}
+
+// 프로젝트 복구 (DELETED -> PENDING)
+const markAsRestore = async () => {
+  console.log("✅ 프로젝트 복구 요청")
+  try {
+    await api.patch(`/api/projects/${projectId}/status/pending`)
+    projectStatus.value = 'PENDING' 
+    alert('프로젝트가 성공적으로 복구 처리되었습니다!')
+    console.log("✅ 프로젝트 복구 성공")
+  } catch(err) {
+    console.error('프로젝트 복구 처리 실패:', err)
+    alert('복구 처리에 실패했습니다.')
+  }
+}
+
+
 
 // 프로젝트 분석 리포트 다운로드 
 const downloadReport = async () => {
@@ -152,6 +215,8 @@ const downloadReport = async () => {
     alert('PDF 생성에 실패했습니다.');
   }
 };
+
+
 
 </script>
 

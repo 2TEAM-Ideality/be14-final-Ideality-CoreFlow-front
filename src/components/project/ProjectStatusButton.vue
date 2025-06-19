@@ -24,7 +24,7 @@ const props = defineProps({
     required: true
   }
 })
-const emit = defineEmits(['start', 'delete', 'report', 'restore', 'restart']) // 'complete' 제거 (모달 내부에서 emit할 예정)
+const emit = defineEmits(['start', 'deleted','canceled', 'report', 'restore', 'restart']) // 'complete' 제거 (모달 내부에서 emit할 예정)
 
 const menuOpen = ref(false)
 const showCompleteModal = ref(false)
@@ -84,8 +84,11 @@ const statusIcon = computed(() => {
         <v-list-item @click="showCompleteModal = true">
           <v-list-item-title>프로젝트 완료</v-list-item-title>
         </v-list-item>
-        <v-list-item @click="emit('delete')">
+        <v-list-item @click="emit('deleted')">
           <v-list-item-title class="text-red">프로젝트 삭제</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="emit('canceled')">
+          <v-list-item-title class="text-red">프로젝트 취소</v-list-item-title>
         </v-list-item>
       </template>
 
@@ -94,8 +97,11 @@ const statusIcon = computed(() => {
         <v-list-item @click="showCompleteModal = true">
           <v-list-item-title>프로젝트 완료</v-list-item-title>
         </v-list-item>
-        <v-list-item @click="emit('delete')">
+        <v-list-item @click="emit('deleted')">
           <v-list-item-title class="text-red">프로젝트 삭제</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="emit('canceled')">
+          <v-list-item-title class="text-red">프로젝트 취소</v-list-item-title>
         </v-list-item>
       </template>
 
@@ -104,8 +110,11 @@ const statusIcon = computed(() => {
         <v-list-item @click="emit('report')" :disabled="!isDirector">
           <v-list-item-title>분석 리포트 다운로드</v-list-item-title>
         </v-list-item>
-        <v-list-item @click="emit('delete')">
+        <v-list-item @click="emit('deleted')">
           <v-list-item-title class="text-red">프로젝트 삭제</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="emit('canceled')">
+          <v-list-item-title class="text-red">프로젝트 취소</v-list-item-title>
         </v-list-item>
       </template>
 
