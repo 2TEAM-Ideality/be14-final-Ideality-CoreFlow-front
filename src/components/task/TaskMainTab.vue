@@ -64,7 +64,7 @@
               <div v-for="(preceding, index) in form.precedingTasks" :key="'preceding-' + index" class="field-group">
                 <select v-model="form.precedingTasks[index]">
                   <option value="" disabled selected>선행일정을 선택해주세요</option>
-                  <option v-for="task in tasks" :key="task.id" :value="task.name">{{ task.name }}</option>
+                  <option v-for="task in tasks" :key="task.id" :value="task.id">{{ task.name }}</option>
                 </select>
               </div>
             </div>
@@ -77,7 +77,7 @@
               <div v-for="(following, index) in form.followingTasks" :key="'following-' + index" class="field-group">
                 <select v-model="form.followingTasks[index]">
                   <option value="" disabled selected>후행일정을 선택해주세요</option>
-                  <option v-for="task in tasks" :key="task.id" :value="task.name">{{ task.name }}</option>
+                  <option v-for="task in tasks" :key="task.id" :value="task.id">{{ task.name }}</option>
                 </select>
               </div>
             </div>
@@ -101,7 +101,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed,onMounted } from 'vue'
 import TaskInfoTab from '@/components/task/TaskInfoTab.vue'
 import TaskApprovalTab from '@/components/task/TaskApprovalTab.vue'
 import TaskAttachmentTab from '@/components/task/TaskAttachmentTab.vue'
@@ -114,6 +114,9 @@ const openModal = () => {
   console.log("버튼 클릭됨!")
   showModal.value = true // 모달을 열기 위해 상태값을 true로 설정
 }
+
+const projectId = sessionStorage.getItem('projectId'); // 세션 저장소에서 프로젝트 ID 가져오기
+
 
 const closeModal = () => {
   showModal.value = false // 모달을 닫기 위해 상태값을 false로 설정
@@ -172,11 +175,40 @@ const form = ref({
   participants: ''
 })
 
-const tasks = [
-  { id: 1, name: 'Task 1' },
-  { id: 2, name: 'Task 2' },
-  { id: 3, name: 'Task 3' }
-]
+const tasks = ref([]) // task 목록을 저장할 배열
+
+// API 호출을 위한 함수
+const fetchTasks = async () => {
+    const userStore = useUserStore()
+  const token = userStore.accessToken
+
+  if (!token) {
+    console.error("토큰이 없습니다.")
+    return
+  }
+
+  try {
+    // 부모 컴포넌트에서 전달된 taskId를 사용하여 API 호출
+    const response = await fetch(`http://localhost:5000/api/work/detail/nameList?parentTaskId=${props.taskId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      tasks.value = data.data // API 응답에서 task 목록을 tasks에 저장
+    } else {
+      console.error('API 호출 실패', data.message)
+    }
+  } catch (error) {
+    console.error('API 호출 오류', error)
+  }
+}
+
 
 const departments = ref([])
 
@@ -209,7 +241,11 @@ const fetchDepartments = async () => {
   }
 }
 
-fetchDepartments()
+// 컴포넌트가 마운트된 후 API 호출
+onMounted(() => {
+  fetchDepartments()
+  fetchTasks()
+})
 </script>
 <style scoped>
 .tab-row {
