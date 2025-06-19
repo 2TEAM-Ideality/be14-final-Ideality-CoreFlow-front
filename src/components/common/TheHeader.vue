@@ -7,7 +7,7 @@
     </div>
 
     <nav class="nav" v-if="isMaster">
-      <router-link to="/">프로젝트</router-link>
+      <router-link to="/project/list">프로젝트</router-link>
       <router-link to="/template">템플릿</router-link>
       <router-link to="/calendar">부서 일정</router-link>
       <router-link to="/approval">결재</router-link>

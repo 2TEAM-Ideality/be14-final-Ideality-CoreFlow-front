@@ -93,6 +93,7 @@ const convertToFlowData = () => {
 
   flowNodes.value = nodeList.value.map((node) => {
     const { x, y } = g.node(node.id)
+
     return {
       id: node.id,
       type: 'custom',
@@ -100,11 +101,14 @@ const convertToFlowData = () => {
       targetPosition: Position.Left,
       sourcePosition: Position.Right,
       data: {
-        label: node.data.label,
-        description: node.data.description,
-        durtaion: node.data.durtaion,
-        slackTime: node.data.slackTime,
-        dept: node.data.deptList.map(d => d.name).join(', '),
+        ...node.data,
+        deptList: (node.data.deptList || [])
+          .filter(d => d != null)
+          .map(d =>
+            typeof d === 'string'
+              ? { id: null, name: d }
+              : { id: d.id ?? d.deptId, name: d.name ?? d.deptName ?? '' }
+          )
       }
     }
   })
@@ -121,22 +125,38 @@ const convertToFlowData = () => {
 }
 
 
+
 // 수정 완료
 async function saveEditedTemplate() {
+  const cleanedNodes = flowNodes.value.map(node => ({
+    ...node,
+    data: {
+      ...node.data,
+      deptList: (node.data.deptList || [])
+      .filter(d => d != null)
+      .map(d =>
+        typeof d === 'string'
+          ? { id: null, name: d }
+          : { id: d.id ?? d.deptId, name: d.name ?? d.deptName ?? '' }
+      )
+    }
+  }))
+
   const payload = {
     name: templateInfo.value.name,
     description: templateInfo.value.description,
     updatedBy: user?.id,
     duration: templateInfo.value.duration,
     taskCount: templateInfo.value.taskCount,
-    nodeList: flowNodes.value,
+    nodeList: cleanedNodes,
     edgeList: flowEdges.value
   }
 
+  console.log("✅ 템플릿 수정 요청 확인", payload)
   try {
     await api.put(`/api/template/${templateId.value}`, payload)
     alert('템플릿 수정이 완료되었습니다 ✅')
-    router.push('/template') // 목록 등으로 이동
+    router.push('/template')
   } catch (err) {
     console.error('템플릿 수정 실패 ❌', err)
     alert('템플릿 수정에 실패했습니다 ❌')

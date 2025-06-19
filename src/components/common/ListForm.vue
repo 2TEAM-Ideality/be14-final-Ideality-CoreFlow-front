@@ -28,26 +28,37 @@
             class="small-checkbox"
             />
         </td>
-        <td
-            v-for="header in headers"
-            :key="header.key"
-        >
-            <template v-if="header.key === 'link'">
+        <td v-for="header in headers" :key="header.key">
+          <!-- 파일 다운로드 버튼 -->
+          <template v-if="header.key === 'link'">
             <v-btn
-                v-if="item.link"
-                :href="item.link"
-                icon
-                variant="text"
-                target="_blank"
-                download 
+              :href="item.link || undefined"
+              icon
+              variant="text"
+              target="_blank"
+              download
+              :disabled="!item.link"
             >
-                <v-icon>mdi-download</v-icon>
+              <v-icon>mdi-download</v-icon>
             </v-btn>
-            </template>
-            <template v-else>
+          </template>
+
+          <!-- taskName인 경우 라우팅 처리 -->
+          <template v-else-if="header.key === 'taskName'">
+            <router-link
+              :to="`/task/${item.id}`"
+              style="color: #1976D2; text-decoration: underline; cursor: pointer;"
+            >
+              {{ item[header.key] }}
+            </router-link>
+          </template>
+
+          <!-- 그 외 일반 텍스트 -->
+          <template v-else>
             {{ item[header.key] }}
-            </template>
+          </template>
         </td>
+
         </tr>
       </tbody>
     </v-table>
