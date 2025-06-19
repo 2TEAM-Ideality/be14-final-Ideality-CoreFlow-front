@@ -6,10 +6,23 @@ import vuetify from './plugins/vuetify'
 import { GanttPlugin } from '@syncfusion/ej2-vue-gantt';
 import '@syncfusion/ej2-base/styles/material.css';
 import '@syncfusion/ej2-vue-gantt/styles/material.css';
+import "@syncfusion/ej2-base/styles/material.css";
+import "@syncfusion/ej2-buttons/styles/material.css";
+import "@syncfusion/ej2-calendars/styles/material.css";
+import "@syncfusion/ej2-dropdowns/styles/material.css";
+import "@syncfusion/ej2-inputs/styles/material.css";
+import "@syncfusion/ej2-navigations/styles/material.css";
+import "@syncfusion/ej2-notifications/styles/material.css";
+import "@syncfusion/ej2-popups/styles/material.css";
+import "@syncfusion/ej2-splitbuttons/styles/material.css";
+import "@syncfusion/ej2-layouts/styles/material.css";
+import "@syncfusion/ej2-grids/styles/material.css";
+import "@syncfusion/ej2-treegrid/styles/material.css";
+import "@syncfusion/ej2-vue-gantt/styles/material.css";
 import { registerLicense } from '@syncfusion/ej2-base';
 
 // 여기에 라이선스 키 붙여넣기
-registerLicense('Ngo9BigBOggjHTQxAR8/V1NNaF1cWWhPYVF0WmFZfVtgdVdMYF9bR3JPIiBoS35Rc0VlWHpfcnRWRWRVUkd+VEBU');
+registerLicense(import.meta.env.VITE_SYNCFUSION_LICENSE_KEY);
 
 const app = createApp(App)
 
