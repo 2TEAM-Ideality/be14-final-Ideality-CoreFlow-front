@@ -20,7 +20,7 @@
                             v-model="selectedUser"
                             :value="user"
                         />
-                        {{ user.name }}
+                        {{ user.deptName}}_{{ user.name }}
                     </label>
                 </div>
 
