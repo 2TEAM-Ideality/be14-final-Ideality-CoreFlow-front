@@ -174,7 +174,6 @@ const delayDays = computed(() => props.project.delayDays || 0)
                     <v-list-item
                         title="분석 리포트 생성"
                         :disabled="project.status !== 'COMPLETED'"
-                        @click="onGenerateReport"
                     />
                 </v-list>
             </v-menu>
