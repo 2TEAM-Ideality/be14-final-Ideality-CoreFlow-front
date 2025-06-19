@@ -2,7 +2,7 @@
   <div class="project-layout">
     <!-- 상단 Breadcrumb -->
     <BreadCrumb :items="[
-      { text: '프로젝트', to: '/' },
+      { text: '프로젝트', to: '/project/list' },
       { text: projectName, to: `/project/${projectId}` }
     ]" />
 

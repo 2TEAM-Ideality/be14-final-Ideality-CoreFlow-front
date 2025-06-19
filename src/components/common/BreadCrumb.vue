@@ -1,49 +1,43 @@
-<!-- src/components/common/Breadcrumb.vue -->
 <template>
-  <div class="breadcrumb">
-    <template v-for="(item, index) in items" :key="index">
-      <!-- 링크 처리 -->
+  <v-breadcrumbs :items="formattedItems" >
+    <template #title="{ item }">
       <router-link
         v-if="item.to"
         :to="item.to"
-        class="breadcrumb-item"
-      >{{ item.text }}</router-link>
-
-      <span v-else class="breadcrumb-item">{{ item.text }}</span>
-
-      <!-- 구분자 -->
-      <span v-if="index < items.length - 1" class="separator"> &gt; </span>
+        class="v-link"
+      >
+        {{ item.text }}
+      </router-link>
+      <span v-else>{{ item.text }}</span>
     </template>
-  </div>
+  </v-breadcrumbs>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   items: {
     type: Array,
     required: true
   }
 })
+
+// Vuetify expects { text: '', to: '' } 형태
+const formattedItems = computed(() => {
+  return props.items.map(item => ({
+    text: item.text,
+    to: item.to || undefined
+  }))
+})
 </script>
 
 <style scoped>
-.breadcrumb {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  font-size: 14px;
-  color: #555;
-}
-.separator {
-  margin: 0 4px;
-}
-.breadcrumb-item {
-  white-space: nowrap;
+.v-link {
   text-decoration: none;
-  color: #555;
+  color: inherit;
 }
-.breadcrumb-item:hover {
-  color: #2b6cb0;
+.v-link:hover {
   text-decoration: underline;
 }
 </style>
