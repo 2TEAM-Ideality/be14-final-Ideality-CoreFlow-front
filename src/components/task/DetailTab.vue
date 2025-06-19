@@ -12,39 +12,51 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, index) in items" :key="index">
+        <tr v-for="(item, index) in items" :key="index" @click="openModal(item.workId)" style="cursor: pointer;">
           <td>{{ item.taskName }}</td>
           <td>{{ item.deptName }}</td>
           <td>{{ item.endExpect }}</td>
           <td>{{ item.delayDays }}일</td>
           <td>{{ item.progressRate }}%</td>
-          <td></td> <!-- 총 진척률 컬럼 값 없음 -->
+          <td></td>
         </tr>
       </tbody>
     </table>
+
+    <!-- 모달 컴포넌트 추가 -->
+    <TaskModal
+      :workId="selectedWorkId"
+      :isVisible="isModalVisible"
+      @close-modal="closeModal"
+    />
+    
     <div class="total-progress">
-      <p class="right-align">총 진척률: {{ totalProgress }}%</p> <!-- 오른쪽 정렬 -->
+      <p class="right-align">총 진척률: {{ totalProgress }}%</p>
     </div>
   </div>
 </template>
 
 <script>
-import { useRoute } from "vue-router"; // vue-router에서 useRoute 사용
-import { useUserStore } from '@/stores/userStore'
+import { useRoute } from "vue-router";
+import { useUserStore } from "@/stores/userStore";
+import TaskModal from "@/components/task/DetailModal.vue"; // 모달 컴포넌트 import
 
 export default {
+  components: {
+    TaskModal, // 모달 컴포넌트 등록
+  },
   data() {
     return {
-      items: [], // 데이터를 받을 빈 배열
-      totalProgress: 0, // 총 진척률을 data 속성으로 설정
+      items: [],
+      totalProgress: 0,
+      selectedWorkId: null, // 클릭한 세부일정의 workId 저장
+      isModalVisible: false, // 모달 표시 여부
     };
   },
   async mounted() {
-    // useRoute()로 URL에서 params 값 가져오기
     const route = useRoute();
-    const parentTaskId = route.params.taskId; // /task/:id 경로 파라미터에서 'id'를 가져옴
+    const parentTaskId = route.params.taskId;
     
-    // parentTaskId가 정상적으로 존재하는지 확인
     if (parentTaskId) {
       const userStore = useUserStore();
       const token = userStore.accessToken;
@@ -55,43 +67,41 @@ export default {
       }
 
       try {
-        // 두 개의 API 요청을 동시에 보내기
-        const [taskInfoResponse, progressResponse] = await Promise.all([
-          fetch(`http://localhost:5000/api/task/detail/${parentTaskId}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`, // Bearer 토큰을 Authorization 헤더에 추가
-              'Content-Type': 'application/json',  // 필요한 경우 Content-Type 설정
-            },
-          }),
-          fetch(`http://localhost:5000/api/work/detailList?parentTaskId=${parentTaskId}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          })
-        ]);
+        const response = await fetch(`http://localhost:5000/api/work/detailList?parentTaskId=${parentTaskId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-        // 두 요청 모두 정상적으로 응답이 오면 처리
-        if (!taskInfoResponse.ok || !progressResponse.ok) {
+        if (!response.ok) {
           throw new Error('네트워크 응답이 정상적이지 않습니다.');
         }
 
-        const taskInfoData = await taskInfoResponse.json();
-        const progressData = await progressResponse.json();
-
-        this.items = progressData.data; // 작업 상세 데이터 저장
-        this.totalProgress = taskInfoData.data.selectTask.progressRate; // 총 진척률 값 저장
+        const data = await response.json();
+        this.items = data.data; // 세부일정 목록 데이터 저장
+        this.totalProgress = data.totalProgress; // 총 진척률 값 저장
       } catch (error) {
         console.error('데이터를 불러오는 중 오류가 발생했습니다:', error);
       }
     } else {
       console.error('parentTaskId가 없습니다.');
     }
-  }
+  },
+  methods: {
+    openModal(workId) {
+      this.selectedWorkId = workId; // 클릭한 세부일정의 workId 저장
+      this.isModalVisible = true; // 모달 표시
+    },
+    closeModal() {
+      this.isModalVisible = false; // 모달 숨기기
+      this.selectedWorkId = null; // 모달 닫을 때 workId 초기화
+    },
+  },
 };
 </script>
+
 <style scoped>
 .container {
   padding: 20px;
