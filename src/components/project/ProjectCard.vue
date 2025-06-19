@@ -20,12 +20,30 @@ const onDelete = () => {
     console.log('삭제 클릭됨', project.id)
 }
 
-const onGenerateReport = () => {
-    if (project.status === 'COMPLETED') {
-        console.log('분석 리포트 생성', project.id)
-    }
+// 프로젝트 분석 리포트 다운로드 
+const onGenerateReport = async () => {
+  try {
+    const response = await api.get(`/api/projects/report/${projectId}`, {
+      responseType: 'blob',
+      headers: {
+        Authorization: `Bearer ${userStore.accessToken}`  
+      }
+    });
 
-}
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '프로젝트_분석_리포트.pdf';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('PDF 다운로드 실패:', err);
+    alert('PDF 생성에 실패했습니다.');
+  }
+};
+
 
 const props = defineProps({
     project:{

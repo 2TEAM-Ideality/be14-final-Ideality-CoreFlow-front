@@ -24,11 +24,10 @@ const props = defineProps({
     required: true
   }
 })
-const emit = defineEmits(['start', 'delete', 'report']) // 'complete' 제거 (모달 내부에서 emit할 예정)
+const emit = defineEmits(['start', 'delete', 'report', 'restore', 'restart']) // 'complete' 제거 (모달 내부에서 emit할 예정)
 
 const menuOpen = ref(false)
 const showCompleteModal = ref(false)
-
 
 
 // 프로젝트 상태에 따른 버튼 아이콘
@@ -42,7 +41,6 @@ const statusIcon = computed(() => {
     default: return { icon: 'mdi-help-circle', color: '#9E9E9E' }
   }
 })
-
 /*
   PENDING (시작 전)
   - 프로젝트 시작

@@ -53,12 +53,13 @@ import BreadCrumb from '@/components/common/BreadCrumb.vue'
 
 const route = useRoute()
 
-// 유저
+// 유저 정보
 const userStore = useUserStore()
 const isDirector = ref(false)
 
 const projectId = route.params.id
 const projectInfo = ref({});
+const projectStatus = ref('PENDING') // 실제 API 응답에서 받아올 값
 const projectName = ref('로딩 중...')
 
 const allTaskList = ref([])    // 전체 태스크 목록
@@ -73,7 +74,6 @@ const tabs = [
   { name: 'ProjectMembers', label: '참여자 목록', route: `/project/${projectId}/members` }
 ]
 
-const projectStatus = ref('PENDING') // 실제 API 응답에서 받아올 값
 
 onMounted(async () => {
   try {
@@ -135,7 +135,7 @@ const downloadReport = async () => {
     const response = await api.get(`/api/projects/report/${projectId}`, {
       responseType: 'blob',
       headers: {
-        Authorization: `Bearer ${userStore.accessToken}`  // 이거 꼭!
+        Authorization: `Bearer ${userStore.accessToken}`  
       }
     });
 
