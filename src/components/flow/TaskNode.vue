@@ -40,6 +40,12 @@ const handleToolbarAction = (action) => {
   confirmDialog.value = true
 }
 
+// 삭제 확인
+const handleDelete = () => {
+  emit('delete', props.id)
+  confirmDeleteDialog.value = false
+}
+
 
 function canChangeStatus(current, target) {
     if (current === target) return false
@@ -138,6 +144,8 @@ const backgroundMap = {
 }
 
 const confirmDialog = ref(false)
+const confirmDeleteDialog = ref(false)  // 삭제 확인 창
+
 const selectedAction = ref('') // 어떤 액션 눌렀는지 저장
 
 
@@ -181,6 +189,18 @@ const handleStyle = {
         <v-spacer />
         <v-btn text color="grey" @click="confirmDialog = false">취소</v-btn>
         <v-btn text color="primary" @click="confirmAction">확인</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+  <!-- 태스크 삭제 확인 모달창 -->
+  <v-dialog v-model="confirmDeleteDialog" width="400">
+    <v-card>
+      <v-card-title class="text-h6">🗑️ 삭제 확인</v-card-title>
+      <v-card-text>정말로 이 태스크를 삭제하시겠습니까?</v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn text color="grey" @click="confirmDeleteDialog = false">취소</v-btn>
+        <v-btn text color="red" @click="handleDelete">삭제</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -263,7 +283,7 @@ const handleStyle = {
               icon
               size="small"
               variant="text"
-              @click.stop="emit('delete', props.id)"
+              @click.stop="confirmDeleteDialog = true"
             >
               <v-icon size="18">mdi-delete-outline</v-icon>
             </v-btn>

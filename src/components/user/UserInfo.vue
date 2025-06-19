@@ -2,7 +2,9 @@
     <div>
         <div class="modal-overlay">
             <div class="modal">
-                <button @click="$emit('close')" class="close-btn">X</button>
+                <v-btn icon @click="$emit('close')" class="close-btn" size="small" variant="text">
+                <v-icon>mdi-close</v-icon>
+                </v-btn>
                 <div class="user-header">
                     <div class="profile-area">
                         <img

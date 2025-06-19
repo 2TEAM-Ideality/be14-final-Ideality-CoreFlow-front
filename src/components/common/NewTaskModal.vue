@@ -115,7 +115,7 @@ const handleCreate = () => {
     alert('종료일은 시작일보다 빠를 수 없습니다.')
     return
   }
-
+  console.log(localNode.id, localNode)
   emit('create', localNode)
 }
 
@@ -238,10 +238,10 @@ const getNodeLabel = (item) => {
       <div class="button-section">
         <button @click="$emit('close')" class="basic-button">취소</button>
         
-        <template v-if="props.initialData">
+        <template v-if="props.initialData && props.initialData.id">
           <button @click="() => {
-            console.log('📦 수정할 localNode 데이터:', localNode)
             $emit('update', localNode)
+          $emit('close')
             }" class="color-button">수정</button>
         </template>
         <template v-else>
