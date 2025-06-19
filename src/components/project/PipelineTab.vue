@@ -497,9 +497,10 @@ watch(showFullscreenView, async (isOpen) => {
             @addNode="onAddNode"
             @edit="onEditNode"
             @delete="handleDeleteTask"
-            @complete="handleCompleteTask"
             @start="handleStartTask"
           />
+            <!-- @complete="handleCompleteTask" -->
+
         </template>
 
         <Background />

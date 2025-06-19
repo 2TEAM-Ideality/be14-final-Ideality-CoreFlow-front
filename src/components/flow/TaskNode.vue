@@ -4,15 +4,52 @@ import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NodeToolbar } from '@vue-flow/node-toolbar'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api' 
+import CompleteTaskModal from '@/components/task/CompleteTaskModal.vue'
 
+const props = defineProps({
+  id : {
+    type: [String, Number],
+    required: true
+  },
+  data : {
+    type: Object,
+    required : true
+  },
+  showFullscreenView : Boolean
+})
+
+const emit = defineEmits(['addNode', 'click', 'openMenu'])
+
+
+
+const { viewport } = useVueFlow()
+const zoomLevel = computed(() => viewport.value.zoom)
+const { updateNodeData } = useVueFlow()
 
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.id
 
-const { viewport } = useVueFlow()
-const zoomLevel = computed(() => viewport.value.zoom)
-const { updateNodeData } = useVueFlow()
+const showCompleteModal = ref(false)    // 완료 처리 모달
+
+const confirmDialog = ref(false)
+const confirmDeleteDialog = ref(false)  // 삭제 확인 창
+
+const selectedAction = ref('') // 어떤 액션 눌렀는지 저장
+
+
+const delay = props.data?.delayDays ?? 0
+const delayText = delay > 0 ? `+${delay}일` : '0일'
+const delayColor = delay > 0 ? 'text-red' : 'text-grey'
+const progressColor = 'deep-purple-lighten-1'
+
+const status = computed(() => props.data?.status?.toLowerCase() || 'pending')
+const icon = computed(() => iconMap[status.value])
+const iconColor = computed(() => colorMap[status.value])
+const backgroundColor = computed(() => backgroundMap[status.value])
+const statusActions = computed(() => actionMap[status.value] || ['작업 없음'])
+
+const menuVisible = ref(false)
 
 
 onMounted(() => {
@@ -24,11 +61,6 @@ onBeforeUnmount(() => {
 })
 
 
-
-
-const props = defineProps(['data', 'id', 'showFullscreenView'])
-const emit = defineEmits(['addNode', 'click', 'openMenu'])
-
 const handleGlobalClick = (e) => {
   const nodeEl = document.getElementById(`node-${props.id}`)
   if (!nodeEl?.contains(e.target)) {
@@ -37,8 +69,30 @@ const handleGlobalClick = (e) => {
 }
 
 const handleToolbarAction = (action) => {
+  if (action === '태스크 완료' || '결과 확인') {
+    // 진척률 100% 검사
+    // if ((props.data.progressRate ?? 0) < 100) {
+    //   alert('진척률이 100%여야 완료할 수 있습니다.')
+    //   return
+    // }
+
+    showCompleteModal.value = true
+    return
+  }
+
   selectedAction.value = action
   confirmDialog.value = true
+}
+
+// 완료 모달에서 emit되는 데이터 받기
+const handleComplete = async (completedInfo) => {
+  try {
+    await api.patch(`/api/task/completed/${props.id}`, completedInfo)
+    updateNodeData(props.id, { status: 'completed', toolbarVisible: false })
+    showCompleteModal.value = false
+  } catch (e) {
+    alert(e.response?.data?.message || '태스크 완료 처리 중 오류 발생')
+  }
 }
 
 // 삭제 확인
@@ -46,7 +100,6 @@ const handleDelete = () => {
   emit('delete', props.id)
   confirmDeleteDialog.value = false
 }
-
 
 function canChangeStatus(current, target) {
     if (current === target) return false
@@ -68,7 +121,7 @@ const confirmAction = async () => {
     '태스크 삭제': 'deleted',
     '복원 요청': 'pending',
     '완전 삭제': 'deleted', // 별도 처리 가능
-    '결과 확인': null
+    '결과 확인': 'completed'
   }
 
   target = map[action]
@@ -89,6 +142,12 @@ const confirmAction = async () => {
     alert(`상태를 '${current}'에서 '${target}'으로 변경할 수 없습니다.`)
     confirmDialog.value = false
     returniconColor
+  }
+   // ✅ 추가: 완료는 진척률 100%일 때만 가능
+  if (target === 'completed' && (props.data.progressRate ?? 0) < 100) {
+    alert('진척률이 100%여야 완료할 수 있습니다.')
+    confirmDialog.value = false
+    return
   }
 
   try {
@@ -148,24 +207,6 @@ const backgroundMap = {
   warning: '#FFF8E1' 
 }
 
-const confirmDialog = ref(false)
-const confirmDeleteDialog = ref(false)  // 삭제 확인 창
-
-const selectedAction = ref('') // 어떤 액션 눌렀는지 저장
-
-
-const delay = props.data?.delayDays ?? 0
-const delayText = delay > 0 ? `+${delay}일` : '0일'
-const delayColor = delay > 0 ? 'text-red' : 'text-grey'
-const progressColor = 'deep-purple-lighten-1'
-
-const status = computed(() => props.data?.status?.toLowerCase() || 'pending')
-const icon = computed(() => iconMap[status.value])
-const iconColor = computed(() => colorMap[status.value])
-const backgroundColor = computed(() => backgroundMap[status.value])
-const statusActions = computed(() => actionMap[status.value] || ['작업 없음'])
-
-const menuVisible = ref(false)
 
 
 const cardStyle = computed(() => ({
@@ -184,6 +225,16 @@ const handleStyle = {
 </script>
 
 <template>
+  <!-- 태스크 완료 처리 모달 -->
+  <CompleteTaskModal 
+    v-if="showCompleteModal"
+    :show="showCompleteModal"
+    :taskInfo="props.data"
+    :allTaskList="[]" 
+    :completedTaskList="[]"
+    @close="showCompleteModal = false"
+    @complete="handleComplete"
+  />
   <v-dialog v-model="confirmDialog" width="400">
     <v-card>
       <v-card-title class="text-h6">🔔 확인</v-card-title>
@@ -224,6 +275,7 @@ const handleStyle = {
       <v-list-item
         v-for="action in statusActions"
         :key="action"
+        :disabled="action === '태스크 완료' && (data.progressRate ?? 0) < 100"
         @click="handleToolbarAction(action)"
       >
         <v-list-item-title>{{ action }}</v-list-item-title>
@@ -258,53 +310,14 @@ const handleStyle = {
 
 
         <!-- DOT more 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
-          <v-btn
-            @click="goToTask"
-            icon
-            size="small"
-            variant="text"
-            v-bind="menuActivatorProps"
-          >
-            <v-icon style="color: gray;">mdi-open-in-new</v-icon>
-          </v-btn>
-        <!-- <v-menu
-          v-model="menuVisible"
-          :close-on-content-click="false"
-          location="top"
-          :attach="true"          
-          offset="8"
-          class="dot-menu"
+        <v-btn
+          @click="goToTask"
+          icon
+          size="small"
+          variant="text"
         >
-          <template #activator="{ props: menuActivatorProps }">
-            <v-btn
-              icon
-              size="x-small"
-              variant="text"
-              v-bind="menuActivatorProps"
-            >
-              <v-icon>mdi-dots-horizontal</v-icon>
-            </v-btn>
-          </template>
-
-          <div class="tooltip-actions">
-            <v-btn
-              icon
-              size="small"
-              variant="text"
-              @click.stop="emit('edit', props.id)"
-            >
-              <v-icon size="18">mdi-pencil-outline</v-icon>
-            </v-btn>
-            <v-btn
-              icon
-              size="small"
-              variant="text"
-              @click.stop="confirmDeleteDialog = true"
-            >
-              <v-icon size="18">mdi-delete-outline</v-icon>
-            </v-btn>
-          </div>
-        </v-menu> -->
+          <v-icon style="color: gray;">mdi-open-in-new</v-icon>
+        </v-btn>
       </div>
 
       <!-- 날짜 -->
@@ -368,6 +381,9 @@ const handleStyle = {
     </div>
     
   </div>
+
+  
+
 </template>
 
 
