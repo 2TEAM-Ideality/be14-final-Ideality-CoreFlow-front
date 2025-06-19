@@ -83,15 +83,61 @@
             </div>
           </div>
 
-          <div>
-            <label for="responsible">책임자:</label>
-            <input type="text" id="responsible" v-model="form.responsible" />
-          </div>
+<!-- 책임자 입력 필드 -->
+<div>
+  <label for="responsible">책임자:</label>
+  <input 
+    type="text" 
+    id="responsible" 
+    v-model="form.responsible" 
+    @input="onInput('responsible')" 
+    ref="responsibleInput"
+  />
 
-          <div>
-            <label for="participants">참여자:</label>
-            <input type="text" id="participants" v-model="form.participants" />
-          </div>
+  <!-- 책임자 검색 결과 리스트 -->
+  <div 
+    v-if="responsibleSuggestions.length > 0" 
+    class="suggestions-list"
+    :style="suggestionsStyle"
+  >
+    <ul>
+      <li
+        v-for="(user, index) in responsibleSuggestions"
+        :key="index"
+        @click="selectUser(user, 'responsible')"
+        style="padding: 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0;"
+      >
+        {{ user }}
+      </li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- 참여자 입력 필드 -->
+<div>
+  <label for="participants">참여자:</label>
+  <input 
+    type="text" 
+    id="participants" 
+    v-model="form.participants" 
+    @input="onInput('participants')" 
+  />
+
+  <!-- 참여자 검색 결과 리스트 -->
+  <div v-if="participantsSuggestions.length > 0" class="suggestions-list">
+    <ul>
+      <li
+        v-for="(user, index) in participantsSuggestions"
+        :key="index"
+        @click="selectUser(user, 'participants')"
+      >
+        {{ user }}
+      </li>
+    </ul>
+  </div>
+</div>
+
 
           <button type="submit" class="submit-btn" @click="submitForm">추가</button>
         </form>
@@ -114,8 +160,6 @@ const openModal = () => {
   console.log("버튼 클릭됨!")
   showModal.value = true // 모달을 열기 위해 상태값을 true로 설정
 }
-
-const projectId = sessionStorage.getItem('projectId'); // 세션 저장소에서 프로젝트 ID 가져오기
 
 
 const closeModal = () => {
@@ -241,6 +285,77 @@ const fetchDepartments = async () => {
   }
 }
 
+const responsibleSuggestions = ref([]); // 책임자 검색 결과 저장
+const suggestionsStyle = ref({}); // 동적으로 위치할 스타일 저장
+const participantsSuggestions = ref([]); // 참여자 검색 결과 저장
+
+const fetchUsers = async (query, field) => {
+  const projectId = sessionStorage.getItem('projectId'); // 세션에서 프로젝트 ID 가져오기
+  const userStore = useUserStore();
+  const token = userStore.accessToken;
+
+  if (!token) {
+    console.error("토큰이 없습니다.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:5000/api/mention/search?projectId=${projectId}&mentionTarget=${query}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+    console.log('API 응답:', data); // 응답 확인
+
+    if (response.ok) {
+      // 응답에서 'data' 안의 'name'을 추출하여 배열로 저장
+      const mentions = data.data.map(item => item.name); // 각 유저의 'name'만 추출
+      console.log('멘션 리스트:', mentions); // 멘션 리스트도 콘솔에 출력
+
+      // field에 따라 할당
+      if (field === 'responsible') {
+        responsibleSuggestions.value = mentions; // 책임자 검색 결과 저장
+      } else if (field === 'participants') {
+        participantsSuggestions.value = mentions; // 참여자 검색 결과 저장
+      }
+    } else {
+      console.error('API 호출 실패', data.message);
+    }
+  } catch (error) {
+    console.error('API 호출 오류', error);
+  }
+};
+
+const onInput = async (field) => {
+  const query = form.value[field].split('@').pop().trim();
+
+  if (query.length > 0) {
+    await fetchUsers(query, field); // API 호출
+  } else {
+    // 검색어가 비어있으면 결과를 초기화
+    if (field === 'responsible') {
+      responsibleSuggestions.value = [];
+    }
+  }
+};
+
+const selectUser = (user, field) => {
+  const lastAtIndex = form.value[field].lastIndexOf('@');
+  const textBeforeAt = form.value[field].slice(0, lastAtIndex);
+  form.value[field] = `${textBeforeAt}@${user}`; // 유저 이름 삽입
+  // 검색 결과 목록을 초기화
+  if (field === 'responsible') {
+    responsibleSuggestions.value = [];
+  } else if (field === 'participants') {
+    participantsSuggestions.value = [];
+  }
+};
+
+
 // 컴포넌트가 마운트된 후 API 호출
 onMounted(() => {
   fetchDepartments()
@@ -291,7 +406,6 @@ onMounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-     z-index: 9999; /* z-index를 높여서 다른 요소들보다 위에 표시되도록 설정 */
 }
 
 .modal-content {
@@ -303,7 +417,6 @@ onMounted(() => {
     overflow-y: auto;
     margin-top: 50px;
     position: relative;
-    z-index: 10000; /* 모달 내용의 z-index를 올려서 보이도록 설정 */
 }
 
 label {
@@ -419,5 +532,32 @@ form>div {
 .submit-btn:hover {
     background-color: grey;
 }
+
+.suggestions-list {
+  position: absolute;
+  z-index: 10;
+  border: 1px solid #ccc;
+  background-color: white;
+  width: 605px; /* 입력 필드와 동일한 너비 */
+  max-height: 150px;
+  overflow-y: auto;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
+}
+.suggestions-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.suggestions-list li {
+  padding: 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestions-list li:hover {
+  background-color: #f0f0f0;
+}
+
 </style>
   
