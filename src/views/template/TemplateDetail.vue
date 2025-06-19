@@ -64,27 +64,47 @@
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center mb-2">
             <h3 class="text-h6">📌 전체 프로세스 보기</h3>
-            <div style="display: flex; flex-direction: row; gap: 10px;">
-              <div>
-                총 소요일 <span style="color: #FF4545; font-size: 20px;" ><strong>{{ templateInfo.duration }} 일</strong></span>
+            <div style="display: flex; flex-direction: row;">
+              <div style="display: flex; flex-direction: row; gap: 20px; background-color: #F8F9FA; border-radius: 15px; padding: 15px 30px;">
+                <div style="display: flex; flex-direction: column; font-size: 14px;">
+                  <div style="color:#484848">총 소요일</div>
+                  <span style="color: #6750A4; font-size: 20px;" ><strong>{{ templateInfo.duration }} 일</strong></span>
+                </div>
+                <div style="display: flex; flex-direction: column; font-size: 14px;">
+                  <div  style="color:#484848">전체 태스크</div>
+                  <span style="color: #6750A4; font-size: 20px;" ><strong>{{ templateInfo.taskCount }} 개</strong></span>
+                </div>
+                <div style="display: flex; flex-direction: column; font-size: 14px;">
+                  <div  style="color:#484848">부서 목록</div>
+                  <div class="chip-container">
+                    <v-chip
+                      size="small"
+                      variant="outlined"
+                      :color="selectedDeptName === '전체' ? 'primary' : 'default'"
+                      @click="selectedDeptName = '전체'"
+                      class="clickable-chip"
+                    >
+                      전체
+                    </v-chip>
+
+                    <v-chip
+                      v-for="dept in templateInfo?.deptList || []"
+                      :key="dept.id || dept.name"
+                      size="small"
+                      variant="outlined"
+                      :color="selectedDeptName === dept.name ? 'primary' : 'default'"
+                      @click="selectedDeptName = dept.name"
+                      class="clickable-chip"
+                    >
+                      {{ dept.name }}
+                    </v-chip>
+                  </div>
+                </div>
               </div>
-              <div>
-                전체 태스크 <span style="color: #FF4545; font-size: 20px;" ><strong>{{ templateInfo.taskCount }} 개</strong></span>
-              </div>
-              <v-select
-                v-model="selectedDeptName"
-                :items="['전체', ...templateInfo?.deptList?.map(d => d.name)]"
-                label="부서 필터"
-                density="compact"
-                hide-details
-                style="width: 150px;"
-                variant="outlined"
-              />
+              <v-btn icon @click="showFullscreenView = false" variant="text">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
             </div>
-            
-            <v-btn icon @click="showFullscreenView = false">
-              <v-icon>mdi-close</v-icon>
-            </v-btn>
           </div>
             <!-- :nodes="filteredFlowNodes" -->
             <!-- :nodes="flowNodes" -->
@@ -432,6 +452,21 @@ watch(selectedDeptName, (newDept) => {
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 4px;
+}
+
+.custom-select {
+  width: 150px;
+  height: 36px;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+}
+
+.custom-select:focus {
+  /* border-color: #25bead; */
+  /* box-shadow: 0 0 2px #25bead; */
 }
 </style>
 
