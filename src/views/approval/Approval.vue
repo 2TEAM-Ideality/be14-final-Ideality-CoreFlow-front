@@ -6,7 +6,6 @@ import ApprovalDetails from '@/components/approval/ApprovalDetails.vue';
 import CreateApproval from '@/components/approval/CreateApproval.vue';
 
 const selectedApprovalId = ref(null)
-const selectedTab = ref('received')
 
 const approvalHistoryRender = ref(0)
 
@@ -16,7 +15,6 @@ function handleReRender() {
 
 function handelShowDetails() {
   selectedApprovalId.value = null
-  currentTabLabel.value = '결재 상세 조회'
   showDetails.value = false;
   showCreateApproval.value = false;
 }
@@ -25,15 +23,10 @@ function handelShowCreateApproval() {
   selectedApprovalId.value = null
   showCreateApproval.value = true
   showDetails.value = false;
-  selectedTab.value = 'create'
-  currentTabLabel.value = '결재 요청'
 }
 
 function handleSelectApproval(id) {
   selectedApprovalId.value = id
-}
-function handleSelectTab(type) {
-  selectedTab.value = type
 }
 
 const showDetails = ref(false);
@@ -45,18 +38,6 @@ watch (() => selectedApprovalId.value, (newId) => {
   showCreateApproval.value = false;
 })
 
-const currentTabLabel = ref('결재 상세 조회')
-
-  watch(() => selectedTab.value, (newTab) => {
-    if (!newTab) return // null이면 무시
-    if (newTab === 'received') {
-      currentTabLabel.value = '수신 상세 조회'
-    } else if (newTab === 'sent') {
-      currentTabLabel.value = '발신 상세 조회'
-    } else {
-      currentTabLabel.value = '결재 요청'
-    }
-  })
 </script>
 
 <template>
@@ -66,7 +47,6 @@ const currentTabLabel = ref('결재 상세 조회')
         <div style="height: 100%">  
           <ApprovalHistory 
             :key="approvalHistoryRender" 
-            :selectedTab=selectedTab
             @select-approval="handleSelectApproval" 
             @select-tab="handleSelectTab"
           />
@@ -81,9 +61,11 @@ const currentTabLabel = ref('결재 상세 조회')
       <div style="background: white; height: calc(100vh - 50px); padding: 50px;">
         <div class="header">
             <h3 class="sub-title">
-                {{ currentTabLabel }}
+                {{ showCreateApproval ? '결재 요청' : '결재 상세 조회' }}
             </h3>
-            <button @click="handelShowDetails" class="close-btn">X</button>
+            <button @click="handelShowDetails">
+              <v-icon class="close-btn">mdi-close</v-icon>
+            </button>
         </div>
         <div class="divide"/>
         <ApprovalDetails v-if="showDetails" :approvalId = selectedApprovalId @remount="handleReRender" />
@@ -113,6 +95,9 @@ const currentTabLabel = ref('결재 상세 조회')
     background: none;
     border: none;
     cursor: pointer;
+  }
+  .close-btn:hover {
+    color: black;
   }
   .divide {
     display: flex;
