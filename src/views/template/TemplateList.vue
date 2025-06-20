@@ -7,7 +7,7 @@
         <div class="left-group">
           <SearchBar
             v-model:query="searchQuery"
-            :filter-label="selectedDept || '부서 전체'"
+            :filter-label="selectedDept || '전체'"
             :sort-label="sortLabel"
             :dept-list="allDepts"
             :placeholder="placeholderMsg"
@@ -69,8 +69,8 @@ const currentPage = ref(1);
 /*  검색   */
 const searchQuery = ref('')
 const sortLabel = ref('최신순')
-const selectedDept = ref('부서 전체')
-const allDepts = ref([])  // 부서 전체 목록
+const selectedDept = ref('전체')
+const allDepts = ref([])  // 전체 목록
 const placeholderMsg = ref("템플릿 이름 검색")
 
 
@@ -123,7 +123,7 @@ const filteredTemplates = computed(() => {
     //   t.createdBy?.toLowerCase().includes(keyword);
 
     const matchesDept =
-      deptFilter === '부서 전체' ||
+      deptFilter === '전체' ||
       t.deptList?.some(dept => dept.name === deptFilter);
 
     return matchesKeyword && matchesDept;

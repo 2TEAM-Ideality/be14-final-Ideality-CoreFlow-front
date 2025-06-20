@@ -147,8 +147,8 @@ const projectInfo = computed(() => [
 }
 
 .info-card{
-    background: white;
-    border: 2px solid rgb(213, 213, 213);
+    background: #F8F8F8;
+    /* border: 1px solid #DEDEDE; */
     flex: 1;
     padding: 20px;
     border-radius: 8px;
@@ -156,14 +156,16 @@ const projectInfo = computed(() => [
 }
 
 .info-label {
+    font-size: 14px;
     font-weight: 600;
-    color: #333;
+    color: #757575;
     /* min-width: 120px; 고정 너비 또는 flex-basis */
     white-space: nowrap;
 }
 
 .info-value {
     color: #666;
+    font-size: 13px;
     flex: 1;
     text-align: left;
     word-break: break-word;

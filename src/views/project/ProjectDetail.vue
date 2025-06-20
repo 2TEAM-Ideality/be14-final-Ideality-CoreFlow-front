@@ -1,47 +1,50 @@
 <template>
-  <div class="project-layout">
+  <div class="project-container">
     <!-- 상단 Breadcrumb -->
     <BreadCrumb :items="[
-      { text: '프로젝트', to: '/' },
+      { text: '프로젝트', to: '/project/list' },
       { text: projectName, to: `/project/${projectId}` }
     ]" />
+    <div class="project-layout">
+      <!-- 페이지 타이틀 -->
+      <h1 class="page-title">
+        📁 {{ projectName }}
+        <ProjectStatusButton
+          :status="projectStatus"
+          :projectInfo="projectInfo"
+          :allTaskList="allTaskList"
+          :isDirector="isDirector"
+          :completedTaskList = "completedTaskList"
+          @start="markAsInProgress"
+          @complete="markAsCompleted"
+          @deleted="markAsDeleted"
+          @report="downloadReport"
+          @restart="markAsRestart"
+          @restore="markAsRestore"
+          @canceled="markAsCanceled"
+        />
+      </h1>
 
-    <!-- 페이지 타이틀 -->
-    <h1 class="page-title">
-      📁 {{ projectName }}
-      <ProjectStatusButton
-        :status="projectStatus"
-        :projectInfo="projectInfo"
-        :allTaskList="allTaskList"
-        :isDirector="isDirector"
-        :completedTaskList = "completedTaskList"
-        @start="markAsInProgress"
-        @complete="markAsCompleted"
-        @deleted="markAsDeleted"
-        @report="downloadReport"
-        @restart="markAsRestart"
-        @restore="markAsRestore"
-        @canceled="markAsCanceled"
-      />
-    </h1>
+      <!-- 탭 메뉴 -->
+      <div class="tab-menu">
+        <router-link
+          v-for="tab in tabs"
+          :key="tab.name"
+          :to="tab.route"
+          class="tab-button"
+          :class="{ active: $route.name === tab.name }"
+        >
+          {{ tab.label }}
+        </router-link>
+      </div>
 
-    <!-- 탭 메뉴 -->
-    <div class="tab-menu">
-      <router-link
-        v-for="tab in tabs"
-        :key="tab.name"
-        :to="tab.route"
-        class="tab-button"
-        :class="{ active: $route.name === tab.name }"
-      >
-        {{ tab.label }}
-      </router-link>
+      <!-- 콘텐츠 영역 -->
+      <div class="content-box" :class="{ 'pipeline-active': $route.name === 'ProjectPipeline' }">
+        <router-view />
+      </div>
     </div>
 
-    <!-- 콘텐츠 영역 -->
-    <div class="content-box" :class="{ 'pipeline-active': $route.name === 'ProjectPipeline' }">
-      <router-view />
-    </div>
+    
   </div>
 </template>
 
@@ -228,12 +231,16 @@ const downloadReport = async () => {
 <style scoped>
 .project-layout {
   padding: 40px 200px;
+  /* display: flex;
+  flex-direction: column;
+  gap: 5%; */
 }
 
 .page-title {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 24px;
+  margin-top: 3%;
+  margin-bottom: 3%;
   display: flex;
   align-items: center;
   gap: 5px;
