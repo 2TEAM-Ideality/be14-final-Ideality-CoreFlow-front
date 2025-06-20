@@ -1,6 +1,10 @@
 <template>
   <BasicLayout>
     <template #main>
+      <!-- <BreadCrumb :items="[
+      { text: '템플릿', to: '/template' },
+      // { text: projectName, to: `/project/${projectId}` }
+    ]" /> -->
       <div class="page-title">
         📁 {{ templateInfo?.name }}
       </div>
@@ -184,6 +188,7 @@
 </template>
 
 <script setup>
+import BreadCrumb from '@/components/common/BreadCrumb.vue'
 import BasicLayout from '@/components/layout/BasicLayout.vue';
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 import InfoField from '@/components/common/SideInfoField.vue'

@@ -100,6 +100,6 @@ provide('closeNotificationSidebar', closeNotificationSidebar)
 <style>
 * {
   font-family: 'Noto Sans KR', sans-serif;
-  text-align: left;
+  /* text-align: left; */
 }
 </style>
