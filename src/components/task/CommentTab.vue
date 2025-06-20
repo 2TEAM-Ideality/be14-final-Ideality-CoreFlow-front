@@ -313,7 +313,7 @@ const emitSetReply = (commentId, name) => {
   gap: 12px;
   flex-shrink: 0;
   min-height: fit-content;
-  /* margin-top: 32px; */
+  margin-top: 16px;
 }
 
 .comment-box {
