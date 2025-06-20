@@ -39,6 +39,7 @@
 
     </div>
   </div>
+  <ChangePwdModal v-if="showChangePwdModal" @close="showChangePwdModal = false"/>
 </template>
 
 <script setup>
@@ -53,6 +54,7 @@ import dayjs from 'dayjs'
 import weekday from 'dayjs/plugin/weekday'
 import updateLocale from 'dayjs/plugin/updateLocale'
 import 'dayjs/locale/ko'
+import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
 
 dayjs.extend(weekday)
 dayjs.extend(updateLocale)
@@ -75,6 +77,7 @@ const userStore = useUserStore()
 const route = useRoute()
 const router = useRouter()
 
+const showChangePwdModal = ref(false)
 const todayDeptList = ref([])
 const todaySchedule = ref([])
 const filteredTodaySchedule = ref([])
@@ -155,6 +158,7 @@ onMounted(() => {
   fetchDeptToday()
   fetchScheduleToday(today.getFullYear(), today.getMonth() + 1)
   fetchMyProject()  
+  if (userStore.temp) showChangePwdModal.value = true
 })
 
 const goToProject = () => {

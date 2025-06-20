@@ -19,6 +19,7 @@ export const useUserStore = defineStore('user', () => {
     const jobRankName = ref('')
     const jobRoleName = ref('')
     const roles = ref([])
+    const temp = ref(false)
 
     const forcedLogout = ref(false)
     const schemaName = ref(null)
@@ -41,6 +42,7 @@ export const useUserStore = defineStore('user', () => {
         jobRankName.value = data.jobRankName
         jobRoleName.value = data.jobRoleName
         roles.value = data.roles
+        temp.value = data.temp
     }
 
     async function login(responseLogin) {
@@ -228,6 +230,7 @@ export const useUserStore = defineStore('user', () => {
         jobRankName,
         jobRoleName,
         roles,
+        temp,
 
         forcedLogout,
         restoreFromStorage,
