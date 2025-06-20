@@ -23,11 +23,13 @@
       </tbody>
     </table>
 
-    <!-- 모달 컴포넌트 추가 -->
+    <!-- 수정 가능한 모달 컴포넌트 추가 -->
     <TaskModal
       :workId="selectedWorkId"
       :isVisible="isModalVisible"
-      @close-modal="closeModal"
+      :isEditMode="isEditMode"
+      @close-modal="closeModal" 
+      @open-edit-modal="openEditModal" 
     />
     
     <div class="total-progress">
@@ -51,6 +53,7 @@ export default {
       totalProgress: 0,
       selectedWorkId: null, // 클릭한 세부일정의 workId 저장
       isModalVisible: false, // 모달 표시 여부
+      isEditMode: false, // 수정 모드 상태
     };
   },
   async mounted() {
@@ -93,13 +96,18 @@ export default {
     openModal(workId) {
       this.selectedWorkId = workId; // 클릭한 세부일정의 workId 저장
       this.isModalVisible = true; // 모달 표시
+      this.isEditMode = false; // 기본적으로 조회 모드로 설정
     },
     closeModal() {
       this.isModalVisible = false; // 모달 숨기기
     },
+    openEditModal() {
+      this.isEditMode = true; // 수정 모드로 설정
+    },
   },
 };
 </script>
+
 
 <style scoped>
 .container {

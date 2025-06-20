@@ -5,63 +5,100 @@
         <h3>세부일정 조회</h3>
         <button class="close-btn" @click="closeModal">X</button>
       </div>
-            <!-- taskDetails가 존재할 때만 렌더링 -->
       <div class="modal-body" v-if="taskDetails">
-        <div class="flex-row">
-          <p><strong>세부일정명:</strong> {{ taskDetails.taskName }}</p>
+        <!-- 조회 모드 -->
+        <div v-if="!isEditMode">
+          <div class="flex-row">
+            <p><strong>세부일정명:</strong> {{ taskDetails.taskName }}</p>
+          </div>
+
+          <div class="flex-row">
+            <p><strong>세부일정 내용:</strong> {{ taskDetails.taskDescription }}</p>
+          </div>
+
+          <div class="flex-row">
+            <p><strong>부서명:</strong> {{ taskDetails.deptName }}</p>
+          </div>
+
+          <div class="flex-row">
+            <p><strong>시작 베이스라인:</strong> {{ taskDetails.startBase }}</p>
+            <p><strong>마감 베이스라인:</strong> {{ taskDetails.endBase }}</p>
+          </div>
+
+          <div class="flex-row">
+            <p><strong>예상 시작일:</strong> {{ taskDetails.startExpect }}</p>
+            <p><strong>예상 마감일:</strong> {{ taskDetails.endExpect }}</p>
+          </div>
+
+          <div class="flex-row">
+            <p><strong>선행 일정:</strong> {{ taskDetails.prevWorkNames.join(', ') }}</p>
+            <p><strong>후행 일정:</strong> {{ taskDetails.nextWorkNames.join(', ') }}</p>
+          </div>
+
+          <div class="flex-row">
+            <p><strong>진척률:</strong> {{ taskDetails.progressRate }}%</p>
+            <p><strong>지연일:</strong> {{ taskDetails.delayDays }}일</p>
+          </div>
+
+          <div class="flex-row">
+            <p><strong>책임자:</strong> 
+              <span v-for="(assignee, index) in taskDetails.assignees" :key="index">{{ assignee.name }}<span v-if="index < taskDetails.assignees.length - 1">, </span></span>
+            </p>
+          </div>
+
+          <div class="flex-row">
+            <p><strong>참여자:</strong>
+              <span v-for="(participant, index) in taskDetails.participants" :key="index">{{ participant.name }}<span v-if="index < taskDetails.participants.length - 1">, </span></span>
+            </p>
+          </div>
         </div>
 
-                <!-- 세부일정 내용 추가 -->
-        <div class="flex-row">
-          <p><strong>세부일정 내용:</strong> {{ taskDetails.taskDescription }}</p>
-        </div>
+        <!-- 수정 모드 -->
+        <div v-if="isEditMode">
+          <div class="flex-row">
+            <label><strong>세부일정명:</strong></label>
+            <input v-model="taskDetails.taskName" type="text" />
+          </div>
+
+          <div class="flex-row">
+            <label><strong>세부일정 내용:</strong></label>
+            <textarea v-model="taskDetails.taskDescription"></textarea>
+          </div>
+
+          <div class="flex-row">
+            <label><strong>부서명:</strong></label>
+            <input v-model="taskDetails.deptName" type="text" />
+          </div>
+
+<!-- 책임자 -->
+<div class="flex-row">
+  <label><strong>책임자:</strong></label>
+  <!-- 책임자들 이름을 콤마로 구분하여 입력 (v-model 사용) -->
+  <input v-model="taskDetails.assignees" type="text" />
+</div>
+
+<!-- 참여자 -->
+<div class="flex-row">
+  <label><strong>참여자:</strong></label>
+  <!-- 참여자들 이름을 콤마로 구분하여 입력 (v-model 사용) -->
+  <input v-model="taskDetails.participants" type="text" />
+</div>
 
 
-        <!-- 세부일정 내용 추가 -->
-        <div class="flex-row">
-          <p><strong>부서명:</strong> {{ taskDetails.deptName }}</p>
-        </div>
+          <div class="flex-row">
+            <label><strong>예상마감일:</strong></label>
+            <input v-model="taskDetails.endExpect" type="date" />
+          </div>
 
-        <!-- 시작/마감 베이스라인 -->
-        <div class="flex-row">
-          <p><strong>시작 베이스라인:</strong> {{ taskDetails.startBase }}</p>
-          <p><strong>마감 베이스라인:</strong> {{ taskDetails.endBase }}</p>
-        </div>
-
-        <!-- 예상 시작일/예상 마감일 -->
-        <div class="flex-row">
-          <p><strong>예상 시작일:</strong> {{ taskDetails.startExpect }}</p>
-          <p><strong>예상 마감일:</strong> {{ taskDetails.endExpect }}</p>
-        </div>
-
-        <!-- 선행 일정/후행 일정 -->
-        <div class="flex-row">
-          <p><strong>선행 일정:</strong> {{ taskDetails.prevWorkNames.join(', ') }}</p>
-          <p><strong>후행 일정:</strong> {{ taskDetails.nextWorkNames.join(', ') }}</p>
-        </div>
-
-        <!-- 진척률 -->
-        <div class="flex-row">
-          <p><strong>진척률:</strong> {{ taskDetails.progressRate }}%</p>
-          <p><strong>지연일:</strong> {{ taskDetails.delayDays }}일</p>
-        </div>
-
-        <!-- 책임자 -->
-        <div class="flex-row">
-          <p><strong>책임자:</strong> 
-            <span v-for="(assignee, index) in taskDetails.assignees" :key="index">{{ assignee.name }}<span v-if="index < taskDetails.assignees.length - 1">, </span></span>
-          </p>
-        </div>
-
-        <!-- 참여자 -->
-        <div class="flex-row">
-          <p><strong>참여자:</strong>
-            <span v-for="(participant, index) in taskDetails.participants" :key="index">{{ participant.name }}<span v-if="index < taskDetails.participants.length - 1">, </span></span>
-          </p>
+          <div class="flex-row">
+            <label><strong>진척률:</strong></label>
+            <input v-model="taskDetails.progressRate" type="number" />
+          </div>
         </div>
 
         <div class="modal-footer">
-          <button class="edit-btn" @click="openEditModal">수정</button>
+          <button class="edit-btn" @click="openEditModal" v-if="!isEditMode">수정</button>
+          <button class="save-btn" @click="saveChanges" v-if="isEditMode">저장</button>
           <button class="delete-btn">삭제</button>
         </div>
       </div>
@@ -69,33 +106,33 @@
   </div>
 </template>
 
-
 <script>
 import { useUserStore } from "@/stores/userStore";
 
 export default {
   props: {
-    workId: Number, // workId를 받습니다.
+    workId: Number,
     isVisible: Boolean,
+    isEditMode: Boolean,  // 수정 모드 상태 전달
   },
   data() {
     return {
-      taskDetails: {}, // API 응답으로 받은 세부일정 데이터
+      taskDetails: {},
     };
   },
   watch: {
     workId(newWorkId) {
       if (newWorkId) {
-        this.fetchTaskDetails(newWorkId); // workId가 바뀌면 새로 데이터를 가져옵니다.
+        this.fetchTaskDetails(newWorkId);
       }
     },
   },
   methods: {
     closeModal() {
-      this.$emit('close-modal');
+      this.$emit('close-modal'); // 부모 컴포넌트에 모달 닫기 이벤트 전달
     },
-        openEditModal() {
-      this.isEditModalVisible = true; // 수정 모달 표시
+    openEditModal() {
+      this.$emit('open-edit-modal'); // 부모 컴포넌트에 수정 모드 전환 이벤트 전달
     },
     async fetchTaskDetails(workId) {
       const userStore = useUserStore();
@@ -120,11 +157,23 @@ export default {
         }
 
         const data = await response.json();
-        this.taskDetails = data.data; // API 응답 데이터 저장
+        this.taskDetails = data.data;
       } catch (error) {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
       }
     },
+    saveChanges() {
+      // 변경 사항을 저장하는 로직 추가
+    },
+    // 책임자 이름을 구분하여 문자열로 반환하는 메서드
+getAssigneesNames(assignees) {
+  return assignees.map(assignee => assignee.name).join(', ');
+},
+// 참여자 이름을 구분하여 문자열로 반환하는 메서드
+getParticipantsNames(participants) {
+  return participants.map(participant => participant.name).join(', ');
+},
+
   },
 };
 </script>
