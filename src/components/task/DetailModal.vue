@@ -192,8 +192,14 @@ saveChanges() {
         body: JSON.stringify(updatedData),
       })
         .then(response => response.json())
-        .then(data => {
+        .then(async (data) => {
           console.log('세부일정 업데이트 성공:', data);
+                // 세부일정 업데이트 후 최신 데이터 가져오기
+      await this.fetchTaskDetails(this.workId);
+
+      // 부모 컴포넌트에 수정된 데이터를 전달
+      this.$emit('update-task', this.taskDetails); // 부모 컴포넌트에 수정된 데이터 전달
+          
           this.$emit('close-modal'); // 모달 닫기
         })
         .catch(error => {

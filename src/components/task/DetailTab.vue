@@ -30,6 +30,7 @@
       :isEditMode="isEditMode"
       @close-modal="closeModal" 
       @open-edit-modal="openEditModal" 
+      @update-task="updateTaskInList" 
     />
     
     <div class="total-progress">
@@ -93,6 +94,14 @@ export default {
     }
   },
   methods: {
+      updateTaskInList(updatedTask) {
+    const index = this.items.findIndex(item => item.workId === updatedTask.workId);
+    if (index !== -1) {
+      // 수정된 항목을 배열에서 업데이트
+      this.items.splice(index, 1, updatedTask);
+    }
+  },
+
     openModal(workId) {
       this.selectedWorkId = workId; // 클릭한 세부일정의 workId 저장
       this.isModalVisible = true; // 모달 표시
