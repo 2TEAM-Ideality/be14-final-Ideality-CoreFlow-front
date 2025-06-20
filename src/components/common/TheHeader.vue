@@ -206,13 +206,15 @@ onBeforeUnmount(() => {
 <style scoped>
 .header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 0px 40px;
+  padding: 8px 24px;
   border-bottom: 1px solid #dbdbdb;
   background-color: #fff;
   z-index: 100;
-  height: 50px;
+  height: auto;
+  gap: 12px;
 }
 
 .logo img {
@@ -221,13 +223,21 @@ onBeforeUnmount(() => {
 }
 
 .nav {
+  font-size: 15px;
   display: flex;
-  gap: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 
 .nav a {
   text-decoration: none;
   color: #444;
+  font-size: 14px;
 }
 
 .nav a.router-link-active {
@@ -240,13 +250,18 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 12px;
   position: relative;
+  min-width: 200px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .profile-container {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   cursor: pointer;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .profile-img {
@@ -254,12 +269,14 @@ onBeforeUnmount(() => {
   height: 36px;
   border-radius: 50%;
   border: 1px solid rgb(170, 170, 170);
+  object-fit: cover;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .position {
@@ -269,17 +286,20 @@ onBeforeUnmount(() => {
 
 .name-role {
   font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dropdown-menu {
   position: absolute;
-  top: 55px;
+  top: 48px;
   right: 0;
   background: white;
-  border: 1px solid black;
+  border: 1px solid #ccc;
   border-radius: 6px;
   padding: 6px 0;
-  width: 140px;
+  width: 160px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 200;
   display: flex;
@@ -291,6 +311,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
   color: black;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .dropdown-item:hover {
@@ -304,6 +325,7 @@ onBeforeUnmount(() => {
 
 .dropdown-item.deleted:hover {
   color: white;
+  background-color: red;
 }
 
 .ring-btn {
