@@ -42,7 +42,7 @@ const placeholderMsg = ref("자료 이름 검색")
 
 const customHeaders = [
   { title: '파일명', key: 'name' },
-  { title: '관련 태스크', key: 'task' },
+  { title: '관련 태스크', key: 'taskName' },
   { title: '파일 유형', key: 'type' },
   { title: '등록자', key: 'author' },
   { title: '등록일', key: 'date' },
@@ -99,6 +99,7 @@ onMounted(async () => {
       fetchDeptList()
     ])
     attachmentList.value = attachments.data.data
+    console.log("✅ 자료 목록 확인", attachmentList.value)
     deptList.value = depts.data.data
   } catch (err) {
     console.error('자료 로딩 실패:', err)

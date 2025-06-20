@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
   <div>
     <button @click="cancelChanges">수정 취소</button>
     <ejs-gantt 
@@ -29,6 +30,8 @@
 
       :splitterSettings="splitterSettings"
 
+      :connectorLine="true"
+
       @actionComplete="onActionComplete"
     >
     </ejs-gantt>
@@ -47,7 +50,7 @@ const splitterSettings = {
 const gantt = ref(null)
 
 const labelSettings = {
-    rightLabel: 'resources',
+    // rightLabel: 'resources',
     taskLabel: 'taskName'
 };
 
@@ -87,8 +90,6 @@ const columns = [
 ]
 
 const treeColumnIndex = 1
-
-const viewType = 'ResourceView'
 
 const originData = ref([
   {
@@ -344,3 +345,9 @@ const taskFields = {
   manual: 'isAutoSchedule',
 };
 </script>
+
+<style>
+@import url("https://cdn.syncfusion.com/ej2/material.css");
+</style>
+
+

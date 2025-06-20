@@ -2,11 +2,12 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NodeToolbar } from '@vue-flow/node-toolbar'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/api' 
 
 
 const route = useRoute()
+const router = useRouter()
 const projectId = route.params.id
 
 const { viewport } = useVueFlow()
@@ -102,6 +103,10 @@ const confirmAction = async () => {
   selectedAction.value = ''
 }
 
+// 태스크 상세 페이지로 이동 
+const goToTask = () => {
+  router.push(`/task/${props.id}`)
+}
 
 const toggleToolbar = () => {
   updateNodeData(props.id, { toolbarVisible: !props.data.toolbarVisible })
@@ -250,8 +255,19 @@ const handleStyle = {
           </v-btn>
           <span class="title">{{ data.label || '작업 이름' }}</span>
         </div>
-        <!-- DOT 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
-        <v-menu
+
+
+        <!-- DOT more 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
+          <v-btn
+            @click="goToTask"
+            icon
+            size="small"
+            variant="text"
+            v-bind="menuActivatorProps"
+          >
+            <v-icon style="color: gray;">mdi-open-in-new</v-icon>
+          </v-btn>
+        <!-- <v-menu
           v-model="menuVisible"
           :close-on-content-click="false"
           location="top"
@@ -288,7 +304,7 @@ const handleStyle = {
               <v-icon size="18">mdi-delete-outline</v-icon>
             </v-btn>
           </div>
-        </v-menu>
+        </v-menu> -->
       </div>
 
       <!-- 날짜 -->

@@ -52,7 +52,7 @@ const customHeaders = [
   { title: '지연 사유', key: 'delayReason' },
   { title: '요청 지연일', key: 'delayDays' },
   { title: '등록일자', key: 'createdDate' },
-  { title: '파일', key: 'url' }
+  { title: '파일', key: 'link' }
 ]
 
 const fileItems = computed(() => {
@@ -85,7 +85,7 @@ const fileItems = computed(() => {
     delayReason: item.delayReason,
     delayDays: item.delayDays + '일',
     createdDate: item.createdDate, // 이미 LocalDate로 나옴
-    url: item.url
+    link: item.url
   }))
 })
 
@@ -111,6 +111,7 @@ onMounted(async () => {
       fetchDeptList()
     ])
     delayList.value = delays.data.data
+    console.log("✅ 지연 사유서 목록 확인", delayList.value)
     deptList.value = depts.data.data
   } catch (err) {
     console.error('자료 로딩 실패:', err)
@@ -125,5 +126,10 @@ const toggleSort = () => {
 <style scoped>
 .empty-message {
     text-align: center;
+}
+.list-container {
+    display:flex;
+    flex-direction: column;
+    gap: 20px;
 }
 </style>

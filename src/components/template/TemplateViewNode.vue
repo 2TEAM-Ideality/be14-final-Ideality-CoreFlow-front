@@ -1,5 +1,5 @@
 <template>
-  <div class="custom-node">
+  <div :class="['custom-node', { highlighted: data.highlight }]">
     <Handle id="target" type="target" position="left" class="handle" />
 
     <div class="content">
@@ -45,6 +45,12 @@ const props = defineProps({
   padding: 12px;
   position: relative;
   text-align: left;
+}
+/* 부서별 태스크 하이라이트 */
+.custom-node.highlighted {
+  border: 2px solid #2196f3;
+  background-color: #e3f2fd;
+  box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
 }
 .content {
   font-size: 13px;

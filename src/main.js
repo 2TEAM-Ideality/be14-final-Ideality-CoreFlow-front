@@ -21,7 +21,7 @@ import "@syncfusion/ej2-treegrid/styles/material.css";
 import "@syncfusion/ej2-vue-gantt/styles/material.css";
 import { registerLicense } from '@syncfusion/ej2-base';
 
-// 여기에 라이선스 키 붙여넣기
+
 registerLicense(import.meta.env.VITE_SYNCFUSION_LICENSE_KEY);
 
 const app = createApp(App)

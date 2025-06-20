@@ -4,11 +4,10 @@ import { nextTick, ref, onMounted, watch } from 'vue'
 import { Panel, VueFlow, useVueFlow, Position } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import TaskNode from '@/components/flow/TaskNode.vue'
-import NodeEditModal from '@/components/common/NodeEditModal.vue'
 import NewTaskModal from '@/components/common/NewTaskModal.vue'
 
 import '@/assets/vue-flow-style.css'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useLayout } from '@/views/test/useLayout'
 import api from '@/api.js'
 import { markRaw } from 'vue'
@@ -23,6 +22,7 @@ const { layout } = useLayout()
 const { fitView, zoomTo } = useVueFlow()
 
 const route = useRoute()
+const projectInfo = ref({})   // 프로젝트 정보
 const projectId = route.params.id
 const projectName = ref('')
 const nodes = ref([])   // 원본 노드 데이터 
@@ -49,6 +49,7 @@ async function fetchPipeline() {
     })
     const data = res.data.data
     console.log(data)
+    projectInfo.value = data
     projectName.value = data.name
     
     const rawNodes = data.nodeList
@@ -437,8 +438,8 @@ watch(showFullscreenView, async (isOpen) => {
 
       <Panel class="process-panel" position="top-right">
         <div class="layout-panel">
-          <button title="태스크 편집">
-            태스크 편집 
+          <button title="태스크 생성" @click="{{showFullscreenView = true; showNewTask = true;}}">
+            📝 태스크 생성
           </button>
           <button title="정렬" @click="layoutGraph('LR')">
             ↔️ 정렬
@@ -450,7 +451,7 @@ watch(showFullscreenView, async (isOpen) => {
       </Panel>
     </VueFlow>
 
-    <!-- 전체 보기 :  노드 생성 / 수정 임시 상태 -->
+    <!-- 전체 보기 창 :  노드 생성 / 수정 임시 상태 -->
     <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
       <NewTaskModal
         v-model:show="showNewTask"
@@ -462,8 +463,19 @@ watch(showFullscreenView, async (isOpen) => {
         @close="showNewTask = false"
       />
       <v-card class="pa-4">
+        <!-- 상단 메뉴 -->
         <div class="d-flex justify-space-between align-center mb-2">
           <h3 class="text-h6">📌 {{ projectName }}</h3>
+          <div style="display:flex; flex-direction: row;">
+            <div style="display: flex; flex-direction: column; font-size: 14px;">
+              <div style="color:#484848">지연일</div>
+                <span style="color: #6750A4; font-size: 20px;" ><strong>{{ projectInfo.delayDays }} 일</strong></span>
+              </div>
+              <div style="display: flex; flex-direction: column; font-size: 14px;">
+                <div  style="color:#484848">전체 태스크</div>
+                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo.delayDays   }} 개</strong></span>
+            </div>
+          </div>
           <v-btn icon @click="showFullscreenView = false" variant="plain">
             <v-icon>mdi-close</v-icon>
           </v-btn>
@@ -485,6 +497,8 @@ watch(showFullscreenView, async (isOpen) => {
             @addNode="onAddNode"
             @edit="onEditNode"
             @delete="handleDeleteTask"
+            @complete="handleCompleteTask"
+            @start="handleStartTask"
           />
         </template>
 
