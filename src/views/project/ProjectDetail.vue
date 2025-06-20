@@ -239,7 +239,7 @@ const downloadReport = async () => {
 .page-title {
   font-size: 24px;
   font-weight: bold;
-  margin-top: 5%;
+  margin-top: 3%;
   margin-bottom: 3%;
   display: flex;
   align-items: center;

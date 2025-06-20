@@ -1,5 +1,5 @@
 <template>
-  <v-breadcrumbs :items="formattedItems" >
+  <v-breadcrumbs :items="formattedItems" style="font-size: 14px;">
     <template #title="{ item }">
       <router-link
         v-if="item.to"
