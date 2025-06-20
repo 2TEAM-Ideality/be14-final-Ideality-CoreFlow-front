@@ -85,23 +85,23 @@ const goToCalendar = () => {
 .issue-container {
   width: 100%;
   display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  /* gap: 10%; */
-  gap: 3%;
+  flex-wrap: wrap; /* 👉 자동 줄바꿈 */
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .issue-item {
     border-radius: 15px;
     padding: 20px;
     background-color: rgb(245, 245, 245);
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
 }
+
 
 .item-left {
   display: flex;

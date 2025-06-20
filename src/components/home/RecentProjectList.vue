@@ -28,7 +28,9 @@
             {{ project.name }}
           </v-card-title>
           <v-card-text class="text-caption">
-            {{ project.description }}
+            {{ project.director.deptName }}
+            {{ project.director.jobRoleName }}
+            {{ project.director.name }}
           </v-card-text>
           <v-divider></v-divider>
           <v-card-actions 
@@ -58,6 +60,7 @@ const props = defineProps({
   }
 })
 
+console.log("프로젝트 정보 확인", props.projectList)
 const router = useRouter()
 
 
