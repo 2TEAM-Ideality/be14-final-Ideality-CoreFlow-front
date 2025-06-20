@@ -5,7 +5,7 @@
         <h3>세부일정 조회</h3>
         <button class="close-btn" @click="closeModal">X</button>
       </div>
-      <div class="modal-body" v-if="taskDetails">
+      <div class="modal-body" v-if="taskDetails && taskDetails.taskName">
         <!-- 조회 모드 -->
         <div v-if="!isEditMode">
           <div class="flex-row">
@@ -162,13 +162,45 @@ export default {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
       }
     },
-    saveChanges() {
-      // 변경 사항을 저장하는 로직 추가
+saveChanges() {
+      const userStore = useUserStore();
+      const token = userStore.accessToken;
+
+      if (!token) {
+        console.error("토큰이 없습니다.");
+        return;
+      }
+
+      // 데이터 준비
+      const updatedData = {
+        name: this.taskDetails.taskName,
+        description: this.taskDetails.taskDescription,
+        deptId: this.taskDetails.deptId, // 필요에 따라 deptId와 기타 데이터를 바인딩합니다.
+        assigneeId: this.taskDetails.assignees, // 책임자 ID 배열로 변환
+        participantIds: Array.isArray(this.taskDetails.participants) ? this.taskDetails.participants.map(p => p.id) : [], // 참여자 ID 배열로 변환
+        expectEnd: this.taskDetails.endExpect,
+        progress: this.taskDetails.progressRate,
+      };
+
+      // PUT 요청 보내기
+      fetch(`http://localhost:5000/api/detail/update/${this.workId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('세부일정 업데이트 성공:', data);
+          this.$emit('close-modal'); // 모달 닫기
+        })
+        .catch(error => {
+          console.error('세부일정 업데이트 오류:', error);
+        });
     },
-    // 책임자 이름을 구분하여 문자열로 반환하는 메서드
-getAssigneesNames(assignees) {
-  return assignees.map(assignee => assignee.name).join(', ');
-},
+    
 // 참여자 이름을 구분하여 문자열로 반환하는 메서드
 getParticipantsNames(participants) {
   return participants.map(participant => participant.name).join(', ');
