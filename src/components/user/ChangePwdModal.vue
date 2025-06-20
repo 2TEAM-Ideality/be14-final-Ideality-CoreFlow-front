@@ -44,7 +44,7 @@
 
                 <div class="modal-actions">
                     <button class="option-btn change-btn" @click="changePassword" :disabled="!canSubmit">변경</button>
-                    <button class="option-btn cancel-btn" @click="close">취소</button>
+                    <button class="option-btn cancel-btn" @click="close">다음에 변경하기</button>
                 </div>
             </div>
             <LoadingModal v-if="isLoading" :today="new Date()" message="요청 중..." />
@@ -153,7 +153,7 @@
     }
 
     .btn:hover {
-        background-color: #9090ff;
+        background-color: black;
     }
 
     .close-btn {
@@ -187,15 +187,15 @@
     }
 
     .option-btn:hover {
-        background-color: #9090ff;
-    }
-
-    .change-btn {
         background-color: black;
     }
 
+    .change-btn {
+        background-color: #9090ff;
+    }
+
     .cancel-btn {
-        background-color: red;
+        background-color: #ff9090;
     }
 
 </style>

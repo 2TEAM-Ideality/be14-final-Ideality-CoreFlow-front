@@ -1,8 +1,11 @@
 // src/stores/userStore.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import api from '@/api'
+
+const router = useRouter()
 
 export const useUserStore = defineStore('user', () => {
     const id = ref(null)
@@ -67,6 +70,9 @@ export const useUserStore = defineStore('user', () => {
         }))
         localStorage.setItem('schemaName', schemaName.value)
         sessionStorage.setItem('accessToken', accessToken.value)
+        if (responseLogin.temp) {
+            router.push('/change-pwd')
+        }
     }
 
     async function logout() {
