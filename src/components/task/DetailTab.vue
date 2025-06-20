@@ -96,7 +96,6 @@ export default {
     },
     closeModal() {
       this.isModalVisible = false; // 모달 숨기기
-      this.selectedWorkId = null; // 모달 닫을 때 workId 초기화
     },
   },
 };
