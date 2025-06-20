@@ -69,7 +69,7 @@ const handleGlobalClick = (e) => {
 }
 
 const handleToolbarAction = (action) => {
-  if (action === '태스크 완료' || '결과 확인') {
+  if (action === '태스크 완료' || action === '결과 확인') {
     // 진척률 100% 검사
     // if ((props.data.progressRate ?? 0) < 100) {
     //   alert('진척률이 100%여야 완료할 수 있습니다.')

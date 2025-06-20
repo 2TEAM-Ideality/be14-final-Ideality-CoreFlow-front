@@ -14,7 +14,7 @@
         <div class="text-title-2 font-weight-bold mb-2">
           📁 TASK : {{ localTaskInfo.label }}
         </div>
-         <!-- 담당 부서 -->
+        <!-- 담당 부서 -->
         <div v-if="detailList.length > 0" class="d-flex flex-wrap align-center" style="gap: 6px; font-size: 12px;">
             <v-icon size="14" color="grey-darken-1">mdi-office-building</v-icon>
             <v-chip
@@ -58,12 +58,11 @@
           </div>
         </div>
 
-       
         <!-- 세부일정 존재 여부 -->
         <div v-if="detailList.length === 0" class="mt-2 text-caption text-center text-grey-darken-1">
         ⚠️ 해당 태스크의 세부일정이 존재하지 않습니다.
         </div>
-         <!-- 통계 -->
+        <!-- 통계 -->
         <div v-else class="mt-2 text-caption text-center text-grey-darken-1">
           전체 세부일정 : {{ detailList.length  }} &nbsp;&nbsp;|&nbsp;&nbsp;
           완료 세부일정 : {{ completedDetailList.length }} &nbsp;&nbsp;|&nbsp;&nbsp;
