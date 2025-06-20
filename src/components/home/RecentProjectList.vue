@@ -16,7 +16,7 @@
           @click="goToProject(project.id)"
         >
         
-          <v-card-title class="text-subtitle-2 font-weight-bold" style="height: 65%;">
+          <v-card-title class="text-subtitle-2 font-weight-bold" style="height: 60%; color: #5E5E5E;">
             <!-- <v-chip
             :color="statusColor(project.status)"
             class="ma-1"

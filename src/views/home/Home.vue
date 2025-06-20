@@ -5,8 +5,12 @@
         <h1 style="color: #2D2D2D; text-align: center;">
           안녕하세요, {{ userStore.name || '' }}님 👋
         </h1>
+        <div class="current-time">
+          현재 시각: {{ currentTime }}
+        </div>
       </div>
     </div>
+   
 
     <v-divider class="border-opacity-100" style="border-color: white;"></v-divider>
 
@@ -39,12 +43,33 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
-import { onMounted, ref, computed, watch } from 'vue'
+import { onMounted,onBeforeUnmount ,  ref, computed, watch } from 'vue'
 import { useUserStore } from '@/stores/userStore.js'
 import api from '@/api.js'
 import RecentProjectList from '@/components/home/RecentProjectList.vue'
 import RecentIssue from '@/components/home/RecentIssue.vue'
 import {useRouter} from 'vue-router'
+import dayjs from 'dayjs'
+import weekday from 'dayjs/plugin/weekday'
+import updateLocale from 'dayjs/plugin/updateLocale'
+import 'dayjs/locale/ko'
+
+dayjs.extend(weekday)
+dayjs.extend(updateLocale)
+dayjs.locale('ko')
+
+const currentTime = ref(dayjs().format('M월 D일 (dd) HH:mm'))
+
+let timer = null
+onMounted(() => {
+  timer = setInterval(() => {
+    currentTime.value = dayjs().format('M월 D일 (dd) HH:mm')
+  }, 60000)
+})
+
+onBeforeUnmount(() => {
+  clearInterval(timer)
+})
 
 const userStore = useUserStore()
 const route = useRoute()
@@ -151,7 +176,7 @@ const goToProject = () => {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 3%;
+  /* margin-bottom: 3%; */
 }
 
 .profile-image {
@@ -181,4 +206,11 @@ const goToProject = () => {
   flex-direction: column;
   gap: 50px;
 }
+
+.current-time {
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+}
+
 </style>
