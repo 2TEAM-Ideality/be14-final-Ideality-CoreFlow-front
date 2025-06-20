@@ -5,6 +5,15 @@ import DonutChart from '@/components/common/DonutChart.vue'
 import profileDummy from '@/assets/profileDummy.png'
 import { useRouter } from 'vue-router'
 
+
+const props = defineProps({
+    project:{
+        type:Object,
+        required: true
+    }
+})
+
+
 const router = useRouter()
 
 
@@ -43,14 +52,6 @@ const onGenerateReport = async () => {
     alert('PDF 생성에 실패했습니다.');
   }
 };
-
-
-const props = defineProps({
-    project:{
-        type:Object,
-        required: true
-    }
-})
 
 const statusMeta = computed(() => {
     switch (props.project.status) {

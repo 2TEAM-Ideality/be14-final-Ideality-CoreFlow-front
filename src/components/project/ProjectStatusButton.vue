@@ -24,7 +24,7 @@ const props = defineProps({
     required: true
   }
 })
-const emit = defineEmits(['start', 'deleted','canceled', 'report', 'restore', 'restart']) // 'complete' 제거 (모달 내부에서 emit할 예정)
+const emit = defineEmits(['start', 'complete', 'deleted','canceled', 'report', 'restore', 'restart']) // 'complete' 제거 (모달 내부에서 emit할 예정)
 
 const menuOpen = ref(false)
 const showCompleteModal = ref(false)
