@@ -37,7 +37,7 @@ const iconBgColor = computed(() => {
 <style>
 .card{
     background: white;
-    border: 2px solid rgb(213, 213, 213);
+    border: 1px solid #DEDEDE;
     border-radius: 8px;
     padding: 20px;
     flex:1;

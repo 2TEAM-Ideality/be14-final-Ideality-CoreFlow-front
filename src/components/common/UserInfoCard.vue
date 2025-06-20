@@ -39,6 +39,7 @@ defineProps({
 }
 
 .user-text {
+    font-size: 12px;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -47,12 +48,12 @@ defineProps({
 
 .user-name {
     font-weight: 700;
-    font-size: 18px;
+    font-size: 13px;
     color: #444;
 }
 
 .user-meta {
-    font-size: 15px;
+    font-size: 13px;
     color: #999;
 }
 </style>
