@@ -11,7 +11,7 @@
           <div class="issue-desc">n개</div>
         </div>
       </div>
-      <v-btn icon variant="plain" class="link-icon" size="small">
+      <v-btn icon variant="plain" class="link-icon" size="small" @click="goToApproval">
         <v-icon color="gray">mdi-chevron-right</v-icon>
       </v-btn>
     </div>
