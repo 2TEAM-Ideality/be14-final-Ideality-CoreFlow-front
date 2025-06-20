@@ -145,16 +145,16 @@ function applyFilters() {
 
     // 2. 파일 유형 필터
     if (selectedType.value !== '전체') {
-    filtered = filtered.filter(
-        item => mapFileType(item.fileType) === selectedType.value
-    )
+        filtered = filtered.filter(
+            item => mapFileType(item.fileType) === selectedType.value
+        )
     }
 
     // 3. 정렬
     if (sortLabel.value === '최신순') {
-    filtered.sort((a, b) => new Date(b.uploadAt) - new Date(a.uploadAt))
+        filtered.sort((a, b) => new Date(b.uploadAt) - new Date(a.uploadAt))
     } else {
-    filtered.sort((a, b) => new Date(a.uploadAt) - new Date(b.uploadAt))
+        filtered.sort((a, b) => new Date(a.uploadAt) - new Date(b.uploadAt))
     }
 
     // 4. 가공해서 최종 리스트
@@ -171,7 +171,11 @@ function applyFilters() {
 watch(searchKeyword, () => {
     applyFilters()
 })
-onMounted(() => fetchAttachment());
+onMounted(async () => {
+    await fetchAttachment();
+    applyFilters();
+    }
+);
 </script>
 
 <style scoped>
