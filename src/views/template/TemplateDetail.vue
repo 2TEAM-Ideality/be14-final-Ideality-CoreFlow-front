@@ -47,7 +47,7 @@
         </v-btn>
 
       </div>
-
+      <!-- 미니맵  -->
       <VueFlow
         ref="vueFlowRef" 
         v-model:nodes="flowNodes"
@@ -64,11 +64,50 @@
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center mb-2">
             <h3 class="text-h6">📌 전체 프로세스 보기</h3>
-            <v-btn icon @click="showFullscreenView = false">
-              <v-icon>mdi-close</v-icon>
-            </v-btn>
-          </div>
+            <div style="display: flex; flex-direction: row;">
+              <div style="display: flex; flex-direction: row; gap: 20px; background-color: #F8F9FA; border-radius: 15px; padding: 15px 30px;">
+                <div style="display: flex; flex-direction: column; font-size: 14px;">
+                  <div style="color:#484848">총 소요일</div>
+                  <span style="color: #6750A4; font-size: 20px;" ><strong>{{ templateInfo.duration }} 일</strong></span>
+                </div>
+                <div style="display: flex; flex-direction: column; font-size: 14px;">
+                  <div  style="color:#484848">전체 태스크</div>
+                  <span style="color: #6750A4; font-size: 20px;" ><strong>{{ templateInfo.taskCount }} 개</strong></span>
+                </div>
+                <div style="display: flex; flex-direction: column; font-size: 14px;">
+                  <div  style="color:#484848">부서 목록</div>
+                  <div class="chip-container">
+                    <v-chip
+                      size="small"
+                      variant="outlined"
+                      :color="selectedDeptName === '전체' ? 'primary' : 'default'"
+                      @click="selectedDeptName = '전체'"
+                      class="clickable-chip"
+                    >
+                      전체
+                    </v-chip>
 
+                    <v-chip
+                      v-for="dept in templateInfo?.deptList || []"
+                      :key="dept.id || dept.name"
+                      size="small"
+                      variant="outlined"
+                      :color="selectedDeptName === dept.name ? 'primary' : 'default'"
+                      @click="selectedDeptName = dept.name"
+                      class="clickable-chip"
+                    >
+                      {{ dept.name }}
+                    </v-chip>
+                  </div>
+                </div>
+              </div>
+              <v-btn icon @click="showFullscreenView = false" variant="text">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </div>
+          </div>
+            <!-- :nodes="filteredFlowNodes" -->
+            <!-- :nodes="flowNodes" -->
           <VueFlow
             :nodes="flowNodes"
             :edges="flowEdges"
@@ -76,8 +115,34 @@
             fit-view
             style="height: calc(100vh - 100px)"
           >
-            <Background />
-            <Controls />
+          <Background />
+          <!-- 템플릿 정보 패널 -->
+          <!-- <Panel class="template-info-panel" position="top-right">
+            <div class="template-panel-content">
+              <h3 class="panel-title">📋 템플릿 정보</h3>
+              <div class="info-field"><strong>작성자:</strong> {{ templateInfo?.createdBy }}</div>
+              <div class="info-field"><strong>생성일:</strong> {{ templateInfo?.createdAt?.split('T')[0] }}</div>
+              <div class="info-field"><strong>총 소요 기간:</strong> {{ templateInfo?.duration }}일</div>
+              <div class="info-field"><strong>전체 태스크 수:</strong> {{ templateInfo?.taskCount }}개</div>
+
+              <div class="info-field">
+                <strong>참여 부서:</strong>
+                <div class="chip-container">
+                  <v-chip
+                    v-for="dept in templateInfo?.deptList || []"
+                    :key="dept.id"
+                    size="x-small"
+                    color="primary"
+                    variant="tonal"
+                  >
+                    {{ dept.name }}
+                  </v-chip>
+                </div>
+              </div>
+            </div>
+          </Panel> -->
+
+          <Controls />
           </VueFlow>
         </v-card>
       </v-dialog>
@@ -122,16 +187,15 @@
 import BasicLayout from '@/components/layout/BasicLayout.vue';
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 import InfoField from '@/components/common/SideInfoField.vue'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed  } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api.js'
-import { VueFlow } from '@vue-flow/core'
+import { Panel, VueFlow, useVueFlow, Position } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 import dagre from '@dagrejs/dagre'
-import { Position } from '@vue-flow/core'
 import { markRaw } from 'vue'
 
 
@@ -151,6 +215,10 @@ const nodeList = ref([])
 const edgeList = ref([])
 const flowNodes = ref([])
 const flowEdges = ref([])
+
+
+const selectedDeptName = ref('전체')    // 부서별 태스크 조회
+
 
 // 템플릿 정보 가져오기 
 const fetchTemplate = async () => {
@@ -172,6 +240,15 @@ const fetchTemplate = async () => {
     isLoading.value = true
   } 
 }
+
+// 부서별 태스크 필터링
+const filteredFlowNodes = computed(() => {
+  if (!templateInfo.value || selectedDeptName.value === '전체') return flowNodes.value
+
+  return flowNodes.value.filter(node =>
+    node.data.deptList?.includes(selectedDeptName.value)
+  )
+})
 
 
 onMounted(() => {
@@ -210,10 +287,15 @@ const convertToFlowData = () => {
         description: node.data.description,
         duration: node.data.duration,
         slackTime: node.data.slackTime,
-        deptList: node.data.deptList
+        // ✅ deptList 정규화 추가
+        deptList: (node.data.deptList || []).map(d =>
+          typeof d === 'string' ? { name: d } : d
+        ),
+        highlight: false,
       }
     }
   })
+
 
   flowEdges.value = edgeList.value.map(edge => ({
     id: edge.id,
@@ -246,6 +328,22 @@ watch(() => route.params.id, async (newId) => {
   await fetchTemplate()
 })
 
+// 선택한 부서에 따라 노드 강조
+watch(selectedDeptName, (newDept) => {
+  console.log("선택한 부서는", selectedDeptName.value)
+  console.log("부서 목록", templateInfo.value)
+  flowNodes.value = flowNodes.value.map(node => {
+    console.log(node.data.deptList)
+    const shouldHighlight = newDept !== '전체' && node.data.deptList?.includes(newDept)
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        highlight: shouldHighlight
+      }
+    }
+  })
+})
 </script>
 
 
@@ -321,5 +419,54 @@ watch(() => route.params.id, async (newId) => {
   gap: 8px;
 }
 
+
+/* 템플릿 정보  */
+.template-info-panel {
+  width: 250px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-size: 13px;
+}
+
+.template-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel-title {
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.info-field {
+  line-height: 1.4;
+}
+
+.chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.custom-select {
+  width: 150px;
+  height: 36px;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+}
+
+.custom-select:focus {
+  /* border-color: #25bead; */
+  /* box-shadow: 0 0 2px #25bead; */
+}
 </style>
 

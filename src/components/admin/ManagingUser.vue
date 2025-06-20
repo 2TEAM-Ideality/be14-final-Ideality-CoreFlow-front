@@ -534,6 +534,8 @@
 
     .tree {
         list-style: none;
+        text-align: left;
+        padding-left: 12px;
     }
 
     .tree li {

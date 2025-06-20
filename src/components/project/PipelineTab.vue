@@ -4,11 +4,10 @@ import { nextTick, ref, onMounted, watch } from 'vue'
 import { Panel, VueFlow, useVueFlow, Position } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import TaskNode from '@/components/flow/TaskNode.vue'
-import NodeEditModal from '@/components/common/NodeEditModal.vue'
 import NewTaskModal from '@/components/common/NewTaskModal.vue'
 
 import '@/assets/vue-flow-style.css'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useLayout } from '@/views/test/useLayout'
 import api from '@/api.js'
 import { markRaw } from 'vue'
@@ -23,6 +22,7 @@ const { layout } = useLayout()
 const { fitView, zoomTo } = useVueFlow()
 
 const route = useRoute()
+const projectInfo = ref({})   // 프로젝트 정보
 const projectId = route.params.id
 const projectName = ref('')
 const nodes = ref([])   // 원본 노드 데이터 
@@ -49,6 +49,7 @@ async function fetchPipeline() {
     })
     const data = res.data.data
     console.log(data)
+    projectInfo.value = data
     projectName.value = data.name
     
     const rawNodes = data.nodeList
@@ -108,7 +109,9 @@ async function fetchPipeline() {
     dagre.layout(g)
 
     // 위치 반영
-    nodes.value = convertedNodes.map(n => {
+    nodes.value = convertedNodes
+    .filter(n => n.data.status?.toLowerCase() !== 'deleted')
+    .map(n => {
       const pos = g.node(n.id)
       return {
         ...n,
@@ -172,6 +175,58 @@ function getChildIds(nodeId) {
 }
 
 
+function handleCreateNewNode(newNodeData) {
+  const newId = nanoid(6)
+
+  const node = {
+    id: newId,
+    type: 'task',
+    position: { x: 200, y: 200 + nodes.value.length * 100 },
+    data: {
+      ...newNodeData,
+      toolbarVisible: false,
+      status: 'pending',
+      progressRate: 0,
+      passedRate: 0,
+      delayDays: 0,
+    }
+  }
+
+  nodes.value.push(node)
+  newTasks.value.push(node)
+
+  // 🔗 연결할 선행 태스크가 있으면 edge 생성
+  const parentIds = newNodeData.parentIds || []
+  parentIds.forEach(parentId => {
+    edges.value.push({
+      id: `e-${parentId}-${newId}`,
+      source: String(parentId),
+      target: newId,
+      type: 'bezier',
+      animated: true,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left
+    })
+  })
+
+  // 🔗 연결할 후행 태스크가 있으면 edge 생성
+  const childIds = newNodeData.childIds || []
+  childIds.forEach(childId => {
+    edges.value.push({
+      id: `e-${newId}-${childId}`,
+      source: newId,
+      target: String(childId),
+      type: 'bezier',
+      animated: true,
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left
+    })
+  })
+
+  showNewTask.value = false
+  nextTick(() => layoutGraph('LR'))
+}
+
 
 
 // 태스크 수정 모달 
@@ -191,6 +246,24 @@ function onEditNode(nodeId) {
     }
 
     showNewTask.value = true
+  }
+}
+
+// 태스크 삭제 연결
+async function handleDeleteTask(nodeId) {
+  console.log("태스크 삭제하러 옴")
+  try {
+    // 서버에 삭제 요청 (실제로는 soft-delete 처리)
+    await api.patch(`/api/task/delete/${nodeId}`)
+
+    // 성공 시: 로컬 노드/엣지에서 제거
+    nodes.value = nodes.value.filter(n => n.id !== nodeId)
+    edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
+
+    console.log(`태스크 ${nodeId} 삭제 완료`)
+  } catch (err) {
+    console.error('태스크 삭제 실패:', err)
+    alert('태스크 삭제에 실패했습니다.')
   }
 }
 
@@ -365,8 +438,8 @@ watch(showFullscreenView, async (isOpen) => {
 
       <Panel class="process-panel" position="top-right">
         <div class="layout-panel">
-          <button title="태스크 편집">
-            태스크 편집 
+          <button title="태스크 생성" @click="{{showFullscreenView = true; showNewTask = true;}}">
+            📝 태스크 생성
           </button>
           <button title="정렬" @click="layoutGraph('LR')">
             ↔️ 정렬
@@ -378,19 +451,31 @@ watch(showFullscreenView, async (isOpen) => {
       </Panel>
     </VueFlow>
 
-    <!-- 전체 보기 :  노드 생성 / 수정 임시 상태 -->
+    <!-- 전체 보기 창 :  노드 생성 / 수정 임시 상태 -->
     <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
       <NewTaskModal
         v-model:show="showNewTask"
         :deptList="deptList"
         :existingNodes="nodes"
         :initialData="editingNode"
+        @create="handleCreateNewNode" 
         @update="handleUpdateTask"
         @close="showNewTask = false"
       />
       <v-card class="pa-4">
+        <!-- 상단 메뉴 -->
         <div class="d-flex justify-space-between align-center mb-2">
           <h3 class="text-h6">📌 {{ projectName }}</h3>
+          <div style="display:flex; flex-direction: row;">
+            <div style="display: flex; flex-direction: column; font-size: 14px;">
+              <div style="color:#484848">지연일</div>
+                <span style="color: #6750A4; font-size: 20px;" ><strong>{{ projectInfo.delayDays }} 일</strong></span>
+              </div>
+              <div style="display: flex; flex-direction: column; font-size: 14px;">
+                <div  style="color:#484848">전체 태스크</div>
+                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo.delayDays   }} 개</strong></span>
+            </div>
+          </div>
           <v-btn icon @click="showFullscreenView = false" variant="plain">
             <v-icon>mdi-close</v-icon>
           </v-btn>
@@ -411,6 +496,9 @@ watch(showFullscreenView, async (isOpen) => {
             :showFullscreenView="showFullscreenView"
             @addNode="onAddNode"
             @edit="onEditNode"
+            @delete="handleDeleteTask"
+            @complete="handleCompleteTask"
+            @start="handleStartTask"
           />
         </template>
 

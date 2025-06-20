@@ -7,7 +7,7 @@
     </div>
 
     <nav class="nav" v-if="isMaster">
-      <router-link to="/">프로젝트</router-link>
+      <router-link to="/project/list">프로젝트</router-link>
       <router-link to="/template">템플릿</router-link>
       <router-link to="/calendar">부서 일정</router-link>
       <router-link to="/approval">결재</router-link>
@@ -31,6 +31,7 @@
 
       <!-- 드롭다운 -->
       <div v-if="showDropdown.user" class="dropdown-menu" ref="dropdownRef" @click.stop>
+        <div class="dropdown-item" @click="showMyProfile = true">내 프로필 조회</div>
         <div class="dropdown-item" @click="triggerFileInput">프로필 변경</div>
         <input type="file" accept="image/*" @change="handleFileChange" ref="fileInput" style="display:none" />
         <div class="dropdown-item deleted" @click="deleteProfile">프로필 삭제</div>
@@ -45,7 +46,7 @@
         :isOpen="notificationSidebarOpen"
         @closeSidebar="closeSidebar" 
       />
-
+      <MyProfile v-if="showMyProfile" @close="showMyProfile = false" />
       <ChangePwdModal v-if="showChangePwdModal" @close="showChangePwdModal = false" />
     </div>
   </header>
@@ -61,6 +62,7 @@ import api from '@/api.js'
 
 import NotificationSidebar from '@/components/common/NotificationSidebar.vue'
 import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
+import MyProfile from '@/components/user/MyProfileModal.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -71,6 +73,7 @@ const notifications = store.notifications
 
 const { connectToSSE } = useNotifications()
 
+const showMyProfile = ref(false)  // 유저 프로필 정보 모달
 const showChangePwdModal = ref(false)
 const fileInput = ref(null)
 const imageUrl = ref(null)
@@ -205,7 +208,7 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 40px;
+  padding: 0px 40px;
   border-bottom: 1px solid #dbdbdb;
   background-color: #fff;
   z-index: 100;

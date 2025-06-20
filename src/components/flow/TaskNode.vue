@@ -2,11 +2,12 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { NodeToolbar } from '@vue-flow/node-toolbar'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/api' 
 
 
 const route = useRoute()
+const router = useRouter()
 const projectId = route.params.id
 
 const { viewport } = useVueFlow()
@@ -38,6 +39,12 @@ const handleGlobalClick = (e) => {
 const handleToolbarAction = (action) => {
   selectedAction.value = action
   confirmDialog.value = true
+}
+
+// 삭제 확인
+const handleDelete = () => {
+  emit('delete', props.id)
+  confirmDeleteDialog.value = false
 }
 
 
@@ -96,6 +103,10 @@ const confirmAction = async () => {
   selectedAction.value = ''
 }
 
+// 태스크 상세 페이지로 이동 
+const goToTask = () => {
+  router.push(`/task/${props.id}`)
+}
 
 const toggleToolbar = () => {
   updateNodeData(props.id, { toolbarVisible: !props.data.toolbarVisible })
@@ -138,6 +149,8 @@ const backgroundMap = {
 }
 
 const confirmDialog = ref(false)
+const confirmDeleteDialog = ref(false)  // 삭제 확인 창
+
 const selectedAction = ref('') // 어떤 액션 눌렀는지 저장
 
 
@@ -181,6 +194,18 @@ const handleStyle = {
         <v-spacer />
         <v-btn text color="grey" @click="confirmDialog = false">취소</v-btn>
         <v-btn text color="primary" @click="confirmAction">확인</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+  <!-- 태스크 삭제 확인 모달창 -->
+  <v-dialog v-model="confirmDeleteDialog" width="400">
+    <v-card>
+      <v-card-title class="text-h6">🗑️ 삭제 확인</v-card-title>
+      <v-card-text>정말로 이 태스크를 삭제하시겠습니까?</v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn text color="grey" @click="confirmDeleteDialog = false">취소</v-btn>
+        <v-btn text color="red" @click="handleDelete">삭제</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -230,8 +255,19 @@ const handleStyle = {
           </v-btn>
           <span class="title">{{ data.label || '작업 이름' }}</span>
         </div>
-        <!-- DOT 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
-        <v-menu
+
+
+        <!-- DOT more 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
+          <v-btn
+            @click="goToTask"
+            icon
+            size="small"
+            variant="text"
+            v-bind="menuActivatorProps"
+          >
+            <v-icon style="color: gray;">mdi-open-in-new</v-icon>
+          </v-btn>
+        <!-- <v-menu
           v-model="menuVisible"
           :close-on-content-click="false"
           location="top"
@@ -263,12 +299,12 @@ const handleStyle = {
               icon
               size="small"
               variant="text"
-              @click.stop="emit('delete', props.id)"
+              @click.stop="confirmDeleteDialog = true"
             >
               <v-icon size="18">mdi-delete-outline</v-icon>
             </v-btn>
           </div>
-        </v-menu>
+        </v-menu> -->
       </div>
 
       <!-- 날짜 -->

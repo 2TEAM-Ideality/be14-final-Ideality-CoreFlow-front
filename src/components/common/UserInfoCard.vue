@@ -1,0 +1,58 @@
+<template>
+    <div class="user-info">
+        <v-avatar size="24" class="user-avatar">
+            <template v-if="profileImage">
+                <img :src="profileImage" alt="프로필 이미지">
+            </template>
+            <template v-else>
+                <v-icon size="24">mdi-account</v-icon>
+            </template>
+        </v-avatar>
+        <div class="user-text">
+            <div class="user-name">{{ name }}</div>
+                -
+            <div class="user-meta">{{ dept }}/{{ role }}</div>
+        </div>
+    </div>
+    
+</template>
+
+<script setup>
+
+defineProps({
+    name: String,
+    dept: String,
+    role: String,
+    profileImage: String
+})
+</script>
+
+<style scoped>
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    background-color: #eee6ff;
+}
+
+.user-text {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-name {
+    font-weight: 700;
+    font-size: 18px;
+    color: #444;
+}
+
+.user-meta {
+    font-size: 15px;
+    color: #999;
+}
+</style>

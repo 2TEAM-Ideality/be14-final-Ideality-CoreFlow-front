@@ -2,7 +2,9 @@
     <div>
         <div class="modal-overlay">
             <div class="modal">
-                <button @click="$emit('close')" class="close-btn">X</button>
+                <v-btn icon @click="$emit('close')" class="close-btn" size="small" variant="text">
+                <v-icon>mdi-close</v-icon>
+                </v-btn>
                 <div class="user-header">
                     <div class="profile-area">
                         <img
@@ -18,7 +20,7 @@
                         </div>
                     </div>
                     <div class="profile">
-                        <div style="font-size: 24px; font-weight: bold">{{ formData.name }}</div>
+                        <div style="font-size: 24px; font-weight: bold; text-align: left;">{{ formData.name }}</div>
                         <div class="role-info">
                             <div class="d-flex role">
                                 <div style="font-weight: bold;">{{ formData.deptName }}</div>
@@ -399,6 +401,7 @@
     }
     .radius-box {
         border-radius: 8px;
+        text-align: left;
     }
     .drop-down {
         padding-left: 12px;
@@ -461,5 +464,6 @@
     }
     .category {
         font-weight: bold;
+        text-align: left;
     }
 </style>

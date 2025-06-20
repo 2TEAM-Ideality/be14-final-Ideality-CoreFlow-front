@@ -10,11 +10,13 @@
         <template #sidebar>
             <SidebarCommentSection :taskId="taskId" />
         </template>
+
     </TaskLayout>
 </template>
 
 <script setup>
 import { useRoute } from 'vue-router'
+
 
 import TaskLayout from '@/components/layout/TaskLayout.vue'
 import TaskHeaderSection from '@/components/task/TaskHeaderSection.vue'
@@ -23,4 +25,6 @@ import SidebarCommentSection from '@/components/task/SidebarCommentSection.vue'
 
 const route = useRoute()
 const taskId = route.params.taskId
+
+
 </script>
