@@ -1,40 +1,54 @@
 <template>
-  <div>
-    <ejs-gantt
-      :dataSource="taskData"
-      :taskFields="taskFields"
-      height="450px"
-    ></ejs-gantt>
+  <div class="col-lg-12 control-section">
+    <div>
+      <ejs-gantt
+        ref="gantt"
+        id="GanttContainer"
+        :dataSource="data"
+        :height="height"
+        :highlightWeekends="true"
+        :taskFields="taskFields"
+        :labelSettings="labelSettings"
+        :treeColumnIndex="1"
+        :projectStartDate="projectStartDate"
+        :projectEndDate="projectEndDate"
+        :connectorLine="true"
+      >
+    </ejs-gantt>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref,provide } from 'vue';
+import { GanttComponent, Selection, DayMarkers } from '@syncfusion/ej2-vue-gantt';
+import { projectNewData } from './data-source.js';
 
-const taskData = ref([
-  {
-    TaskID: 1,
-    TaskName: '프로젝트 시작',
-    StartDate: new Date('2025-06-01'),
-    Duration: 5,
-    Progress: 50,
-  },
-  {
-    TaskID: 2,
-    TaskName: '요구사항 분석',
-    StartDate: new Date('2025-06-06'),
-    Duration: 4,
-    Progress: 30,
-    Predecessor: '1',
-  },
-]);
-
-const taskFields = {
+// Define reactive state using ref
+const data = ref(projectNewData);
+const height = ref('450px');
+const taskFields = ref({
   id: 'TaskID',
   name: 'TaskName',
   startDate: 'StartDate',
-  duration: 'Duration',
+  endDate: 'EndDate',
+
   progress: 'Progress',
   dependency: 'Predecessor',
-};
+  child: 'subtasks'
+});
+const labelSettings = ref({
+  leftLabel: 'TaskName'
+});
+const projectStartDate = ref(new Date('03/23/2024'));
+const projectEndDate = ref(new Date('07/06/2024'));
+
+// Provide DayMarkers and Selection module to the Gantt component
+provide('gantt', [DayMarkers, Selection]);
 </script>
+
+<style>
+@import url("https://cdn.syncfusion.com/ej2/material.css");
+</style>
+
+

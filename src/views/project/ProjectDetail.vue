@@ -81,6 +81,11 @@ const tabs = [
 ]
 
 
+if (route.params.id) {
+      sessionStorage.setItem('projectId', route.params.id); // 세션 저장소에 프로젝트 ID 저장
+    }
+
+
 onMounted(async () => {
   try {
     // 프로젝트 정보 가져오기 
