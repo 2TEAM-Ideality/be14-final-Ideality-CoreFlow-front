@@ -177,6 +177,11 @@ async function handleNodesInitialized() {
   })
 }
 
+function handleStartTask(taskId) {
+  // 태스크 시작 로직
+  console.log('Started task', taskId)
+}
+
 
 function getParentIds(nodeId) {
   return edges.value
