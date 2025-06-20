@@ -57,11 +57,7 @@ function selectTab(type) {
     currentTab.value = type
 }
 
-const props = defineProps ({
-    selectedTab: String
-})
-
-const currentTab = ref(null)
+const currentTab = ref('received')
 
 const approvalData = ref([])
 
@@ -80,7 +76,6 @@ const fetchApprovalData = async () => {
 
 onMounted(() => {
     fetchApprovalData()
-    currentTab.value = props.selectedTab
 })
 
 const displayedList = computed(() => {

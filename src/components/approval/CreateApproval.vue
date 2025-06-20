@@ -315,9 +315,6 @@ async function createApproval() {
         alert('입력하지 않은 영역이 있습니다.')
         return
     }
-    if (selectedFiles.value?.length > 5) {
-        alert('첨부파일은 최대 5개 등록할 수 있습니다.')
-    }
     const formData = new FormData();
 
     formData.append('title', title.value)
