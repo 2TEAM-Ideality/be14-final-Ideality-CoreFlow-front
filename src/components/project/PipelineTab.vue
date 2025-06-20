@@ -1,5 +1,6 @@
 
 <script setup>
+import FloatingInfo from '@/components/project/FloatingInfo.vue'
 import { nextTick, ref, onMounted, watch } from 'vue'
 import { Panel, VueFlow, useVueFlow, Position } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
@@ -49,11 +50,26 @@ async function fetchPipeline() {
     })
     const data = res.data.data
     console.log(data)
-    projectInfo.value = data
+    // projectInfo.value = data
+   
     projectName.value = data.name
     
     const rawNodes = data.nodeList
     const rawEdges = data.edgeList
+
+    
+    // 상태별 개수 계산
+    const statusCounts = rawNodes.reduce((acc, node) => {
+      const status = node.status?.toUpperCase() || 'UNKNOWN'
+      acc[status] = (acc[status] || 0) + 1
+      return acc
+    }, {})
+
+    // 기존 projectInfo에 상태별 개수까지 포함해서 저장
+     projectInfo.value = {
+      ...data,
+      statusCounts
+    }
 
     // 중복 제거한 엣지
     const uniqueEdges = Array.from(
@@ -413,8 +429,17 @@ watch(showFullscreenView, async (isOpen) => {
 
 
 <template>
-
+  <div>
+  <FloatingInfo
+    v-if="projectInfo.statusCounts"
+    :passedRate="projectInfo.passedRate"
+    :progressRate="projectInfo.progressRate"
+    :delayDays="projectInfo.delayDays"
+    :statusCounts="projectInfo.statusCounts"
+  />
+  </div>
   <div class="layout-flow" style="position: relative; overflow: visible">
+    
     <VueFlow
       ref="vueFlowRef"
       :nodes="nodes"
