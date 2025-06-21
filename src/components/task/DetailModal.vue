@@ -6,100 +6,92 @@
         <button class="close-btn" @click="closeModal">X</button>
       </div>
       <div class="modal-body" v-if="taskDetails && taskDetails.taskName">
-        <!-- 조회 모드 -->
-        <div v-if="!isEditMode">
-          <div class="flex-row">
-            <p><strong>세부일정명:</strong> {{ taskDetails.taskName }}</p>
-          </div>
+        <!-- 테이블 형식으로 정보 표시 -->
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th colspan="2">항목</th>
+              <th colspan="2">내용</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="2"><strong>세부일정명</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{ taskDetails.taskName }}</td>
+              <td colspan="2"v-if="isEditMode"><input v-model="taskDetails.taskName" type="text" /></td>
+            </tr>
+            <tr>
+              <td colspan="2"><strong>세부일정 내용</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{ taskDetails.taskDescription }}</td>
+              <td colspan="2" v-if="isEditMode"><textarea v-model="taskDetails.taskDescription"></textarea></td>
+            </tr>
+            <tr>
+              <td colspan="2"><strong>담당 부서</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{ taskDetails.deptName }}</td>
+              <td colspan="2" v-if="isEditMode">
+                <select v-model="taskDetails.deptId">
+                  <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
+                </select>
+              </td>
+            </tr>
 
-          <div class="flex-row">
-            <p><strong>세부일정 내용:</strong> {{ taskDetails.taskDescription }}</p>
-          </div>
+            <!-- 시작 베이스라인과 마감 베이스라인을 한 행에 표시 -->
+            <tr>
+              <td><strong>시작 베이스라인</strong></td>
+              <td v-if="!isEditMode">{{ taskDetails.startBase }}</td>
+              <td v-if="isEditMode"><input v-model="taskDetails.startBase" type="text" /></td>
+              <td><strong>마감 베이스라인</strong></td>
+              <td v-if="!isEditMode">{{ taskDetails.endBase }}</td>
+              <td v-if="isEditMode"><input v-model="taskDetails.endBase" type="text" /></td>
+            </tr>
 
-          <div class="flex-row">
-            <p><strong>부서명:</strong> {{ taskDetails.deptName }}</p>
-          </div>
+            <!-- 예상 시작일과 예상 마감일을 한 행에 표시 -->
+            <tr>
+              <td><strong>예상 시작일</strong></td>
+              <td v-if="!isEditMode">{{ taskDetails.startExpect }}</td>
+              <td v-if="isEditMode"><input v-model="taskDetails.startExpect" type="date" /></td>
+              <td><strong>예상 마감일</strong></td>
+              <td v-if="!isEditMode">{{ taskDetails.endExpect }}</td>
+              <td v-if="isEditMode"><input v-model="taskDetails.endExpect" type="date" /></td>
+            </tr>
 
-          <div class="flex-row">
-            <p><strong>시작 베이스라인:</strong> {{ taskDetails.startBase }}</p>
-            <p><strong>마감 베이스라인:</strong> {{ taskDetails.endBase }}</p>
-          </div>
+            <!-- 선행 일정과 후행 일정을 한 행에 표시 -->
+            <tr v-if="taskDetails.prevWorkNames.length > 0 || taskDetails.nextWorkNames.length > 0">
+              <td><strong>선행 일정</strong></td>
+              <td v-if="!isEditMode">{{ taskDetails.prevWorkNames.join(', ') }}</td>
+              <td v-if="isEditMode"><input v-model="taskDetails.prevWorkNames" type="text" /></td>
+              <td><strong>후행 일정</strong></td>
+              <td v-if="!isEditMode">{{ taskDetails.nextWorkNames.join(', ') }}</td>
+              <td v-if="isEditMode"><input v-model="taskDetails.nextWorkNames" type="text" /></td>
+            </tr>
 
-          <div class="flex-row">
-            <p><strong>예상 시작일:</strong> {{ taskDetails.startExpect }}</p>
-            <p><strong>예상 마감일:</strong> {{ taskDetails.endExpect }}</p>
-          </div>
-
-          <div class="flex-row">
-            <p><strong>선행 일정:</strong> {{ taskDetails.prevWorkNames.join(', ') }}</p>
-            <p><strong>후행 일정:</strong> {{ taskDetails.nextWorkNames.join(', ') }}</p>
-          </div>
-
-          <div class="flex-row">
-            <p><strong>진척률:</strong> {{ taskDetails.progressRate }}%</p>
-            <p><strong>지연일:</strong> {{ taskDetails.delayDays }}일</p>
-          </div>
-
-          <div class="flex-row">
-            <p><strong>책임자:</strong> 
-              <span v-for="(assignee, index) in taskDetails.assignees" :key="index">{{ assignee.name }}<span v-if="index < taskDetails.assignees.length - 1">, </span></span>
-            </p>
-          </div>
-
-          <div class="flex-row">
-            <p><strong>참여자:</strong>
-              <span v-for="(participant, index) in taskDetails.participants" :key="index">{{ participant.name }}<span v-if="index < taskDetails.participants.length - 1">, </span></span>
-            </p>
-          </div>
-        </div>
-
-        <!-- 수정 모드 -->
-        <div v-if="isEditMode">
-          <div class="flex-row">
-            <label><strong>세부일정명:</strong></label>
-            <input v-model="taskDetails.taskName" type="text" />
-          </div>
-
-          <div class="flex-row">
-            <label><strong>세부일정 내용:</strong></label>
-            <textarea v-model="taskDetails.taskDescription"></textarea>
-          </div>
-
-          <div class="flex-row">
-            <label><strong>부서명:</strong></label>
-            <input v-model="taskDetails.deptName" type="text" />
-          </div>
-
-<!-- 책임자 -->
-<div class="flex-row">
-  <label><strong>책임자:</strong></label>
-  <!-- 책임자들 이름을 콤마로 구분하여 입력 (v-model 사용) -->
-  <input v-model="taskDetails.assignees" type="text" />
-</div>
-
-<!-- 참여자 -->
-<div class="flex-row">
-  <label><strong>참여자:</strong></label>
-  <!-- 참여자들 이름을 콤마로 구분하여 입력 (v-model 사용) -->
-  <input v-model="taskDetails.participants" type="text" />
-</div>
-
-
-          <div class="flex-row">
-            <label><strong>예상마감일:</strong></label>
-            <input v-model="taskDetails.endExpect" type="date" />
-          </div>
-
-          <div class="flex-row">
-            <label><strong>진척률:</strong></label>
-            <input v-model="taskDetails.progressRate" type="number" />
-          </div>
-        </div>
+            <tr>
+              <td colspan="2"><strong>진척률</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{ taskDetails.progressRate }}%</td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.progressRate" type="number" /></td>
+            </tr>
+            <tr>
+              <td colspan="2" ><strong>지연일</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{ taskDetails.delayDays }}일</td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.delayDays" type="number" /></td>
+            </tr>
+            <tr>
+              <td colspan="2" ><strong>책임자</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{ taskDetails.assignees.map(a => a.name).join(', ') }}</td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.assignees" type="text" /></td>
+            </tr>
+            <tr>
+              <td colspan="2" ><strong>참여자</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{ taskDetails.participants.map(p => p.name).join(', ') }}</td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.participants" type="text" /></td>
+            </tr>
+          </tbody>
+        </table>
 
         <div class="modal-footer">
           <button class="edit-btn" @click="openEditModal" v-if="!isEditMode">수정</button>
           <button class="save-btn" @click="saveChanges" v-if="isEditMode">저장</button>
-          <button class="delete-btn">삭제</button>
+          <button class="delete-btn" @click="deleteTask">삭제</button>
         </div>
       </div>
     </div>
@@ -118,6 +110,7 @@ export default {
   data() {
     return {
       taskDetails: {},
+      departments: [], // 부서 목록을 저장하는 변수
     };
   },
   watch: {
@@ -132,7 +125,8 @@ export default {
       this.$emit('close-modal'); // 부모 컴포넌트에 모달 닫기 이벤트 전달
     },
     openEditModal() {
-      this.$emit('open-edit-modal'); // 부모 컴포넌트에 수정 모드 전환 이벤트 전달
+   this.$emit('open-edit-modal');
+      this.isEditMode = true; // 수정 모드로 전환
     },
     async fetchTaskDetails(workId) {
       const userStore = useUserStore();
@@ -162,7 +156,7 @@ export default {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
       }
     },
-saveChanges() {
+    async saveChanges() {
       const userStore = useUserStore();
       const token = userStore.accessToken;
 
@@ -171,18 +165,16 @@ saveChanges() {
         return;
       }
 
-      // 데이터 준비
       const updatedData = {
         name: this.taskDetails.taskName,
         description: this.taskDetails.taskDescription,
-        deptId: this.taskDetails.deptId, // 필요에 따라 deptId와 기타 데이터를 바인딩합니다.
-        assigneeId: this.taskDetails.assignees, // 책임자 ID 배열로 변환
-        participantIds: Array.isArray(this.taskDetails.participants) ? this.taskDetails.participants.map(p => p.id) : [], // 참여자 ID 배열로 변환
+        deptId: this.taskDetails.deptId,
+        assigneeId: this.taskDetails.assignees,
+        participantIds: Array.isArray(this.taskDetails.participants) ? this.taskDetails.participants.map(p => p.id) : [],
         expectEnd: this.taskDetails.endExpect,
         progress: this.taskDetails.progressRate,
       };
 
-      // PUT 요청 보내기
       fetch(`http://localhost:5000/api/detail/update/${this.workId}`, {
         method: 'PUT',
         headers: {
@@ -194,24 +186,43 @@ saveChanges() {
         .then(response => response.json())
         .then(async (data) => {
           console.log('세부일정 업데이트 성공:', data);
-                // 세부일정 업데이트 후 최신 데이터 가져오기
-      await this.fetchTaskDetails(this.workId);
-
-      // 부모 컴포넌트에 수정된 데이터를 전달
-      this.$emit('update-task', this.taskDetails); // 부모 컴포넌트에 수정된 데이터 전달
-          
-          this.$emit('close-modal'); // 모달 닫기
+          await this.fetchTaskDetails(this.workId);
+          this.$emit('update-task', this.taskDetails);
+          this.$emit('close-modal');
         })
         .catch(error => {
           console.error('세부일정 업데이트 오류:', error);
         });
     },
-    
-// 참여자 이름을 구분하여 문자열로 반환하는 메서드
-getParticipantsNames(participants) {
-  return participants.map(participant => participant.name).join(', ');
-},
+    async deleteTask() {
+      const userStore = useUserStore();
+      const token = userStore.accessToken;
 
+      if (!token) {
+        console.error("토큰이 없습니다.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/detail/delete/${this.workId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('세부일정 삭제 실패');
+        }
+
+        const data = await response.json();
+        console.log('세부일정 삭제 성공:', data);
+        this.$emit('close-modal');
+      } catch (error) {
+        console.error('세부일정 삭제 오류:', error);
+      }
+    }
   },
 };
 </script>
@@ -234,7 +245,7 @@ getParticipantsNames(participants) {
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
-  max-width: 500px;
+  max-width: 600px;
   width: 100%;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
@@ -261,16 +272,23 @@ getParticipantsNames(participants) {
   margin-top: 20px;
 }
 
-.modal-body p {
-  font-size: 16px;
-  line-height: 1.5;
-  margin: 5px 0;
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  table-layout: fixed; /* 테이블 너비 고정 */
 }
 
-.flex-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+.info-table th,
+.info-table td {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #ddd;
+  word-wrap: break-word; 
+}
+
+.info-table th {
+  background-color: #f2f2f2;
 }
 
 .modal-footer {
@@ -280,6 +298,7 @@ getParticipantsNames(participants) {
 }
 
 .edit-btn,
+.save-btn,
 .delete-btn {
   padding: 10px 20px;
   margin-left: 10px;
@@ -292,11 +311,13 @@ getParticipantsNames(participants) {
 }
 
 .edit-btn:hover,
+.save-btn:hover,
 .delete-btn:hover {
   opacity: 0.8;
 }
 
 .edit-btn:focus,
+.save-btn:focus,
 .delete-btn:focus {
   outline: none;
 }
