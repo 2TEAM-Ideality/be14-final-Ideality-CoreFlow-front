@@ -5,7 +5,7 @@
         <h3>세부일정 조회</h3>
         <button class="close-btn" @click="closeModal">X</button>
       </div>
-      <div class="modal-body" v-if="taskDetails && taskDetails.taskName">
+      <div class="modal-body" v-if="taskDetails">
         <!-- 테이블 형식으로 정보 표시 -->
         <table class="info-table">
           <thead>
@@ -17,20 +17,20 @@
           <tbody>
             <tr>
               <td colspan="2"><strong>세부일정명</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{ taskDetails.taskName }}</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.taskName" class="input-field" type="text" />
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.taskName }}</td>
+              <td colspan="2" v-if="localEditMode"><input v-model="taskDetails.taskName" class="input-field" type="text" />
               </td>
             </tr>
             <tr>
               <td colspan="2"><strong>세부일정 내용</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{ taskDetails.taskDescription }}</td>
-              <td colspan="2" v-if="isEditMode"><textarea v-model="taskDetails.taskDescription"
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.taskDescription }}</td>
+              <td colspan="2" v-if="localEditMode"><textarea v-model="taskDetails.taskDescription"
                   class="input-field"></textarea></td>
             </tr>
             <tr>
               <td colspan="2"><strong>담당 부서</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{ taskDetails.deptName }}</td>
-              <td colspan="2" v-if="isEditMode">
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.deptName }}</td>
+              <td colspan="2" v-if="localEditMode">
                 <!-- 부서 선택 드롭다운 -->
                 <select v-model="taskDetails.deptId" @change="onDeptChange" class="input-field">
                   <option v-for="dept in departments" :key="dept.deptId" :value="dept.deptId">{{ dept.deptName }}
@@ -55,8 +55,8 @@
               <td>{{ taskDetails.startExpect }}</td>
 
               <td><strong>예상 마감일</strong></td>
-              <td v-if="!isEditMode">{{ taskDetails.endExpect }}</td>
-              <td v-if="isEditMode"><input v-model="taskDetails.endExpect" type="date" class="input-field" /></td>
+              <td v-if="!localEditMode">{{ taskDetails.endExpect }}</td>
+              <td v-if="localEditMode"><input v-model="taskDetails.endExpect" type="date" class="input-field" /></td>
             </tr>
 
             <!-- 시작 베이스라인과 마감 베이스라인을 한 행에 표시 -->
@@ -72,38 +72,38 @@
             <!-- 선행 일정 -->
             <tr>
               <td><strong>선행 일정</strong></td>
-              <td v-if="taskDetails.prevWorkIds.length > 0">{{ taskDetails.prevWorkNames.join(', ') }}</td>
+              <td v-if="taskDetails && taskDetails.prevWorkIds && taskDetails.prevWorkIds.length > 0">{{ taskDetails.prevWorkNames.join(', ') }}</td>
               <td v-else>없음</td>
 
               <!-- 후행 일정 -->
               <td><strong>후행 일정</strong></td>
-              <td v-if="taskDetails.nextWorkIds.length > 0">{{ taskDetails.nextWorkNames.join(', ') }}</td>
+              <td v-if="taskDetails && taskDetails.nextWorkIds && taskDetails.nextWorkIds.length > 0">{{ taskDetails.nextWorkNames.join(', ') }}</td>
               <td v-else>없음</td>
             </tr>
 
             <tr>
               <td colspan="2"><strong>진척률</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{ taskDetails.progressRate }}%</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.progressRate" type="number"
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.progressRate }}%</td>
+              <td colspan="2" v-if="localEditMode"><input v-model="taskDetails.progressRate" type="number"
                   class="input-field" /></td>
             </tr>
             <tr>
               <td colspan="2"><strong>지연일</strong></td>
               <td colspan="2">{{ taskDetails.delayDays }}일</td>
             </tr>
-            <tr>
+            <tr v-if="taskDetails && taskDetails.assignees">
               <td colspan="2"><strong>책임자</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{taskDetails.assignees.map(a => a.name).join(', ')}}</td>
-              <td colspan="2" v-if="isEditMode">
+              <td colspan="2" v-if="!localEditMode">{{taskDetails.assignees.map(a => a.name).join(', ')}}</td>
+              <td colspan="2" v-if="localEditMode">
                 <select v-model="taskDetails.assignees" class="input-field">
-                  <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                  <option v-for="user in users" :key="user.id" :value="user.id" >{{ user.name }}</option>
                 </select>
               </td>
             </tr>
-            <tr>
+            <tr v-if="taskDetails && taskDetails.participants">
               <td colspan="2"><strong>참여자</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{taskDetails.participants.map(p => p.name).join(', ')}}</td>
-              <td colspan="2" v-if="isEditMode">
+              <td colspan="2" v-if="!localEditMode">{{taskDetails.participants.map(p => p.name).join(', ')}}</td>
+              <td colspan="2" v-if="localEditMode">
                 <div v-for="user in users" :key="user.id" class="checkbox-container">
                   <input type="checkbox" :id="'participant-' + user.id" :value="user.id"
                     v-model="taskDetails.participants" />
@@ -114,6 +114,10 @@
             </tr>
           </tbody>
         </table>
+
+        <!-- 경고 메시지 표시 -->
+<div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+
 
         <div class="modal-footer">
           <button class="edit-btn" @click="openEditModal" v-if="!isEditMode">수정</button>
@@ -139,6 +143,8 @@ export default {
       taskDetails: {},
       departments: [], // 부서 목록을 저장하는 변수
       users: [], // 사용자 목록을 저장하는 변수
+      localEditMode: this.isEditMode, // `isEditMode` 상태를 local로 관리
+      errorMessage: "",  // 오류 메시지를 저장하는 변수
     };
   },
   watch: {
@@ -148,14 +154,45 @@ export default {
         this.fetchDepartments(); // 부서 목록을 가져옴
       }
     },
+        // 부모 컴포넌트에서 전달된 `isEditMode` 값이 변경되면 반영
+    isEditMode(newValue) {
+      this.localEditMode = newValue;
+    }
   },
-  methods: {
+methods: {
+validateForm() {
+  // 각 필드가 비어있는지 체크
+  if (
+    !this.taskDetails?.taskName ||  // taskDetails가 없으면 오류가 나지 않도록 처리
+    !this.taskDetails?.taskDescription ||
+    !this.taskDetails?.deptId ||
+    !this.taskDetails?.endExpect ||
+    !this.taskDetails?.progressRate ||
+    !this.taskDetails?.assignees ||
+    this.taskDetails.assignees.length === 0 ||
+    !this.taskDetails?.participants ||
+    this.taskDetails.participants.length === 0
+  ) {
+    this.errorMessage = "모든 필수 항목을 입력해주세요.";
+    return false;  // 폼 제출을 막음
+  }
+
+  this.errorMessage = "";  // 오류 메시지 초기화
+  return true;
+}
+,
     closeModal() {
       this.$emit('close-modal'); // 부모 컴포넌트에 모달 닫기 이벤트 전달
     },
     openEditModal() {
+      this.localEditMode = true; // 수정 모드로 전환
+
+    // 수정 모드일 때 assignees와 participants 초기화
+    this.taskDetails.assignees =[]; // assignees가 없으면 빈 배열로 설정
+    this.taskDetails.participants =  []; // participants가 없으면 빈 배열로 설
+
       this.$emit('open-edit-modal');
-      this.isEditMode = true; // 수정 모드로 전환
+      
     },
     async fetchTaskDetails(workId) {
       const userStore = useUserStore();
@@ -257,6 +294,11 @@ export default {
     }
     ,
     async saveChanges() {
+        if (!this.validateForm()) {
+          console.log("validateForm 호출")
+    return;
+  }
+            this.localEditMode = false; // 저장 후 수정모드 종료
       const userStore = useUserStore();
       const token = userStore.accessToken;
 
@@ -343,7 +385,6 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
@@ -352,11 +393,14 @@ export default {
 }
 
 .modal-content {
+    display: flex;
+  flex-direction: column;
+  overflow-y: auto;
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
   max-width: 600px;
-  width: 100%;
+  max-height: 750px; 
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -437,4 +481,11 @@ export default {
 .delete-btn:focus {
   outline: none;
 }
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
 </style>
