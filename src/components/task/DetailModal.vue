@@ -30,7 +30,7 @@
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.deptName }}</td>
               <td colspan="2" v-if="isEditMode">
                         <!-- 부서 선택 드롭다운 -->
-                <select v-model="taskDetails.deptId" class="input-field">
+                <select v-model="taskDetails.deptId" @change="onDeptChange" class="input-field">
                   <option v-for="dept in departments" :key="dept.deptId" :value="dept.deptId">{{ dept.deptName }}</option>
                 </select>
               </td>
@@ -54,6 +54,16 @@
               <td><strong>예상 마감일</strong></td>
               <td v-if="!isEditMode">{{ taskDetails.endExpect }}</td>
                <td v-if="isEditMode"><input v-model="taskDetails.endExpect" type="date" class="input-field" /></td>
+            </tr>
+
+            <!-- 시작 베이스라인과 마감 베이스라인을 한 행에 표시 -->
+            <tr>
+              <td><strong>실제 시작일</strong></td>
+              <td>{{ taskDetails.startReal }}</td>
+
+              <td><strong>실제 마감일</strong></td>
+              <td>{{ taskDetails.endReal }}</td>
+              
             </tr>
 
 <!-- 선행 일정 -->
@@ -80,12 +90,20 @@
             <tr>
               <td colspan="2" ><strong>책임자</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.assignees.map(a => a.name).join(', ') }}</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.assignees" type="text" class="input-field"  /></td>
+              <td colspan="2" v-if="isEditMode">
+                <select v-model="taskDetails.assignees" class="input-field">
+      <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+    </select>
+              </td>
             </tr>
             <tr>
               <td colspan="2" ><strong>참여자</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.participants.map(p => p.name).join(', ') }}</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.participants" type="text" class="input-field"  /></td>
+              <td colspan="2" v-if="isEditMode">
+                    <select v-model="taskDetails.participants" class="input-field">
+      <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+    </select>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -113,6 +131,7 @@ export default {
     return {
       taskDetails: {},
       departments: [], // 부서 목록을 저장하는 변수
+      users: [], // 사용자 목록을 저장하는 변수
     };
   },
   watch: {
@@ -160,6 +179,7 @@ export default {
     const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
     if (selectedDept) {
       this.taskDetails.deptName = selectedDept.deptName; // deptName을 부서 이름으로 설정
+      this.fetchUsersByDept(selectedDept.deptName); // 부서 이름으로 사용자 목록 가져오기
     }
       } catch (error) {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
@@ -191,7 +211,41 @@ export default {
       } catch (error) {
         console.error("부서 데이터를 불러오는 데 실패했습니다:", error);
       }
+    }, async fetchUsersByDept(deptName) {
+      const userStore = useUserStore();
+      const token = userStore.accessToken;
+
+      if (!token) {
+        console.error("토큰이 없습니다.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/users/dept?deptName=${deptName}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          this.users = data.data; // 사용자 목록을 users에 저장
+        } else {
+          console.error("사용자 데이터를 가져오는 데 실패했습니다:", response.status);
+        }
+      } catch (error) {
+        console.error("사용자 데이터를 불러오는 데 실패했습니다:", error);
+      }
     },
+    async onDeptChange() {
+  const selectedDept = this.departments.find(dept => dept.id === this.taskDetails.deptId);
+  if (selectedDept) {
+    this.fetchUsersByDept(selectedDept.deptName); // 부서 이름을 바탕으로 사용자 목록을 가져옴
+  }
+}
+,
     async saveChanges() {
       const userStore = useUserStore();
       const token = userStore.accessToken;
@@ -240,7 +294,7 @@ export default {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/detail/delete/${this.workId}`, {
+        const response = await fetch(`http://localhost:5000/api/detail/${this.workId}/delete`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
