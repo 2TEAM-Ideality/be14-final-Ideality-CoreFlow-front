@@ -18,20 +18,23 @@
             <tr>
               <td colspan="2"><strong>세부일정명</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.taskName }}</td>
-              <td colspan="2"v-if="isEditMode"><input v-model="taskDetails.taskName" class="input-field" type="text" /></td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.taskName" class="input-field" type="text" />
+              </td>
             </tr>
             <tr>
               <td colspan="2"><strong>세부일정 내용</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.taskDescription }}</td>
-              <td colspan="2" v-if="isEditMode"><textarea v-model="taskDetails.taskDescription" class="input-field"></textarea></td>
+              <td colspan="2" v-if="isEditMode"><textarea v-model="taskDetails.taskDescription"
+                  class="input-field"></textarea></td>
             </tr>
             <tr>
               <td colspan="2"><strong>담당 부서</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.deptName }}</td>
               <td colspan="2" v-if="isEditMode">
-                        <!-- 부서 선택 드롭다운 -->
+                <!-- 부서 선택 드롭다운 -->
                 <select v-model="taskDetails.deptId" @change="onDeptChange" class="input-field">
-                  <option v-for="dept in departments" :key="dept.deptId" :value="dept.deptId">{{ dept.deptName }}</option>
+                  <option v-for="dept in departments" :key="dept.deptId" :value="dept.deptId">{{ dept.deptName }}
+                  </option>
                 </select>
               </td>
             </tr>
@@ -43,17 +46,17 @@
 
               <td><strong>마감 베이스라인</strong></td>
               <td>{{ taskDetails.endBase }}</td>
-              
+
             </tr>
 
             <!-- 예상 시작일과 예상 마감일을 한 행에 표시 -->
             <tr>
               <td><strong>예상 시작일</strong></td>
-              <td >{{ taskDetails.startExpect }}</td>
+              <td>{{ taskDetails.startExpect }}</td>
 
               <td><strong>예상 마감일</strong></td>
               <td v-if="!isEditMode">{{ taskDetails.endExpect }}</td>
-               <td v-if="isEditMode"><input v-model="taskDetails.endExpect" type="date" class="input-field" /></td>
+              <td v-if="isEditMode"><input v-model="taskDetails.endExpect" type="date" class="input-field" /></td>
             </tr>
 
             <!-- 시작 베이스라인과 마감 베이스라인을 한 행에 표시 -->
@@ -63,47 +66,51 @@
 
               <td><strong>실제 마감일</strong></td>
               <td>{{ taskDetails.endReal }}</td>
-              
+
             </tr>
 
-<!-- 선행 일정 -->
-<tr>
-  <td><strong>선행 일정</strong></td>
-  <td v-if="taskDetails.prevWorkIds.length > 0">{{ taskDetails.prevWorkNames.join(', ') }}</td>
-  <td v-else>없음</td>
+            <!-- 선행 일정 -->
+            <tr>
+              <td><strong>선행 일정</strong></td>
+              <td v-if="taskDetails.prevWorkIds.length > 0">{{ taskDetails.prevWorkNames.join(', ') }}</td>
+              <td v-else>없음</td>
 
-<!-- 후행 일정 -->
-  <td><strong>후행 일정</strong></td>
-  <td v-if="taskDetails.nextWorkIds.length > 0">{{ taskDetails.nextWorkNames.join(', ') }}</td>
-  <td v-else>없음</td>
-</tr>
+              <!-- 후행 일정 -->
+              <td><strong>후행 일정</strong></td>
+              <td v-if="taskDetails.nextWorkIds.length > 0">{{ taskDetails.nextWorkNames.join(', ') }}</td>
+              <td v-else>없음</td>
+            </tr>
 
             <tr>
               <td colspan="2"><strong>진척률</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.progressRate }}%</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.progressRate" type="number" class="input-field"  /></td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.progressRate" type="number"
+                  class="input-field" /></td>
             </tr>
             <tr>
-              <td colspan="2" ><strong>지연일</strong></td>
+              <td colspan="2"><strong>지연일</strong></td>
               <td colspan="2">{{ taskDetails.delayDays }}일</td>
             </tr>
             <tr>
-              <td colspan="2" ><strong>책임자</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{ taskDetails.assignees.map(a => a.name).join(', ') }}</td>
+              <td colspan="2"><strong>책임자</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{taskDetails.assignees.map(a => a.name).join(', ')}}</td>
               <td colspan="2" v-if="isEditMode">
                 <select v-model="taskDetails.assignees" class="input-field">
-      <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
-    </select>
+                  <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                </select>
               </td>
             </tr>
             <tr>
-              <td colspan="2" ><strong>참여자</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{ taskDetails.participants.map(p => p.name).join(', ') }}</td>
+              <td colspan="2"><strong>참여자</strong></td>
+              <td colspan="2" v-if="!isEditMode">{{taskDetails.participants.map(p => p.name).join(', ')}}</td>
               <td colspan="2" v-if="isEditMode">
-                    <select v-model="taskDetails.participants" class="input-field">
-      <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
-    </select>
+                <div v-for="user in users" :key="user.id" class="checkbox-container">
+                  <input type="checkbox" :id="'participant-' + user.id" :value="user.id"
+                    v-model="taskDetails.participants" />
+                  <label :for="'participant-' + user.id">{{ user.name }}</label>
+                </div>
               </td>
+
             </tr>
           </tbody>
         </table>
@@ -147,7 +154,7 @@ export default {
       this.$emit('close-modal'); // 부모 컴포넌트에 모달 닫기 이벤트 전달
     },
     openEditModal() {
-   this.$emit('open-edit-modal');
+      this.$emit('open-edit-modal');
       this.isEditMode = true; // 수정 모드로 전환
     },
     async fetchTaskDetails(workId) {
@@ -175,16 +182,16 @@ export default {
         const data = await response.json();
         this.taskDetails = data.data;
 
-            // 수정 모드일 때, 부서 정보를 기본값으로 설정
-    const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
-    if (selectedDept) {
-      this.taskDetails.deptName = selectedDept.deptName; // deptName을 부서 이름으로 설정
-      this.fetchUsersByDept(selectedDept.deptName); // 부서 이름으로 사용자 목록 가져오기
-    }
+        // 수정 모드일 때, 부서 정보를 기본값으로 설정
+        const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
+        if (selectedDept) {
+          this.taskDetails.deptName = selectedDept.deptName; // deptName을 부서 이름으로 설정
+          this.fetchUsersByDept(selectedDept.deptName); // 부서 이름으로 사용자 목록 가져오기
+        }
       } catch (error) {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
       }
-    },async fetchDepartments() {
+    }, async fetchDepartments() {
       const userStore = useUserStore();
       const token = userStore.accessToken;
 
@@ -221,6 +228,7 @@ export default {
       }
 
       try {
+        console.log("Fetching users for dept:", deptName); // 부서명 확인
         const response = await fetch(`http://localhost:5000/api/users/dept?deptName=${deptName}`, {
           method: 'GET',
           headers: {
@@ -231,6 +239,7 @@ export default {
 
         if (response.ok) {
           const data = await response.json();
+          console.log("Fetched users:", data.data); // 사용자 목록 출력
           this.users = data.data; // 사용자 목록을 users에 저장
         } else {
           console.error("사용자 데이터를 가져오는 데 실패했습니다:", response.status);
@@ -240,12 +249,13 @@ export default {
       }
     },
     async onDeptChange() {
-  const selectedDept = this.departments.find(dept => dept.id === this.taskDetails.deptId);
-  if (selectedDept) {
-    this.fetchUsersByDept(selectedDept.deptName); // 부서 이름을 바탕으로 사용자 목록을 가져옴
-  }
-}
-,
+      const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
+      if (selectedDept) {
+        this.fetchUsersByDept(selectedDept.deptName); // 부서 이름을 바탕으로 사용자 목록을 가져옴
+
+      }
+    }
+    ,
     async saveChanges() {
       const userStore = useUserStore();
       const token = userStore.accessToken;
@@ -254,13 +264,18 @@ export default {
         console.error("토큰이 없습니다.");
         return;
       }
+  // Proxy 객체에서 'id' 값을 추출하여 'taskDetails.participants' 배열에 저장
+  const validParticipants = this.taskDetails.participants
+    .map(p => p.userId || p) // Proxy 객체일 경우 userId를 추출하고, 숫자 ID인 경우 그대로 사용
+    .filter(id => id !== null && id !== undefined); // null 및 undefined 제거
 
+  console.log("참여자 목록:", validParticipants);
       const updatedData = {
         name: this.taskDetails.taskName,
         description: this.taskDetails.taskDescription,
         deptId: this.taskDetails.deptId,
         assigneeId: this.taskDetails.assignees,
-        participantIds: Array.isArray(this.taskDetails.participants) ? this.taskDetails.participants.map(p => p.id) : [],
+        participantIds: validParticipants , // id 값만 추출
         expectEnd: this.taskDetails.endExpect,
         progress: this.taskDetails.progressRate,
       };
@@ -371,7 +386,8 @@ export default {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
-  table-layout: fixed; /* 테이블 너비 고정 */
+  table-layout: fixed;
+  /* 테이블 너비 고정 */
 }
 
 .info-table th,
@@ -379,7 +395,7 @@ export default {
   padding: 10px;
   text-align: left;
   border: 1px solid #ddd;
-  word-wrap: break-word; 
+  word-wrap: break-word;
 }
 
 .info-table th {
