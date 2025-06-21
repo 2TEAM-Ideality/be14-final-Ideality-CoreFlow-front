@@ -3,15 +3,16 @@
         <template #main>
         <!-- selectTask.id가 있는 경우에만 렌더링 -->
             <!-- taskId 기준으로 렌더링 -->
-            <TaskHeaderSection 
-            v-if="originTaskValue.selectTask?.taskId" 
-            :task="originTaskValue.selectTask" 
-            />
+                <TaskHeaderSection 
+                v-if="originTaskValue.selectTask?.taskId" 
+                :task="originTaskValue.selectTask" 
+                />
 
-            <TaskMainTab 
-            v-if="originTaskValue.selectTask?.taskId" 
-            :taskData="originTaskValue" 
-            />
+                <TaskMainTab 
+                v-if="originTaskValue.selectTask?.taskId" 
+                :taskData="originTaskValue" 
+                />
+            
         </template>
 
         <template #sidebar>
@@ -62,3 +63,12 @@ onMounted(async () => {
     await fetchTask(taskId);
 })
 </script>
+
+
+<style scoped>
+.task-main{
+    padding: 0;
+}
+
+
+</style>

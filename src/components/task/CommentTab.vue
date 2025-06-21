@@ -7,7 +7,7 @@
             </select>
         </div>
 
-        <div class="comment-list">
+        <div class="comment-list" ref="commentListRef">
             <!-- 댓글 -->
             <div
                 v-for="(comment, index) in comments"
@@ -101,7 +101,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
@@ -115,6 +115,19 @@ const deleteTargetId = ref(null);
 
 const comments = ref([]);
 
+
+
+// 코멘트 생성 시, 스크롤 맨 아래로 이동
+const commentListRef = ref(null)
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (commentListRef.value) {
+      commentListRef.value.scrollTop = commentListRef.value.scrollHeight
+    }
+  })
+}
+
 const fetchComments = async (id)=> {
   try {
     const res = await axios.get(`http://localhost:5000/api/comment/task/${id}`, {
@@ -123,6 +136,9 @@ const fetchComments = async (id)=> {
       }
     });
     comments.value = convertToTree(res.data.data);
+    // nextTick(() => {
+    //   scrollToBottom();
+    // });
   } catch (error) {
     const status = error.response?.status;
     const message = error.code;
@@ -263,6 +279,12 @@ const onEditComment = (comment) => {
 const emitSetReply = (commentId, name) => {
   emit('set-reply', commentId, name)
 }
+
+
+// key 혹은 taskId 변화를 감지해서 재조회
+watch(() => props.taskId, (newId) => {
+  if (newId) fetchComments(newId)
+})
 
 </script>
 

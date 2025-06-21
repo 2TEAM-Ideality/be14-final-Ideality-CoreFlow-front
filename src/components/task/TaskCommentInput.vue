@@ -1,7 +1,13 @@
 <template>
     <div class="comment-container">
-        <hr class="comment-divider">
-        <label class="nickname-label">{{ fullName }}</label>
+        <div class="sender-section">
+            <img
+            :src="userStore.profileImage"
+            alt="프로필 이미지"
+            class="profile-img"
+            />
+            <label class="nickname-label">{{ fullName }}</label>
+        </div>
 
         <!-- replyTargetId가 있을 때만 표시 -->
         <div v-if="replyTargetId" class="reply-banner">
@@ -44,7 +50,9 @@
     </div>
     <div class="options">
         <label><input type="checkbox" v-model="isNotice" /> 공지</label>
-        <button class="submit-btn" @click="handleSubmit">등록</button>
+        <v-btn class="submit-btn" @click="handleSubmit" variant="flat">
+        등록
+        </v-btn>
     </div>
     </div>
 </template>
@@ -55,6 +63,7 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/userStore'
 
 const userStore = useUserStore()
+console.log(userStore.profileImage)
 const fullName = `${userStore.deptName}_${userStore.name}`
 
 const selectedFileName = ref(null);
@@ -133,12 +142,13 @@ try {
 
 // textarea 리사이징
 const resizeTextarea = () => {
-nextTick(() => {
+  nextTick(() => {
     if (textarea.value) {
-    textarea.value.style.height = 'auto'
-    textarea.value.style.height = textarea.value.scrollHeight + 'px'
+      textarea.value.style.height = 'auto'
+      const newHeight = Math.min(textarea.value.scrollHeight, 200) // 200px 제한
+      textarea.value.style.height = `${newHeight}px`
     }
-})
+  })
 }
 
 // 멘션 입력 감지
@@ -218,7 +228,7 @@ const handleKeydown = (e) => {
 const updatePosition = () => {
 if (textarea.value) {
     position.value = {
-    top: textarea.value.offsetTop + textarea.value.offsetHeight + 4,
+    top: textarea.value.offsetTop - 120, // textarea 위로 표시
     left: 12
     }
 }
@@ -348,15 +358,33 @@ onMounted(() => resizeTextarea())
 .comment-container {
   width: 100%;
   max-width: 600px;
-  padding: 12px;
+  padding: 20px;
+  border-top: solid 1px gray;
+}
+
+/* 작성자 입력창 */
+.sender-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.profile-img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ccc;
 }
 
 .nickname-label {
+  margin: 0;
+  padding: 0;
   font-weight: bold;
-  margin-bottom: 8px;
-  display: block;
-  color: #333;
   font-size: 15px;
+  display: inline-block;
 }
 
 .input-box {
@@ -365,24 +393,38 @@ onMounted(() => resizeTextarea())
 
 .comment-input {
   width: 100%;
-  min-height: 40px;
-  padding: 10px;
+  min-height: 44px;
+  max-height: 200px;
+  padding: 8px 12px;  
   resize: none;
-  overflow: hidden;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
+  overflow-y: auto !important;            /* 내용 넘칠 때만 스크롤 */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  font-size: 15px;
+  font-family: 'Pretendard', sans-serif;
   box-sizing: border-box;
-  line-height: 1.5;
-  transition: height 0.1s ease-out;
+  line-height: 1.6;
+  transition: border 0.2s, box-shadow 0.2s;
+
+  /* scrollbar-width: thin;         */
+  scrollbar-color: #bbb transparent;
+}
+
+
+
+.comment-input:focus {
+  outline: none;
+  border-color: #3f51b5;
+  box-shadow: 0 0 0 2px #e8eaf6;
 }
 
 .submit-btn {
   padding: 6px 16px;
-  border: 1px solid #000;
-  background-color: #FFFBFB;
-  border-radius: 4px;
+  /* border: 1px solid #000; */
+  color: white;
+  border-radius: 10px;
+  background-color: #3f51b5;
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;

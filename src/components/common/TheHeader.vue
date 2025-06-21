@@ -209,7 +209,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 24px;
+  padding: 4px 24px;
   border-bottom: 1px solid #dbdbdb;
   background-color: #fff;
   z-index: 100;
@@ -236,7 +236,7 @@ onBeforeUnmount(() => {
 .nav a {
   text-decoration: none;
   color: #444;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .nav a.router-link-active {

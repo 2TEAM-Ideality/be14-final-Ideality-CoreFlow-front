@@ -470,14 +470,11 @@ watch(showFullscreenView, async (isOpen) => {
 
       <Panel class="process-panel" position="top-right">
         <div class="layout-panel">
-          <button title="태스크 생성" @click="{{showFullscreenView = true; showNewTask = true;}}">
-            📝 태스크 생성
-          </button>
           <button title="정렬" @click="layoutGraph('LR')">
             ↔️ 정렬
           </button>
           <button title="전체 보기" @click="showFullscreenView = true">
-            🔍 전체 보기
+            ✏️ 편집하기
           </button>
         </div>
       </Panel>
