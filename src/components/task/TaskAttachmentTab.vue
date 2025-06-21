@@ -167,10 +167,12 @@ function applyFilters() {
     attachmentId: item.attachmentId,
     userId: item.userId
     }))
-    }
+}
+    
 watch(searchKeyword, () => {
     applyFilters()
 })
+
 onMounted(async () => {
     await fetchAttachment();
     applyFilters();

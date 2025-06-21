@@ -464,19 +464,7 @@ const emitSetReply = (commentId, name) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+  z-index: 7000;
 }
 
 .modal-box {

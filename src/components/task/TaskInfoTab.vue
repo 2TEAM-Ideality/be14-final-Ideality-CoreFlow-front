@@ -9,7 +9,17 @@
         alt="edit"
         @click="isEdit = true"
       />
-      <button v-else class="complete-button" @click="isEdit = false">완료</button>
+      <button v-else class="complete-button" @click="handleCompleteClick">완료</button>
+
+        <!-- 확인 모달 -->
+        <ConfirmModal
+          v-if="showConfirmModal"
+          :visible="showConfirmModal"
+          title="수정 확인"
+          message="정말 수정하시겠습니까?"
+          @confirm="submitEdit"
+          @cancel="cancelEdit"
+        />
     </div>
 
     <!-- 담당부서 -->
@@ -21,7 +31,7 @@
           :class="{ editable: isEdit }"
           @click="isEdit && handleDeptDropdown()"
         >
-          <span>{{ selectedDeptName}}</span>
+          <span>{{ selectedDeptName }}</span>
           <i
             class="mdi mdi-chevron-down icon-right"
             :style="{ visibility: isEdit ? 'visible' : 'hidden' }"
@@ -100,9 +110,10 @@
                 class="dropdown-item"
                 @click.stop="selectPrevTask(prev)"
               >
+              <!-- 이전 태스크 드롭다운 체크 수정 -->
               <input
                 type="checkbox"
-                :checked="task.nextTasks?.some(n => n.id === next.id)"
+                :checked="task.prevTasks?.some(p => p.prevWorkId === prev.id)"
                 readonly
               />
                 {{ prev.label }}
@@ -142,9 +153,10 @@
                 class="dropdown-item"
                 @click.stop="selectNextTask(next)"
               >
+              <!-- 이후 태스크 드롭다운 체크 수정 -->
               <input
                 type="checkbox"
-                :checked="task.nextTasks?.some(n => n.id === next.id)"
+                :checked="task.nextTasks?.some(n => n.nextWorkId === next.id)"
                 readonly
               />
                 {{ next.label }}
@@ -180,28 +192,29 @@ import { ref, watch, onMounted, computed, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
+import ConfirmModal from '@/components/common/ConfirmModal.vue';
+
 const route = useRoute();
 const userStore = useUserStore();
 const task = ref({
-    selectTask: {
-        id: '',
-        description: '',
-        startBaseLine: '',
-        endBaseLine: '',
-        expectStartDate: "",
-        expectEndDate: "",
-        progressRate: "",
-        passedRate: "",
-        delayDay: ""
-        
-    },
+    selectTask: {},
     prevTasks: [],
     nextTasks: [],
     deptNames: []
 });
-const taskId = ref(route.params.taskId);
 
+const props = defineProps({
+  taskData: Object,
+  visible : Boolean
+})
 const isEdit = ref(false);
+
+// 태스크 수정 ? 을 위한 깊은 복사
+const originalTask = ref({});
+
+// 태스크 수정을 위한 모달 열기창
+const showConfirmModal = ref(false);
+
 // 부서명, 이전 태스크, 이후 태스크를 보여주기 위함
 const prevTaskNames = computed(() =>
   task.value.prevTasks?.length
@@ -217,43 +230,12 @@ const selectedDeptName = computed(() =>
   task.value.deptNames.length > 0 ? task.value.deptNames.join(', ') : ''
 );
 
-const fetchTask = async (id) => {
-  try {
-    const res = await axios.get(`http://localhost:5000/api/task/detail/${id}`, {
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-      }
-    });
-
-    const responseData = res.data.data;
-
-    // selectTask는 task 안에 selectTask로 넣고, 나머지 값도 안전하게 병합
-    task.value = {
-      selectTask: {
-        ...task.value.selectTask,
-        ...responseData.selectTask // 혹은 responseData가 selectTask 하나라면 responseData 자체
-      },
-      prevTasks: responseData.prevTasks ?? [],
-      nextTasks: responseData.nextTasks ?? [],
-      deptNames: responseData.deptNames ?? []
-    };
-  } catch (error) {
-    console.log(error.message);
-  }
-};
-
 onMounted(() => {
-  fetchTask(taskId.value);
   window.addEventListener('click', handleClickOutside);
 });
 
 onUnmounted(() => {
   window.removeEventListener('click', handleClickOutside);
-});
-
-watch(() => route.params.taskId, (newId) => {
-    taskId.value = newId;
-    fetchTask(newId);
 });
 
 // 드롭다운 코드
@@ -266,11 +248,6 @@ const deptDropdownRef = ref(null)
 const prevDropdownRef = ref(null)
 const nextDropdownRef = ref(null)
 
-/* 드롭다운 선택값 */
-const dropDownDept = computed(() => task.value.deptNames[0] || '-')
-const dropDownPrevTask = computed(() => task.value.prevTasks.map(t => t.name).join(', '))
-const dropDownNextTask = computed(() => task.value.nextTasks.map(t => t.name).join(', '))
-
 /* 리스트 */
 const deptList = ref([])
 const taskList = ref([])
@@ -279,7 +256,7 @@ const taskList = ref([])
 const handleDeptDropdown = async () => {
   // 프로젝트 id 필히 수정 필요
   try {
-    const res = await axios.get(`http://localhost:5000/api/projects/1/participants/department`, {
+    const res = await axios.get(`http://localhost:5000/api/projects/${task.value.selectTask.projectId}/participants/department`, {
       headers: {
         Authorization: `Bearer ${userStore.accessToken}`
       }
@@ -294,19 +271,23 @@ const handleDeptDropdown = async () => {
 
 // 부서 선택
 const selectDept = (dept) => {
-  if (!task.value.deptNames.includes(dept)) {
-    task.value.deptNames.push(dept);
+  const current = task.value.deptNames;
+  if (current.includes(dept)) {
+    if (current.length === 1) {
+      alert('최소 1개 이상의 부서를 선택해야 합니다.');
+      return;
+    }
+    task.value.deptNames = current.filter(d => d !== dept);
   } else {
-    // 이미 선택된 경우 제거
-    task.value.deptNames = task.value.deptNames.filter(d => d !== dept);
+    task.value.deptNames = [...current, dept]; // ✅ 중복 없이 추가
   }
-}
+};
 
 // 태스크 목록 조회
-const fetchTaskList = async () => {
+const TaskList = async () => {
   // 프로젝트 id는 바로 수정 필요
   try {
-    const res = await axios.get(`http://localhost:5000/api/task/1`, {
+    const res = await axios.get(`http://localhost:5000/api/task/${task.value.selectTask.projectId}`, {
       headers: {
         Authorization: `Bearer ${userStore.accessToken}`
       }
@@ -323,55 +304,56 @@ const fetchTaskList = async () => {
 // 필터링 함수 -> 예상 날짜로 할 거면 바꿔도 됌
 const filteredPrevTasks = computed(() =>
   taskList.value.filter(t =>
-    new Date(t.endBaseLine) < new Date(task.value.selectTask.startBaseLine) &&
-    t.id !== task.value.selectTask.id
+    new Date(t.startBaseLine) <= new Date(task.value.selectTask.startBaseLine) &&
+    t.id !== task.value.selectTask.taskId  // ← 여기!
   )
 );
 
 const filteredNextTasks = computed(() =>
   taskList.value.filter(t =>
-    new Date(t.startBaseLine) > new Date(task.value.selectTask.endBaseLine) &&
-    t.id !== task.value.selectTask.id
+    new Date(t.startBaseLine) >= new Date(task.value.selectTask.startBaseLine) &&
+    t.id !== task.value.selectTask.taskId  // ← 여기!
   )
 );
 
 // 드롭다운 오픈 함수
 const handlePrevTaskDropdown = async () => {
-  await fetchTaskList();
+  await TaskList();
   showPrevDropdown.value = !showPrevDropdown.value;
   showNextDropdown.value = false;
 };
 
 const handleNextTaskDropdown = async () => {
-  await fetchTaskList();
+  await TaskList();
   showNextDropdown.value = !showNextDropdown.value;
   showPrevDropdown.value = false;
 };
 
+// 이전 태스크 선택
 const selectPrevTask = (t) => {
-  const exists = task.value.prevTasks.some(p => p.id === t.id);
-  if (exists) {
-    task.value.prevTasks = task.value.prevTasks.filter(p => p.id !== t.id);
+  const current = task.value.prevTasks.map(p => p.prevWorkId);
+  if (current.includes(t.id)) {
+    task.value.prevTasks = task.value.prevTasks.filter(p => p.prevWorkId !== t.id);
   } else {
-    task.value.prevTasks.push({ id: t.id, prevWorkName: t.label });
+    task.value.prevTasks = [...task.value.prevTasks, {
+      prevWorkId: t.id,
+      prevWorkName: t.label
+    }];
   }
 };
 
+// 이후 태스크 선택
 const selectNextTask = (t) => {
-  const exists = task.value.nextTasks.some(n => n.id === t.id);
-  if (exists) {
-    task.value.nextTasks = task.value.nextTasks.filter(n => n.id !== t.id);
+  const current = task.value.nextTasks.map(n => n.nextWorkId);
+  if (current.includes(t.id)) {
+    task.value.nextTasks = task.value.nextTasks.filter(n => n.nextWorkId !== t.id);
   } else {
-    task.value.nextTasks.push({ id: t.id, nextWorkName: t.label });
+    task.value.nextTasks = [...task.value.nextTasks, {
+      nextWorkId: t.id,
+      nextWorkName: t.label
+    }];
   }
 };
-
-watch(filteredPrevTasks, (val) => {
-  console.log('filteredPrevTasks:', val)
-})
-watch(filteredNextTasks, (val) => {
-  console.log('filteredNextTasks:', val)
-})
 
 const handleClickOutside = (e) => {
   const target = e.target;
@@ -385,6 +367,86 @@ const handleClickOutside = (e) => {
   if (nextDropdownRef.value && !nextDropdownRef.value.contains(target)) {
     showNextDropdown.value = false;
   }
+};
+
+watch(() => props.taskData, (newData) => {
+  if (newData) {
+    showConfirmModal.value = false; // ✅ 혹시 떠 있을까봐 초기화
+    isEdit.value = false;
+
+    task.value = {
+      selectTask: newData.selectTask,
+      prevTasks: newData.prevTasks || [],
+      nextTasks: newData.nextTasks || [],
+      deptNames: newData.deptNames || []
+    };
+    // 깊은 복사로 초기값 저장
+    originalTask.value = JSON.parse(JSON.stringify(task.value));
+    console.log(originalTask.value);
+  }
+}, { immediate: true });
+
+
+const hasChanges = computed(() => {
+  return JSON.stringify(task.value) !== JSON.stringify(originalTask.value);
+});
+
+const fetchModify = async () => {
+  try {
+    const dto = {
+      taskId: task.value.selectTask.taskId,
+      projectId: task.value.selectTask.projectId,
+      description: task.value.selectTask.description,
+      deptLists: task.value.deptNames,
+      prevTaskList: task.value.prevTasks.map(t => t.prevWorkId),
+      nextTaskList: task.value.nextTasks.map(t => t.nextWorkId),
+      startExpect: task.value.selectTask.expectStartDate,
+      endExpect: task.value.selectTask.expectEndDate
+    };
+    await axios.patch(`http://localhost:5000/api/task/modify/${dto.taskId}`, dto, {
+      headers: {
+        'Authorization': `Bearer ${userStore.accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    alert("수정되었습니다.");
+  } catch (error) {
+    if (error.response && error.response.status === 403) {
+      alert("권한이 없습니다.");
+      isEdit.value = false;
+      task.value = JSON.parse(JSON.stringify(originalTask.value));
+    } else {
+      console.error("수정 중 오류 발생:", error);
+      isEdit.value = false;
+      task.value = JSON.parse(JSON.stringify(originalTask.value));
+    }
+  }     
+}
+// 완료 클릭 처리
+const handleCompleteClick = () => {
+  if (hasChanges.value) {
+    showConfirmModal.value = true
+  } else {
+    isEdit.value = false
+  }
+}
+
+// 모달 확인 => patch 전송
+const submitEdit = async () => {
+  showConfirmModal.value = false
+  isEdit.value = false
+  console.log('PATCH API 전송할 데이터:', task.value)
+  // 이후 API 연결
+  await fetchModify();
+}
+
+// 모달 취소 => 수정 전 상태로 돌리기
+const cancelEdit = () => {
+  showConfirmModal.value = false;
+  isEdit.value = false;
+
+  // 수정 전 상태로 되돌리기
+  task.value = JSON.parse(JSON.stringify(originalTask.value));
 };
 </script>
 
