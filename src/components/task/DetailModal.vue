@@ -29,8 +29,9 @@
               <td colspan="2"><strong>담당 부서</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.deptName }}</td>
               <td colspan="2" v-if="isEditMode">
-                <select v-model="taskDetails.deptId">
-                  <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
+                        <!-- 부서 선택 드롭다운 -->
+                <select v-model="taskDetails.deptId" class="input-field">
+                  <option v-for="dept in departments" :key="dept.deptId" :value="dept.deptId">{{ dept.deptName }}</option>
                 </select>
               </td>
             </tr>
@@ -55,15 +56,17 @@
                <td v-if="isEditMode"><input v-model="taskDetails.endExpect" type="date" class="input-field" /></td>
             </tr>
 
-            <!-- 선행 일정과 후행 일정을 한 행에 표시 -->
-            <tr v-if="taskDetails.prevWorkNames.length > 0 || taskDetails.nextWorkNames.length > 0">
-              <td><strong>선행 일정</strong></td>
-              <td>{{ taskDetails.prevWorkNames.join(', ') }}</td>
+<!-- 선행 일정 -->
+<tr>
+  <td><strong>선행 일정</strong></td>
+  <td v-if="taskDetails.prevWorkIds.length > 0">{{ taskDetails.prevWorkNames.join(', ') }}</td>
+  <td v-else>없음</td>
 
-              <td><strong>후행 일정</strong></td>
-              <td >{{ taskDetails.nextWorkNames.join(', ') }}</td>
-
-            </tr>
+<!-- 후행 일정 -->
+  <td><strong>후행 일정</strong></td>
+  <td v-if="taskDetails.nextWorkIds.length > 0">{{ taskDetails.nextWorkNames.join(', ') }}</td>
+  <td v-else>없음</td>
+</tr>
 
             <tr>
               <td colspan="2"><strong>진척률</strong></td>
@@ -72,8 +75,7 @@
             </tr>
             <tr>
               <td colspan="2" ><strong>지연일</strong></td>
-              <td colspan="2" v-if="!isEditMode">{{ taskDetails.delayDays }}일</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.delayDays" type="number" class="input-field" /></td>
+              <td colspan="2">{{ taskDetails.delayDays }}일</td>
             </tr>
             <tr>
               <td colspan="2" ><strong>책임자</strong></td>
@@ -117,6 +119,7 @@ export default {
     workId(newWorkId) {
       if (newWorkId) {
         this.fetchTaskDetails(newWorkId);
+        this.fetchDepartments(); // 부서 목록을 가져옴
       }
     },
   },
@@ -152,8 +155,41 @@ export default {
 
         const data = await response.json();
         this.taskDetails = data.data;
+
+            // 수정 모드일 때, 부서 정보를 기본값으로 설정
+    const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
+    if (selectedDept) {
+      this.taskDetails.deptName = selectedDept.deptName; // deptName을 부서 이름으로 설정
+    }
       } catch (error) {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
+      }
+    },async fetchDepartments() {
+      const userStore = useUserStore();
+      const token = userStore.accessToken;
+
+      if (!token) {
+        console.error("토큰이 없습니다.");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:5000/api/dept/all", {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          this.departments = data.data; // 부서 데이터를 departments에 저장
+        } else {
+          console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status);
+        }
+      } catch (error) {
+        console.error("부서 데이터를 불러오는 데 실패했습니다:", error);
       }
     },
     async saveChanges() {
