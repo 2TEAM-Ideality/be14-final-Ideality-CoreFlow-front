@@ -26,6 +26,7 @@ function handelShowCreateApproval() {
 }
 
 function handleSelectApproval(id) {
+  if (selectedApprovalId.value === id && showDetails.value) return
   selectedApprovalId.value = id
 }
 
