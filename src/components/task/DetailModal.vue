@@ -264,12 +264,17 @@ export default {
         console.error("토큰이 없습니다.");
         return;
       }
-  // Proxy 객체에서 'id' 값을 추출하여 'taskDetails.participants' 배열에 저장
-  const validParticipants = this.taskDetails.participants
-    .map(p => p.userId || p) // Proxy 객체일 경우 userId를 추출하고, 숫자 ID인 경우 그대로 사용
-    .filter(id => id !== null && id !== undefined); // null 및 undefined 제거
 
-  console.log("참여자 목록:", validParticipants);
+  // Proxy 객체에서 `userId`가 있는 객체를 삭제
+  const validParticipants = this.taskDetails.participants
+    .filter(p => !p.hasOwnProperty('userId')) // `userId`가 존재하지 않는 객체만 필터링
+    .map(p => {
+      // 여기에 `userId`가 없는 객체만 남음
+      return p; 
+    });
+
+  console.log("최종 유효한 참여자 목록:", validParticipants);
+
       const updatedData = {
         name: this.taskDetails.taskName,
         description: this.taskDetails.taskDescription,
