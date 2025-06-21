@@ -23,8 +23,9 @@ const { layout } = useLayout()
 const { fitView, zoomTo } = useVueFlow()
 
 const route = useRoute()
-const projectInfo = ref({})   // 프로젝트 정보
+
 const projectId = route.params.id
+const projectInfo = ref({})   // 프로젝트 정보
 const projectName = ref('')
 const nodes = ref([])   // 원본 노드 데이터 
 const edges = ref([])   // 원본 엣지 데이터 
@@ -70,6 +71,7 @@ async function fetchPipeline() {
       ...data,
       statusCounts
     }
+    console.log("✅ 프로젝트 파이프라인 데이터 확인", projectInfo.value)
 
     // 중복 제거한 엣지
     const uniqueEdges = Array.from(

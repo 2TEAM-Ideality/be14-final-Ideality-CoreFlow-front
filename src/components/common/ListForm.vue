@@ -46,7 +46,7 @@
           <!-- taskName인 경우 라우팅 처리 -->
           <template v-else-if="header.key === 'taskName'">
             <router-link
-              :to="`/task/${item.id}`"
+              :to="`/task/${item.taskId}`"
               style="color: #1976D2; text-decoration: underline; cursor: pointer;"
             >
               {{ item[header.key] }}
