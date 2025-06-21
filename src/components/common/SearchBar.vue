@@ -16,7 +16,7 @@
         <v-list-item
           @click="selectDept(null)"
         >
-          전체 부서
+          전체
         </v-list-item>
         <v-list-item
           v-for="dept in deptList"
@@ -75,7 +75,7 @@ watch(searchInput, (val) => {
 // 부서 선택 드롭다운용
 const menu = ref(false)
 const selectDept = (deptName) => {
-  emit('filter-click', deptName || '부서 전체')
+  emit('filter-click', deptName || '전체')
   menu.value = false
 }
 </script>
