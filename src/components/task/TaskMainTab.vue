@@ -51,7 +51,7 @@
 
           <div>
             <label for="department">담당 부서:</label>
-            <select id="department" v-model="form.department">
+            <select id="department" v-model="form.department" @change="fetchUsersForDepartment">
               <option value="" disabled selected>부서명을 선택해주세요</option>
               <option v-for="department in departments" :key="department.deptId" :value="department.deptId">
                 {{ department.deptName }}
@@ -87,63 +87,46 @@
             </div>
           </div>
 
-<!-- 책임자 입력 필드 -->
+<!-- 책임자 -->
 <div>
   <label for="responsible">책임자:</label>
-  <input 
-    type="text" 
-    id="responsible" 
-    v-model="form.responsible" 
-    @input="onInput('responsible')" 
-    ref="responsibleInput"
-  />
-
-  <!-- 책임자 검색 결과 리스트 -->
-  <div 
-    v-if="responsibleSuggestions.length > 0" 
-    class="suggestions-list"
-    :style="suggestionsStyle"
-  >
-    <ul>
-      <li
-        v-for="(user, index) in responsibleSuggestions"
-        :key="index"
-        @click="selectUser(user, 'responsible')"
-        style="padding: 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0;"
-      >
-        {{ user }}
-      </li>
-    </ul>
-  </div>
+  <select id="responsible" v-model="form.responsible">
+    <option value="" disabled selected>책임자를 선택해주세요</option>
+    <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+  </select>
 </div>
 
-
-<!-- 참여자 입력 필드 -->
+<!-- 참여자 -->
+<!-- 참여자 체크박스 -->
 <div>
   <label for="participants">참여자:</label>
-  <input 
-    type="text" 
-    id="participants" 
-    v-model="form.participants" 
-    @input="onInput('participants')" 
-  />
-
-  <!-- 참여자 검색 결과 리스트 -->
-  <div v-if="participantsSuggestions.length > 0" class="suggestions-list">
-    <ul>
-      <li
-        v-for="(user, index) in participantsSuggestions"
-        :key="index"
-        @click="selectUser(user, 'participants')"
-      >
-        {{ user }}
-      </li>
-    </ul>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>선택</th>
+        <th>참여자 이름</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="user in users" :key="user.id">
+        <td>
+          <input 
+            type="checkbox" 
+            :id="'participant-' + user.id" 
+            :value="user.id" 
+            v-model="form.participants" 
+          />
+        </td>
+        <td>
+          <label :for="'participant-' + user.id">{{ user.name }}</label>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 
-          <button type="submit" class="submit-btn" @click="submitForm">추가</button>
+          <button type="submit" class="submit-btn" @click="submitForm" :disabled="isSubmitting.value">추가</button>
         </form>
       </div>
     </div>
@@ -170,29 +153,87 @@ const closeModal = () => {
   showModal.value = false // 모달을 닫기 위해 상태값을 false로 설정
 }
 
-const submitForm = () => {
+const isSubmitting = ref(false); // 제출 중 상태를 관리
+
+const submitForm = async () => {
+  // 제출 중이면 아무 것도 하지 않도록 방지
+  if (isSubmitting.value) return;
+
+  // 제출 중 상태로 설정
+  isSubmitting.value = true;
+
   // 필수 입력 항목 체크
   if (!form.value.department) {
     alert("부서를 선택해주세요.");
+    isSubmitting.value = false; // 제출 완료 후 상태 변경
     return;
   }
   if (!form.value.title || !form.value.description || !form.value.startDate || !form.value.endDate) {
     alert("필수 항목이 비어있습니다. 모든 항목을 채워주세요.");
+    isSubmitting.value = false; // 제출 완료 후 상태 변경
     return;
   }
   if (!form.value.responsible) {
     alert("책임자를 입력해주세요.");
+    isSubmitting.value = false; // 제출 완료 후 상태 변경
     return;
   }
-  if (!form.value.participants) {
+  if (!form.value.participants || form.value.participants.length === 0) {
     alert("참여자를 입력해주세요.");
+    isSubmitting.value = false; // 제출 완료 후 상태 변경
     return;
   }
 
-  console.log("폼 제출:", form.value);
-  // 폼 제출 처리 로직을 추가하세요 (예: 서버로 전송)
-  closeModal(); // 폼 제출 후 모달을 닫음
-}
+  // API 요청 데이터 준비
+  const requestData = {
+    projectId: sessionStorage.getItem('projectId'), // 세션에서 프로젝트 ID 가져오기
+    parentTaskId: props.taskData.selectTask.taskId, // parentTaskId 가져오기
+    name: form.value.title, // 제목
+    description: form.value.description, // 설명
+    startBase: form.value.startDate, // 시작 베이스라인
+    endBase: form.value.endDate, // 마감 베이스라인
+    deptId: form.value.department, // 부서 ID
+    source: null, // 필요시 추가
+    target: null, // 필요시 추가
+    assigneeId: form.value.responsible, // 책임자 ID
+    participantIds: form.value.participants // 참여자 IDs
+  };
+
+  // 요청 전송
+  const userStore = useUserStore();
+  const token = userStore.accessToken;
+
+  if (!token) {
+    console.error("토큰이 없습니다.");
+    isSubmitting.value = false; // 제출 완료 후 상태 변경
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:5000/api/detail/create', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestData)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("폼 제출 성공:", data);
+      closeModal(); // 폼 제출 후 모달 닫기
+      // 여기서 필요한 추가 동작을 처리할 수 있어 (예: 새로 생성된 세부일정 갱신)
+    } else {
+      const errorData = await response.json();
+      console.error("폼 제출 실패:", errorData.message);
+    }
+  } catch (error) {
+    console.error("폼 제출 중 오류 발생:", error);
+  } finally {
+    isSubmitting.value = false; // 제출 완료 후 상태 변경
+  }
+};
 
 
 const addPrecedingTask = () => form.value.precedingTasks.push("") // 선행 일정 추가
@@ -227,7 +268,7 @@ const form = ref({
   precedingTasks: [''],
   followingTasks: [''],
   responsible: '',
-  participants: ''
+  participants: [] //참여자배열
 })
 
 const tasks = ref([]) // task 목록을 저장할 배열
@@ -296,12 +337,11 @@ const fetchDepartments = async () => {
   }
 }
 
-const responsibleSuggestions = ref([]); // 책임자 검색 결과 저장
-const suggestionsStyle = ref({}); // 동적으로 위치할 스타일 저장
-const participantsSuggestions = ref([]); // 참여자 검색 결과 저장
 
-const fetchUsers = async (query, field) => {
-  const projectId = sessionStorage.getItem('projectId'); // 세션에서 프로젝트 ID 가져오기
+const users = ref([]) // task 목록을 저장할 배열
+
+const fetchUsersForDepartment = async () => {
+  const deptId = form.value.department; // 선택된 부서 ID
   const userStore = useUserStore();
   const token = userStore.accessToken;
 
@@ -311,7 +351,12 @@ const fetchUsers = async (query, field) => {
   }
 
   try {
-    const response = await fetch(`http://localhost:5000/api/mention/search?projectId=${projectId}&mentionTarget=${query}`, {
+    // 부서 ID로 부서명 찾기
+    const selectedDept = departments.value.find(dept => dept.deptId === deptId);
+    const deptName = selectedDept ? selectedDept.deptName : ''; // deptName을 가져오기
+
+    console.log("Fetching users for dept:", deptName); // 부서명 확인
+    const response = await fetch(`http://localhost:5000/api/users/dept?deptName=${deptName}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -319,52 +364,17 @@ const fetchUsers = async (query, field) => {
       }
     });
 
-    const data = await response.json();
-    console.log('API 응답:', data); // 응답 확인
-
     if (response.ok) {
-      // 응답에서 'data' 안의 'name'을 추출하여 배열로 저장
-      const mentions = data.data.map(item => item.name); // 각 유저의 'name'만 추출
-      console.log('멘션 리스트:', mentions); // 멘션 리스트도 콘솔에 출력
-
-      // field에 따라 할당
-      if (field === 'responsible') {
-        responsibleSuggestions.value = mentions; // 책임자 검색 결과 저장
-      } else if (field === 'participants') {
-        participantsSuggestions.value = mentions; // 참여자 검색 결과 저장
-      }
+      const data = await response.json();
+      users.value = data.data; // 부서에 해당하는 사용자 목록을 users 배열에 저장
     } else {
-      console.error('API 호출 실패', data.message);
+      console.error("사용자 데이터를 가져오는 데 실패했습니다:", response.status);
     }
   } catch (error) {
-    console.error('API 호출 오류', error);
+    console.error("사용자 데이터를 불러오는 데 실패했습니다:", error);
   }
 };
 
-const onInput = async (field) => {
-  const query = form.value[field].split('@').pop().trim();
-
-  if (query.length > 0) {
-    await fetchUsers(query, field); // API 호출
-  } else {
-    // 검색어가 비어있으면 결과를 초기화
-    if (field === 'responsible') {
-      responsibleSuggestions.value = [];
-    }
-  }
-};
-
-const selectUser = (user, field) => {
-  const lastAtIndex = form.value[field].lastIndexOf('@');
-  const textBeforeAt = form.value[field].slice(0, lastAtIndex);
-  form.value[field] = `${textBeforeAt}@${user}`; // 유저 이름 삽입
-  // 검색 결과 목록을 초기화
-  if (field === 'responsible') {
-    responsibleSuggestions.value = [];
-  } else if (field === 'participants') {
-    participantsSuggestions.value = [];
-  }
-};
 
 
 // 컴포넌트가 마운트된 후 API 호출
@@ -570,6 +580,28 @@ form>div {
 .suggestions-list li:hover {
   background-color: #f0f0f0;
 }
+/* 참여자 체크박스 표 스타일 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+/* 체크박스와 레이블 간 간격 */
+input[type="checkbox"] {
+  margin-right: 10px;
+}
+
 
 </style>
   
