@@ -3,6 +3,7 @@
         <template #main>
         <!-- selectTask.id가 있는 경우에만 렌더링 -->
             <!-- taskId 기준으로 렌더링 -->
+             <div class="task-main">
                 <TaskHeaderSection 
                 v-if="originTaskValue.selectTask?.taskId" 
                 :task="originTaskValue.selectTask" 
@@ -12,7 +13,7 @@
                 v-if="originTaskValue.selectTask?.taskId" 
                 :taskData="originTaskValue" 
                 />
-            
+             </div>
         </template>
 
         <template #sidebar>
@@ -67,7 +68,7 @@ onMounted(async () => {
 
 <style scoped>
 .task-main{
-    padding: 0;
+    padding: 2% 5% 5% 10%;
 }
 
 

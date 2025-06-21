@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="task-main-container">
     <div class="tab-row">
       <div class="tab-menu">
         <button
@@ -373,7 +373,9 @@ onMounted(() => {
   fetchTasks()
 })
 </script>
+
 <style scoped>
+
 .tab-row {
   display: flex;
   justify-content: space-between;
