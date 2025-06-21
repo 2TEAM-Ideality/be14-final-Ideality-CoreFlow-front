@@ -18,12 +18,12 @@
             <tr>
               <td colspan="2"><strong>세부일정명</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.taskName }}</td>
-              <td colspan="2"v-if="isEditMode"><input v-model="taskDetails.taskName" type="text" /></td>
+              <td colspan="2"v-if="isEditMode"><input v-model="taskDetails.taskName" class="input-field" type="text" /></td>
             </tr>
             <tr>
               <td colspan="2"><strong>세부일정 내용</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.taskDescription }}</td>
-              <td colspan="2" v-if="isEditMode"><textarea v-model="taskDetails.taskDescription"></textarea></td>
+              <td colspan="2" v-if="isEditMode"><textarea v-model="taskDetails.taskDescription" class="input-field"></textarea></td>
             </tr>
             <tr>
               <td colspan="2"><strong>담당 부서</strong></td>
@@ -38,52 +38,52 @@
             <!-- 시작 베이스라인과 마감 베이스라인을 한 행에 표시 -->
             <tr>
               <td><strong>시작 베이스라인</strong></td>
-              <td v-if="!isEditMode">{{ taskDetails.startBase }}</td>
-              <td v-if="isEditMode"><input v-model="taskDetails.startBase" type="text" /></td>
+              <td>{{ taskDetails.startBase }}</td>
+
               <td><strong>마감 베이스라인</strong></td>
-              <td v-if="!isEditMode">{{ taskDetails.endBase }}</td>
-              <td v-if="isEditMode"><input v-model="taskDetails.endBase" type="text" /></td>
+              <td>{{ taskDetails.endBase }}</td>
+              
             </tr>
 
             <!-- 예상 시작일과 예상 마감일을 한 행에 표시 -->
             <tr>
               <td><strong>예상 시작일</strong></td>
-              <td v-if="!isEditMode">{{ taskDetails.startExpect }}</td>
-              <td v-if="isEditMode"><input v-model="taskDetails.startExpect" type="date" /></td>
+              <td >{{ taskDetails.startExpect }}</td>
+
               <td><strong>예상 마감일</strong></td>
               <td v-if="!isEditMode">{{ taskDetails.endExpect }}</td>
-              <td v-if="isEditMode"><input v-model="taskDetails.endExpect" type="date" /></td>
+               <td v-if="isEditMode"><input v-model="taskDetails.endExpect" type="date" class="input-field" /></td>
             </tr>
 
             <!-- 선행 일정과 후행 일정을 한 행에 표시 -->
             <tr v-if="taskDetails.prevWorkNames.length > 0 || taskDetails.nextWorkNames.length > 0">
               <td><strong>선행 일정</strong></td>
-              <td v-if="!isEditMode">{{ taskDetails.prevWorkNames.join(', ') }}</td>
-              <td v-if="isEditMode"><input v-model="taskDetails.prevWorkNames" type="text" /></td>
+              <td>{{ taskDetails.prevWorkNames.join(', ') }}</td>
+
               <td><strong>후행 일정</strong></td>
-              <td v-if="!isEditMode">{{ taskDetails.nextWorkNames.join(', ') }}</td>
-              <td v-if="isEditMode"><input v-model="taskDetails.nextWorkNames" type="text" /></td>
+              <td >{{ taskDetails.nextWorkNames.join(', ') }}</td>
+
             </tr>
 
             <tr>
               <td colspan="2"><strong>진척률</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.progressRate }}%</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.progressRate" type="number" /></td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.progressRate" type="number" class="input-field"  /></td>
             </tr>
             <tr>
               <td colspan="2" ><strong>지연일</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.delayDays }}일</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.delayDays" type="number" /></td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.delayDays" type="number" class="input-field" /></td>
             </tr>
             <tr>
               <td colspan="2" ><strong>책임자</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.assignees.map(a => a.name).join(', ') }}</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.assignees" type="text" /></td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.assignees" type="text" class="input-field"  /></td>
             </tr>
             <tr>
               <td colspan="2" ><strong>참여자</strong></td>
               <td colspan="2" v-if="!isEditMode">{{ taskDetails.participants.map(p => p.name).join(', ') }}</td>
-              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.participants" type="text" /></td>
+              <td colspan="2" v-if="isEditMode"><input v-model="taskDetails.participants" type="text" class="input-field"  /></td>
             </tr>
           </tbody>
         </table>
@@ -266,6 +266,11 @@ export default {
   border: none;
   font-size: 24px;
   cursor: pointer;
+}
+
+.input-field {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .modal-body {
