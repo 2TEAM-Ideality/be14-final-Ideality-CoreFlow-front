@@ -1,222 +1,180 @@
 <template>
   <div class="comment-tab">
-      <div class="comment-filter">
-          <!-- 공지를 오름차순 내림차순으로 정렬하기 위해서는, -->
-          <select class="select_box">
-              <option>오름차순</option>
-              <option>내림차순</option>
-          </select>
-      </div>
+    <div class="comment-filter">
+      <select class="select_box" v-model="sortOrder">
+        <option value="asc">오름차순</option>
+        <option value="desc">내림차순</option>
+      </select>
+    </div>
 
-      <div class="comment-list">
-          <!-- 댓글 -->
-          <div
-              v-for="(comment, index) in comments"
-              :key="comment.id"
-              class="comment-item"
-          >
-              <div class="comment-header">
-                <span class="comment-writer">📌 {{ comment.commentWriter }}</span>
+    <div class="comment-list">
+      <div
+        v-for="comment in comments"
+        :key="comment.commentId"
+        class="comment-item"
+      >
+        <div class="comment-header">
+          <div class="writer-with-modify">
+                <span class="comment-writer">📌 {{ comment.deptName + '_' + comment.name }}</span>
+                <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
               </div>
+        </div>
 
-              <div class="comment-box">
-                <span class="comment-content">{{ comment.content }}</span>
+        <div class="comment-box">
+          <span class="comment-content">{{ comment.content }}</span>
 
-              <!-- 아이콘들 공통 스타일 icon 적용 -->
-              <div class="comment-icons">
-                <!-- 댓글 드롭다운 열기 -->
-                <button
-                  v-if="comment.userId === userStore.id"
-                  @click="toggleDropdown(`comment-${comment.commentId}`)"
-                  class="icon-button"
-                >
-                  <img src="@/assets/icons/ellipsis-horizontal.svg" alt="more" class="icon" />
-                </button>
-              </div>
-              
-                <!-- 댓글 드롭다운 -->
-                <div v-if="dropdownIndex === `comment-${comment.commentId}`" class="comment-dropdown">
-                    <button @click="onEditComment(comment)">공지 수정</button>
-                    <button @click="openDeleteModal(comment.commentId)">공지 삭제</button>
-                </div>
-              </div>
+          <div class="comment-icons">
+            <button
+              v-if="comment.userId === userStore.id"
+              @click="toggleDropdown(`comment-${comment.commentId}`)"
+              class="icon-button"
+            >
+              <img src="@/assets/icons/ellipsis-horizontal.svg" alt="more" class="icon" />
+            </button>
           </div>
-      </div>
-  </div>
 
-  <!-- 모달 창 -->
-  <template v-if="isDeleteModalOpen">
-    <div class="modal-overlay">
-      <div class="modal-box">
-        <h2 class="modal-title">공지 삭제</h2>
-        <p class="modal-message">공지를 정말로 삭제하시겠습니까?</p>
-        <div class="modal-buttons">
-          <button class="modal-cancel" @click="closeDeleteModal">취소</button>
-          <button class="modal-confirm" @click="deleteComment">확인</button>
+          <div v-if="dropdownIndex === `comment-${comment.commentId}`" class="comment-dropdown">
+            <button @click="onEditComment(comment)">공지 수정</button>
+            <button @click="openDeleteModal(comment.commentId)">공지 삭제</button>
+          </div>
         </div>
       </div>
     </div>
-  </template>
+
+    <template v-if="isDeleteModalOpen">
+      <div class="modal-overlay">
+        <div class="modal-box">
+          <h2 class="modal-title">공지 삭제</h2>
+          <p class="modal-message">공지를 정말로 삭제하시겠습니까?</p>
+          <div class="modal-buttons">
+            <button class="modal-cancel" @click="closeDeleteModal">취소</button>
+            <button class="modal-confirm" @click="deleteComment">확인</button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
-import axios from 'axios' 
+import axios from 'axios'
 
 const route = useRoute();
 const userStore = useUserStore();
 const taskId = ref(route.params.taskId);
-// 댓글 삭제 구현
+
 const isDeleteModalOpen = ref(false);
 const deleteTargetId = ref(null);
-
+const dropdownIndex = ref(null);
+const sortOrder = ref('asc');
 const comments = ref([]);
-const replyTargetId = ref(null);
 
-const fetchComments = async (id)=> {
-try {
-  const res = await axios.get(`http://localhost:5000/api/comment/task/${id}/notice`, {
-    headers: {
-      Authorization: `Bearer ${userStore.accessToken}`
+// 댓글 fetch + 정렬 적용
+const fetchComments = async (id) => {
+  try {
+    const res = await axios.get(`http://localhost:5000/api/comment/task/${id}/notice`, {
+      headers: { Authorization: `Bearer ${userStore.accessToken}` }
+    });
+    comments.value = convertToTree(res.data.data);
+    sortComments();
+  } catch (error) {
+    if (error.response?.status === 403) {
+      alert(error.code);
+      route.push('/');
     }
-  });
-  comments.value = convertToTree(res.data.data);
-} catch (error) {
-  const status = error.response?.status;
-  const message = error.code;
-
-  if (status === 403) {
-    alert(message);
-    route.push('/');
   }
-}
 };
 
-// 대댓글 부모 구조를 위한 변환
 function convertToTree(flatList) {
-const map = {}
-const tree = []
-
-flatList.forEach(comment => {
-  map[comment.commentId] = { ...comment, replies: [] }
-})
-
-flatList.forEach(comment => {
-  const node = map[comment.commentId]
-  if (comment.parentCommentId) {
-    const parent = map[comment.parentCommentId]
-    if (parent) parent.replies.push(node)
-  } else {
-    tree.push(node)
-  }
-})
-
-return tree
+  const map = {};
+  const tree = [];
+  flatList.forEach(comment => {
+    map[comment.commentId] = { ...comment, replies: [] };
+  });
+  flatList.forEach(comment => {
+    const node = map[comment.commentId];
+    if (comment.parentCommentId) {
+      const parent = map[comment.parentCommentId];
+      if (parent) parent.replies.push(node);
+    } else {
+      tree.push(node);
+    }
+  });
+  return tree;
 }
-
-
-const dropdownIndex = ref(null)
 
 const toggleDropdown = (id) => {
-dropdownIndex.value = dropdownIndex.value === id ? null : id
-}
+  dropdownIndex.value = dropdownIndex.value === id ? null : id;
+};
 
 const handleClickOutside = (event) => {
+  const dropdowns = document.querySelectorAll('.comment-dropdown, .icon-button');
+  const clickedInside = Array.from(dropdowns).some(el => el.contains(event.target));
+  if (!clickedInside) dropdownIndex.value = null;
+};
 
-const dropdowns = document.querySelectorAll('.comment-dropdown, .icon-button')
-
-const clickedInside = Array.from(dropdowns).some((el) =>
-  el.contains(event.target)
-)
-
-if (!clickedInside) {
-  dropdownIndex.value = null
-}
-}
-
-// 댓글 삭제 모달 창 함수 + api 요청 만들기
 const openDeleteModal = (id) => {
-console.log(id);
-deleteTargetId.value = id;   
-isDeleteModalOpen.value = true;
+  deleteTargetId.value = id;
+  isDeleteModalOpen.value = true;
 };
 
 const closeDeleteModal = () => {
-isDeleteModalOpen.value = false;
-deleteTargetId.value = null;
+  isDeleteModalOpen.value = false;
+  deleteTargetId.value = null;
 };
 
 const deleteComment = async () => {
-try {
-  await axios.patch(`http://localhost:5000/api/comment/${deleteTargetId.value}/delete`, {} ,{
-    headers: {
-      Authorization: `Bearer ${userStore.accessToken}`
+  try {
+    await axios.patch(`http://localhost:5000/api/comment/${deleteTargetId.value}/delete`, {}, {
+      headers: { Authorization: `Bearer ${userStore.accessToken}` }
+    });
+    closeDeleteModal();
+    await fetchComments(taskId.value);
+  } catch (error) {
+    const status = error.response?.status;
+    if (status === 403 || status === 409) {
+      alert(error.code);
+      route.push('/');
     }
-  })
-  closeDeleteModal()
-  fetchComments(taskId.value)
-} catch (error) {
-  const status = error.response?.status;
-  const message = error.code;
-
-  if (status === 403) {
-    alert(message);
-    route.push('/');
   }
-
-  if (status === 409) {
-    alert(message);
-    route.push(`/task/${taskId}`);
-  }
-
-  // 400번 예외는 프로젝트 페이지 만들어지면 연결
-}
-}
-
-const updateNoticeComment = async (id) => {
-try {
-  const res = await axios.patch(`http://localhost:5000/api/comment/${id}/notice`, {}, {
-    headers: {
-      Authorization: `Bearer ${userStore.accessToken}`
-    }
-  });
-  alert(res.data?.message);
-  fetchComments(taskId.value)
-} catch (error) {
-  const status = error.response?.status;
-  const message = error.code;
-}
 };
 
-
-onMounted(() => {
-window.addEventListener('click', handleClickOutside)
-fetchComments(taskId.value);
-})
-
-onBeforeUnmount(() => {
-window.removeEventListener('click', handleClickOutside)
-})
-
-// 댓글 수정 emit
 const emit = defineEmits(['edit-comment']);
 
 const props = defineProps({
-taskId: {
-  type: [String, Number],
-  required: true
-}
+  taskId: { type: [String, Number], required: true }
 });
 
 const onEditComment = (comment) => {
-emit('edit-comment', {
-  id: comment.id,
-  content: comment.content,
-  isNotice: true
-});
+  emit('edit-comment', {
+    id: comment.commentId,
+    content: comment.content,
+    isNotice: true
+  });
 };
+
+const sortComments = () => {
+  const sorted = [...comments.value].sort((a, b) => {
+    const timeA = new Date(a.createdAt).getTime();
+    const timeB = new Date(b.createdAt).getTime();
+    return sortOrder.value === 'asc' ? timeA - timeB : timeB - timeA;
+  });
+  comments.value = sorted;
+};
+
+watch(sortOrder, sortComments);
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside);
+  fetchComments(taskId.value);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <style scoped>
@@ -475,5 +433,16 @@ padding: 8px 16px;
 border-radius: 6px;
 font-weight: 600;
 cursor: pointer;
+}
+
+.modify-comment {
+  font-size: 13px;
+  color: #888;
+}
+
+.writer-with-modify {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 </style>

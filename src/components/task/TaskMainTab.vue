@@ -14,7 +14,11 @@
     </div>
 
     <!-- 선택된 탭에 맞는 컴포넌트를 표시 -->
-    <component :is="selectedComponent" :taskId="taskId" />
+    <component
+      :is="selectedComponent"
+      v-bind="selectedTab === 'info' ? { taskData } : {}"
+      :task-id="taskData.selectTask.taskId"
+    />
 
     <!-- 모달이 열릴 때만 표시 -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
@@ -194,7 +198,12 @@ const submitForm = () => {
 const addPrecedingTask = () => form.value.precedingTasks.push("") // 선행 일정 추가
 const addFollowingTask = () => form.value.followingTasks.push("") // 후행 일정 추가
 
-const props = defineProps({ taskId: String })
+const props = defineProps({
+  taskData: {
+    type: Object,
+    required: true
+  }
+});
 
 const tabs = [
   { name: 'info', label: '태스크 정보', component: TaskInfoTab },
@@ -204,7 +213,9 @@ const tabs = [
 ]
 
 const selectedTab = ref('info')
-const selectedComponent = computed(() => tabs.find(tab => tab.name === selectedTab.value)?.component || TaskInfoTab)
+const selectedComponent = computed(() => {
+  return tabs.find(tab => tab.name === selectedTab.value)?.component || TaskInfoTab
+})
 
 const showModal = ref(false) // 모달 상태 관리
 const form = ref({
@@ -223,7 +234,7 @@ const tasks = ref([]) // task 목록을 저장할 배열
 
 // API 호출을 위한 함수
 const fetchTasks = async () => {
-    const userStore = useUserStore()
+  const userStore = useUserStore()
   const token = userStore.accessToken
 
   if (!token) {
@@ -233,7 +244,7 @@ const fetchTasks = async () => {
 
   try {
     // 부모 컴포넌트에서 전달된 taskId를 사용하여 API 호출
-    const response = await fetch(`http://localhost:5000/api/work/detail/nameList?parentTaskId=${props.taskId}`, {
+    const response = await fetch(`http://localhost:5000/api/work/detail/nameList?parentTaskId=${props.taskData.selectTask.taskId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -406,6 +417,7 @@ onMounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 9999;
 }
 
 .modal-content {
