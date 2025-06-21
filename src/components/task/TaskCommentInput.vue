@@ -1,12 +1,18 @@
 <template>
     <div class="comment-container">
         <div class="sender-section">
-            <img
-            :src="userStore.profileImage"
-            alt="프로필 이미지"
-            class="profile-img"
-            />
-            <label class="nickname-label">{{ fullName }}</label>
+            <div class="sender-profile">
+                <img
+                :src="userStore.profileImage"
+                alt="프로필 이미지"
+                class="profile-img"
+                />
+                <label class="nickname-label">{{ fullName }}</label>
+            </div>
+            <div class="options">
+            <label><input type="checkbox" v-model="isNotice" /> 공지</label>
+            <v-btn class="submit-btn" @click="handleSubmit" variant="text" size="small">등록</v-btn>
+            </div>
         </div>
 
         <!-- replyTargetId가 있을 때만 표시 -->
@@ -48,12 +54,12 @@
         첨부파일: {{ selectedFileName }}
         <button @click="removeFile">❌</button>
     </div>
-    <div class="options">
+    <!-- <div class="options">
         <label><input type="checkbox" v-model="isNotice" /> 공지</label>
         <v-btn class="submit-btn" @click="handleSubmit" variant="flat">
         등록
         </v-btn>
-    </div>
+    </div> -->
     </div>
 </template>
 
@@ -357,9 +363,10 @@ onMounted(() => resizeTextarea())
 
 .comment-container {
   width: 100%;
+  height: 100%;
   max-width: 600px;
-  padding: 20px;
-  border-top: solid 1px gray;
+  padding: 10px 20px;
+  border-top: solid 1px rgb(226, 226, 226);
 }
 
 /* 작성자 입력창 */
@@ -369,6 +376,13 @@ onMounted(() => resizeTextarea())
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
+  justify-content: space-between;
+}
+.sender-profile {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
 }
 
 .profile-img {
@@ -420,9 +434,10 @@ onMounted(() => resizeTextarea())
 }
 
 .submit-btn {
-  padding: 6px 16px;
+  /* padding: 6px 16px; */
   /* border: 1px solid #000; */
   color: white;
+  padding: 0;
   border-radius: 10px;
   background-color: #3f51b5;
   font-size: 14px;
@@ -431,7 +446,7 @@ onMounted(() => resizeTextarea())
 }
 
 .options {
-  margin-top: 10px;
+  /* margin-top: 10px; */
   display: flex;
   align-items: center;
   justify-content: flex-end;

@@ -16,6 +16,11 @@
             >
             <div class="comment-header">
               <div class="writer-with-modify">
+                <img
+                :src="userStore.profileImage"
+                alt="프로필 이미지"
+                class="profile-img"
+                />
                 <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
                 <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
               </div>
@@ -101,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onUpdated, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
@@ -136,9 +141,8 @@ const fetchComments = async (id)=> {
       }
     });
     comments.value = convertToTree(res.data.data);
-    // nextTick(() => {
-    //   scrollToBottom();
-    // });
+    nextTick(() => scrollToBottom())
+    
   } catch (error) {
     const status = error.response?.status;
     const message = error.code;
@@ -258,6 +262,9 @@ onBeforeUnmount(() => {
   window.removeEventListener('click', handleClickOutside)
 })
 
+onUpdated(() => {
+  nextTick(() => scrollToBottom())
+})
 // 댓글 수정 emit
 const emit = defineEmits(['edit-comment', 'set-reply']);
 
@@ -290,23 +297,34 @@ watch(() => props.taskId, (newId) => {
 
 <style scoped>
 .comment-tab {
-  height: 100%;
-  max-height: calc(100vh - 100px); /* 필요시 적절히 조절 */
   display: flex;
   flex-direction: column;
-  gap: 40px;
-  padding-left: 40px;
-  padding-right: 12px;
+  height: 100%;
+  padding-left: 5%;
+  padding-top: 3%;
+  height: 100%;
+  max-height: calc(100vh - 100px); /* 필요시 적절히 조절 */
+  flex-direction: column;
+  gap: 2%;
   overflow: hidden; /* 중요: 내부 스크롤을 위해 */
+  /* background-color: yellowgreen; */
+  /* background-color: yellow; */
+  /* background-color: yellow; */
+
+
 }
 
 .comment-filter {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
+  flex-direction: row;
+  gap: 10px;
+  /* width: 100%; */
+  /* border-bottom: 1px solid black;; */
+  /* flex: 0 0 auto; */
+  /* background-color: #00cfc1; */
 }
 
+/* 세부일정 선택 input */
 .select_box {
   width: 100%;
   max-width: 300px;
@@ -323,10 +341,24 @@ watch(() => props.taskId, (newId) => {
 }
 
 .comment-list {
-  min-height: 400px;         /* 댓글이 없어도 공간 확보 */
-  max-height: 400px;         /* 댓글이 많을 경우 최대 높이까지만 */
-  overflow-y: auto;          /* 스크롤 가능하게 */
-  padding-right: 12px;
+  flex: 1;
+  overflow-y: auto;
+  /* padding-right: 12px; */
+  padding-right: 5%;
+  padding-bottom: 15px;
+}
+/* comment list 스크롤 */
+.comment-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comment-list::-webkit-scrollbar-track {
+  background: transparent; /* 배경 없애기 */
+}
+
+.comment-list::-webkit-scrollbar-thumb {
+  background-color: rgba(132, 132, 132, 0.5);  /* 흐릿한 검정 */
+  border-radius: 10px;
 }
 
 .comment-item {
@@ -358,6 +390,13 @@ watch(() => props.taskId, (newId) => {
   font-size: 13px;
 }
 
+.profile-img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
 .comment-icons {
   position: absolute;
   top: 0;        /* 🔥 꼭대기에 붙임 */
@@ -424,6 +463,8 @@ watch(() => props.taskId, (newId) => {
 
 .comment-writer {
   font-size: 13px;
+  color: rgb(60, 60, 60);
+  font-weight: bold;
 }
 
 /* 대댓글 */

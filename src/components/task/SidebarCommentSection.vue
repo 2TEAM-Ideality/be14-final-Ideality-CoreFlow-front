@@ -117,10 +117,8 @@ const commentTabs = [
 .comment-panel {
   flex: 1;
   overflow-y: auto;
+  height: 100%;
   min-height: 0;   
-  background-color: yellow;        
-  /* padding: 16px; */
-  display: flex;
   flex-direction: column;
   gap: 12px;
 }
