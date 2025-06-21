@@ -12,26 +12,32 @@
         </div>
 
         <div class="comment-panel">
-            <CommentTab
+        <CommentTab
             v-if="selectedTab === 'comment'"
+            :key="`comment-${refreshKey}`"
             :taskId="taskId"
             @edit-comment="handleEditComment"
             @set-reply="handleSetReply"
-            />
+            @comment-updated="refreshKey++" 
+        />
 
-            <NoticeTab
+        <NoticeTab
             v-if="selectedTab === 'notice'"
+            :key="`notice-${refreshKey}`" 
             :taskId="taskId"
             @edit-comment="handleEditComment"
             @set-reply="handleSetReply"
-            />
+            @comment-updated="refreshKey++"
+        />
         </div>
 
         <TaskCommentInput
         :taskId="taskId"
         :replyTargetId="replyTargetId"
+        :replyTargetUser="replyTargetUser"
         :editData="editData"
-        @reset-reply="replyTargetId = null"
+        @reset-reply="resetReply"
+        @comment-updated="refreshKey++"
         />
 
     </div>
@@ -43,22 +49,37 @@ import CommentTab from './CommentTab.vue'
 import NoticeTab from './NoticeTab.vue'
 import TaskCommentInput from './TaskCommentInput.vue'
 
+const props = defineProps({
+  taskId: {
+    type: [Number, String],
+    required: true
+  }
+})
+
 const editData = ref(null);
 const replyTargetId = ref(null);
+const replyTargetUser = ref('')
+const refreshKey = ref(0)
 
-const handleEditComment = (data) => {
-    editData.value = data
+const resetReply = () => {
+  replyTargetId.value = null
+  replyTargetUser.value = ''
 }
 
-const handleSetReply = (parentId) => {
-    replyTargetId.value = parentId
+const handleEditComment = (data) => {
+  editData.value = data
+}
+
+const handleSetReply = (commentId, userName) => {
+  replyTargetId.value = commentId
+  replyTargetUser.value = userName
 }
 
 const selectedTab = ref('comment')
 
 const commentTabs = [
-{ name: 'comment', label: '댓글' },
-{ name: 'notice', label: '공지' }
+  { name: 'comment', label: '댓글' },
+  { name: 'notice', label: '공지' }
 ]
 </script>
 
