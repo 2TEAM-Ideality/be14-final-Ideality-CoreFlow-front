@@ -26,16 +26,18 @@ const props = defineProps({
     }
 })
 
+console.log(props.task)
+
 const statusTextMap = {
     PENDING: '시작전',
     PROGRESS: '진행중',
-    COMPLETE: '완료'
+    COMPLETED: '완료'
 }
 
 const statusClassMap = {
     PENDING: 'badge-pending',
     PROGRESS: 'badge-progress',
-    COMPLETE: 'badge-complete'
+    COMPLETED: 'badge-complete'
 }
 
 const statusText = computed(() => statusTextMap[props.task.status] || '알 수 없음')
