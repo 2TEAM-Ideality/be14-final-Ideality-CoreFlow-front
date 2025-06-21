@@ -1,7 +1,7 @@
 <template>
   <div class="task-info-box">
     <!-- 수정 아이콘 / 완료 버튼 -->
-    <!-- <div class="edit-toggle">
+    <div class="edit-toggle">
        <img
           v-if="!isEdit"
           src="@/assets/icons/pentool.svg"
@@ -29,7 +29,7 @@
           @confirm="submitEdit"
           @cancel="cancelEdit"
         />
-    </div> -->
+    </div>
 
 
     
@@ -444,7 +444,7 @@ const cancelEdit = () => {
   position: relative;
   background-color: #ffffff;
   border-radius: 6px;
-  padding: 7% 2%;
+  padding: 5% 2% 5% 2%;
   display: flex;
   flex-direction: column;
   gap: 24px;

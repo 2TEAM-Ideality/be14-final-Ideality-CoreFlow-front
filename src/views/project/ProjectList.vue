@@ -3,10 +3,12 @@
 import Breadcrumb from '@/components/common/BreadCrumb.vue';
 import ListLayout from '@/components/layout/ListLayout.vue';
 import { useUserStore } from '@/stores/userStore.js'
+import { useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue';
 import api from '@/api';
 import ProjectCard from '@/components/project/ProjectCard.vue';
 
+const router = useRouter()
 const projectList = ref([])
 const searchKeyword = ref('')
 const fullProjectList = ref([])
@@ -52,6 +54,10 @@ const toggleStatus = (status) => {
     selectedStatuses.value.push(status)
   }
   applyFilter()
+}
+
+const goToCreateProject = () => {
+  router.push('/project/create')
 }
 
 const applyFilter = ()=> {
@@ -115,9 +121,9 @@ const applyFilter = ()=> {
             </div>
           </div>
         </div>
-        <div class="create-btn">
-          <button >+ 프로젝트 생성하기</button>
-        </div>
+          <v-btn prepend-icon="mdi-plus"  class="create-btn" @click="goToCreateProject">
+            프로젝트 생성하기
+          </v-btn>
       </div>
 
       <div class="project-list">
