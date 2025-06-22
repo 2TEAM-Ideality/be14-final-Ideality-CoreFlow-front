@@ -6,7 +6,6 @@ on:
       - develop
     types: [opened, reopened, synchronize]
 
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -22,6 +21,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # ✅ 여기서 .env.production 파일을 생성함
+      - name: Create .env.production
+        run: |
+          echo "VITE_API_URL=https://api.core-flow.site" >> .env.production
+          echo "VITE_SYNCFUSION_LICENSE_KEY=${{ secrets.VITE_SYNCFUSION_LICENSE_KEY }}" >> .env.production
 
       - name: Build Vite App
         run: npm run build

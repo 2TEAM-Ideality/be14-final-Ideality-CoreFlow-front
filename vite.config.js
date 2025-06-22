@@ -19,7 +19,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000', // 백엔드 주소
+        target: import.meta.env.VITE_API_URL, // 백엔드 주소
         changeOrigin: true
       }
     }
