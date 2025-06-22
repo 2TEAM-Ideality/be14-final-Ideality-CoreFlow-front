@@ -28,6 +28,10 @@ export const useTaskStore = defineStore('taskStore', {
         console.error('데이터를 불러오는 중 오류가 발생했습니다:', error);
       }
     },
+    removeItem(workId) {
+      // workId에 해당하는 항목을 배열에서 제거
+      this.items = this.items.filter(item => item.workId !== workId);
+    },
 
      // createItem 메서드
     async createItem(form, taskId, token) {

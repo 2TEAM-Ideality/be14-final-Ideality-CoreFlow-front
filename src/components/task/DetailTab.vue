@@ -62,7 +62,7 @@ export default {
     // Pinia store에서 상태 가져오기
     items() {
       const taskStore = useTaskStore();
-      return taskStore.items;
+      return taskStore.items.filter(item => item.status !== "DELETED");
     }
   },
   async mounted() {

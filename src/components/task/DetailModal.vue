@@ -131,6 +131,7 @@
 
 <script>
 import { useUserStore } from "@/stores/userStore";
+import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 
 export default {
   props: {
@@ -357,7 +358,7 @@ validateForm() {
 
       try {
         const response = await fetch(`http://localhost:5000/api/detail/${this.workId}/delete`, {
-          method: 'DELETE',
+          method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -369,7 +370,13 @@ validateForm() {
         }
 
         const data = await response.json();
+
         console.log('세부일정 삭제 성공:', data);
+
+              // Store에서 삭제된 항목을 즉시 반영
+      const taskStore = useTaskStore();
+      taskStore.removeItem(this.workId); // 작업 삭제 후 store에서 해당 항목 제거
+      
         this.$emit('close-modal');
       } catch (error) {
         console.error('세부일정 삭제 오류:', error);
