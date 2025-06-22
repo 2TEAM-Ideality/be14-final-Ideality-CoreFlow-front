@@ -100,6 +100,12 @@ provide('closeNotificationSidebar', closeNotificationSidebar)
 <style>
 * {
   font-family: 'Noto Sans KR', sans-serif;
-  /* text-align: left; */
+  text-align: left;
+}
+.button{
+  text-align: center;
+}
+.v-btn {
+  text-align: center;
 }
 </style>
