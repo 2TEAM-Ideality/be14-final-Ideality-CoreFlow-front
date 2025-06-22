@@ -25,8 +25,10 @@ jobs:
       # ✅ 여기서 .env.production 파일을 생성함
       - name: Create .env.production
         run: |
-          echo "VITE_API_URL=https://api.core-flow.site" >> .env.production
-          echo "VITE_SYNCFUSION_LICENSE_KEY=${{ secrets.VITE_SYNCFUSION_LICENSE_KEY }}" >> .env.production
+          cat <<EOF > .env.production
+          VITE_API_URL=https://api.core-flow.site
+          VITE_SYNCFUSION_LICENSE_KEY=${{ secrets.VITE_SYNCFUSION_LICENSE_KEY }}
+          EOF
 
       - name: Build Vite App
         run: npm run build
