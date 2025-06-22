@@ -63,6 +63,11 @@ export default {
     items() {
       const taskStore = useTaskStore();
       return taskStore.items.filter(item => item.status !== "DELETED");
+    },
+        // totalProgress 값을 userStore에서 가져오기
+    totalProgress() {
+      const taskStore = useTaskStore();
+      return taskStore.totalProgress;
     }
   },
   async mounted() {
@@ -74,6 +79,7 @@ export default {
     if (parentTaskId && token) {
       const taskStore = useTaskStore();
       await taskStore.fetchItems(parentTaskId, token); // 데이터를 불러옴
+      await taskStore.fetchTotalProgress(parentTaskId, token); // 총 진척률 가져오기
     } else {
       console.error("parentTaskId나 token이 없습니다.");
     }

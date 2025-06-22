@@ -4,6 +4,7 @@ import { defineStore } from 'pinia';
 export const useTaskStore = defineStore('taskStore', {
   state: () => ({
     items: [],  // 세부일정 목록
+    totalProgress: 0, // 추가된 상태
   }),
 
   actions: {
@@ -28,6 +29,27 @@ export const useTaskStore = defineStore('taskStore', {
         console.error('데이터를 불러오는 중 오류가 발생했습니다:', error);
       }
     },
+    async fetchTotalProgress(taskId, token) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/task/detail/${taskId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('태스크 상세 정보 조회 실패');
+        }
+
+        const data = await response.json();
+        this.totalProgress = data.data.selectTask.progressRate; // progressRate를 totalProgress에 저장
+      } catch (error) {
+        console.error('총 진척률을 가져오는 중 오류가 발생했습니다:', error);
+      }
+    },
+
     removeItem(workId) {
       // workId에 해당하는 항목을 배열에서 제거
       this.items = this.items.filter(item => item.workId !== workId);
