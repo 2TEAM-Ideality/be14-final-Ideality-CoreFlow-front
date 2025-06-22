@@ -33,8 +33,8 @@ function handleSelectApproval(id) {
 const showDetails = ref(false);
 const showCreateApproval = ref(false)
 
-watch (() => selectedApprovalId.value, (newId) => {
-  if (!newId) return
+watch (() => selectedApprovalId.value, (newId, oldId) => {
+  if (!newId || newId === oldId) return
   showDetails.value = true;
   showCreateApproval.value = false;
 })

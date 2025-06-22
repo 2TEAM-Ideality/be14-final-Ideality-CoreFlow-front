@@ -11,8 +11,10 @@
       id="GanttContainer"
       :key="ganttKey"
 
+      :queryTaskbarInfo="onQueryTaskbarInfo"
+
       :editDialogFields="addDialogFields"
-      :autoCalculateParentTasks="false"
+      :autoCalculateParentTasks="true"
       :enablePredecessorValidation="false"
       :dataSource="formattedData"
       :treeColumnIndex="treeColumnIndex"
@@ -29,7 +31,7 @@
       :allowSelection= "true"
       :toolbar= "toolbar"
       :labelSettings="labelSettings"
-      baselineColor='#cccccc'
+      baselineColor='#ff0000'
       height="450px"  
 
       :splitterSettings="splitterSettings"
@@ -54,6 +56,64 @@ const projectId = route.params.id
 const router = useRouter();
 
 let lastClickTime = 0;
+
+function onQueryTaskbarInfo(args) {
+  console.log('args', args)
+  const taskId = args.data.taskId
+  console.log('taskId', taskId)
+  const status = args.data.status
+  console.log('status', status)
+
+  const originalTask = findTaskById(taskId, originData.value)
+  const originalEndDate = originalTask?.endDate
+    ? new Date(originalTask.endDate)
+    : null
+  console.log('endExpect', originalEndDate)
+  let latestChildEndExpect = null;
+
+  // 자식이 있는 경우 가장 늦은 자식의 endExpect 구하기
+  if (!args.data.isChild) {
+    const children = args.data.childRecords;
+
+    for (const child of children) {
+      const childEnd = new Date(child.endDate);
+      console.log('childEnd', childEnd)
+      if (!latestChildEndExpect || childEnd > latestChildEndExpect) {
+        latestChildEndExpect = childEnd;
+      }
+    }
+
+    // 자식이 부모보다 늦게 끝나는 경우 warning
+    if (latestChildEndExpect && originalEndDate) {
+      const childDate = stripTime(latestChildEndExpect);
+      const originalDate = stripTime(originalEndDate);
+      if (childDate > originalDate) {
+        args.taskbarBgColor = '#ffff00'; // 경고 색상
+        args.taskLabelColor = '#000000';
+        return;
+      }
+    }
+  }
+
+  if (status === 'PENDING') {
+    args.taskbarBgColor='#cccccc'
+  } else if (status === 'COMPLETED') {
+    args.taskbarBgColor='#90ff90'
+  } else if (status === 'PROGRESS') {
+    args.taskbarBgColor='#9090ff'
+  } else if (status === 'DELETED') {
+    args.taskbarBgColor='#ff9090'
+  } else {
+    args.taskbarBgColor='#909090'
+  }
+
+  args.taskLabelColor = '#000000';
+  args.taskbarBorderColor = '#000000'; 
+}
+
+function stripTime(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
 
 function onTaskbarClick(args) {
   const now = Date.now();
@@ -85,7 +145,6 @@ const splitterSettings = {
 const gantt = ref(null)
 
 const labelSettings = {
-    // rightLabel: 'resources',
     taskLabel: 'taskName'
 };
 
@@ -218,6 +277,7 @@ async function fetchTaskData() {
     const response = await api.get(`/api/projects/${projectId}/gantt`)
     taskData.value = response.data.data
     originData.value = processTasks(response.data.data)
+    console.log(JSON.stringify(originData.value, null, 2));
   } catch (error) {
     if (error.response) {
       alert(error.response.data.message)
@@ -262,13 +322,14 @@ function processTasks(tasks) {
     endDate: t.endDate ? toDateOnly(t.endDate) : new Date(),
     startBase: t.startBase ? toDateOnly(t.startBase) : new Date(),
     endBase: t.endBase ? toDateOnly(t.endBase) : new Date(),
-    actualDuration: Number(getDurationDays(t.startDate, t.endDate)),
-    baselineDuration: Number(getDurationDays(t.startBase, t.endBase)),
+    actualDuration: getDurationDays(t.startDate, t.endDate),
+    baselineDuration: getDurationDays(t.startBase, t.endBase),
     predecessor: Array.isArray(t.predecessor) ? t.predecessor.join(',') : '',
     progress: t.progress ?? 0,
     delayDays: t.delayDays ?? 0,
     isAutoSchedule: false,
     parentId: t.isChild ? t.parentTaskId : null,
+    resources: Array.isArray(t.resources) ? t.resources : [],
     subTasks: t.subTasks ? processTasks(t.subTasks) : [],
   }))
 }
