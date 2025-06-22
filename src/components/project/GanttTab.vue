@@ -7,6 +7,7 @@
 
     </div>
     <ejs-gantt 
+      v-if="isDataReady"
       ref="gantt"
       id="GanttContainer"
       :key="ganttKey"
@@ -254,10 +255,13 @@ const originData = ref([])
 const taskData = ref([])
 const modifiedTasks = ref([])
 
+const isDataReady = ref(false)
+
 onMounted(() => {
   fetchTaskData()
   fetchDeptData()
   fetchProjectDate()
+  isDataReady.value=true
 })
 
 async function fetchProjectDate() {
