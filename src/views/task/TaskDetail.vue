@@ -12,6 +12,7 @@
                 <TaskMainTab 
                 v-if="originTaskValue.selectTask?.taskId" 
                 :taskData="originTaskValue" 
+                :detailList = "detailList"
                 />
              </div>
         </template>
@@ -31,7 +32,9 @@ import TaskMainTab from '@/components/task/TaskMainTab.vue';
 import SidebarCommentSection from '@/components/task/SidebarCommentSection.vue';
 import axios from 'axios';
 import { useUserStore } from '@/stores/userStore';
+import api from '@/api.js'
 
+const userStore = useUserStore();
 const route = useRoute()
 const taskId = route.params.taskId
 const originTaskValue = ref({
@@ -41,7 +44,8 @@ const originTaskValue = ref({
     nextTasks: []
 })
 
-const userStore = useUserStore();
+const detailList = ref([]);
+
 
 const fetchTask = async (id) => {
     try {
@@ -60,15 +64,32 @@ const fetchTask = async (id) => {
     }
 }
 
+const fetchDetailList = async (parentTaskId) => {
+  try {
+    const res = await api.get('/api/work/detailList', {
+      params: {
+        parentTaskId
+      }
+    });
+    console.log('상세 태스크 목록:', res.data.data);
+    detailList.value = res.data.data;
+  } catch (error) {
+    console.error('상세 태스크 조회 실패:', error);
+    return [];
+  }
+};
+
+
 onMounted(async () => {
     await fetchTask(taskId);
+    await fetchDetailList(taskId);
 })
 </script>
 
 
 <style scoped>
 .task-main{
-    padding: 2% 5% 5% 10%;
+    padding: 2% 5% 5% 7%;
 }
 
 

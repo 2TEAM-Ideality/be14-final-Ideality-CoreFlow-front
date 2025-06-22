@@ -16,7 +16,7 @@
     <!-- 선택된 탭에 맞는 컴포넌트를 표시 -->
     <component
       :is="selectedComponent"
-      v-bind="selectedTab === 'info' ? { taskData } : {}"
+      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
       :task-id="taskData.selectTask.taskId"
     />
 
@@ -251,6 +251,10 @@ const addFollowingTask = () => form.value.followingTasks.push("") // 후행 일�
 const props = defineProps({
   taskData: {
     type: Object,
+    required: true
+  },
+  detailList : {
+    type : Array,
     required: true
   }
 });

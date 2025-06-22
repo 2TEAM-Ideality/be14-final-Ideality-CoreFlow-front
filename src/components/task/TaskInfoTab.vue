@@ -34,7 +34,9 @@
 
     
     <div style="display: flex; flex-direction: row; gap: 50px;">
-      <DonutChart />
+      <DonutChart  
+      :taskInfo="props.taskData" 
+      :detailList="props.detailList" />
       <!-- 담당부서 -->
       <div style="display: flex; flex-direction: column; width: 100%;">
         <div class="form-row">
@@ -111,18 +113,18 @@
     <div class="data-wraper">
       <div class="data-item">
       <div>경과율</div>
-      <div class="data">100%</div>
+      <div class="data">{{ task.selectTask.progressRate }}%</div>
       </div>
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
           <div style="width:12px; height: 12px;  background-color: #56D193;"></div>
           태스크 진척률
         </div>
-        <div class="data">100%</div>
+        <div class="data">{{ task.selectTask.passedRate }}%</div>
       </div>
       <div class="data-item">
         <div>전체 세부일정</div>
-        <div class="data">12</div>
+        <div class="data">{{ detailList.length }}</div>
       </div>
       <div class="data-item">
         <div>지연 임박</div>
@@ -133,7 +135,7 @@
             <div style="width:12px; height: 12px;  background-color: #FF914D;"></div>
             지연일
           </div>
-        <div class="data">0일</div>
+        <div class="data">{{ task.selectTask.delayDay === 0 ? '0일' : `+ ${task.selectTask.delayDay}일` }}</div>
       </div>
     </div>
     
@@ -190,10 +192,14 @@ const task = ref({
     deptNames: []
 });
 
+
 const props = defineProps({
   taskData: Object,
-  visible : Boolean
+  visible : Boolean,
+  detailList: Array,
 })
+
+console.log(props.taskData)
 const isEdit = ref(false);
 
 // 태스크 수정 ? 을 위한 깊은 복사
@@ -367,6 +373,8 @@ watch(() => props.taskData, (newData) => {
       nextTasks: newData.nextTasks || [],
       deptNames: newData.deptNames || []
     };
+
+    
     // 깊은 복사로 초기값 저장
     originalTask.value = JSON.parse(JSON.stringify(task.value));
     console.log(originalTask.value);
@@ -435,6 +443,25 @@ const cancelEdit = () => {
   // 수정 전 상태로 되돌리기
   task.value = JSON.parse(JSON.stringify(originalTask.value));
 };
+
+
+// 도넛 차트에 전달할 정보
+const donutData = computed(() => {
+  // 실제 데이터 구조에 따라 수정
+  const todo = props.detailList.filter(d => d.status === 'PENDING').length
+  const delay = props.detailList.filter(d => d.status === 'WARNING').length
+  const doing = props.detailList.filter(d => d.status === 'PROGRESS').length
+  const done = props.detailList.filter(d => d.status === 'COMPLETED').length
+
+  return [todo, delay, doing, done]
+})
+
+const completionRate = computed(() => {
+  const total = props.detailList.length
+  const done = props.detailList.filter(d => d.status === 'DONE').length
+  if (total === 0) return '0%'
+  return Math.round((done / total) * 100) + '%'
+})
 </script>
 
 <style scoped>
