@@ -42,6 +42,7 @@
 <script>
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
+import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import TaskModal from "@/components/task/DetailModal.vue"; // 모달 컴포넌트 import
 
 export default {
@@ -50,47 +51,31 @@ export default {
   },
   data() {
     return {
-      items: [],
+
       totalProgress: 0,
       selectedWorkId: null, // 클릭한 세부일정의 workId 저장
       isModalVisible: false, // 모달 표시 여부
       isEditMode: false, // 수정 모드 상태
     };
   },
+  computed: {
+    // Pinia store에서 상태 가져오기
+    items() {
+      const taskStore = useTaskStore();
+      return taskStore.items;
+    }
+  },
   async mounted() {
     const route = useRoute();
     const parentTaskId = route.params.taskId;
-    
-    if (parentTaskId) {
-      const userStore = useUserStore();
-      const token = userStore.accessToken;
+    const userStore = useUserStore();
+    const token = userStore.accessToken;
 
-      if (!token) {
-        console.error("토큰이 없습니다.");
-        return;
-      }
-
-      try {
-        const response = await fetch(`http://localhost:5000/api/work/detailList?parentTaskId=${parentTaskId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('네트워크 응답이 정상적이지 않습니다.');
-        }
-
-        const data = await response.json();
-        this.items = data.data; // 세부일정 목록 데이터 저장
-        this.totalProgress = data.totalProgress; // 총 진척률 값 저장
-      } catch (error) {
-        console.error('데이터를 불러오는 중 오류가 발생했습니다:', error);
-      }
+    if (parentTaskId && token) {
+      const taskStore = useTaskStore();
+      await taskStore.fetchItems(parentTaskId, token); // 데이터를 불러옴
     } else {
-      console.error('parentTaskId가 없습니다.');
+      console.error("parentTaskId나 token이 없습니다.");
     }
   },
   methods: {

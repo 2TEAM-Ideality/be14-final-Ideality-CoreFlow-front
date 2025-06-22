@@ -141,6 +141,7 @@ import TaskAttachmentTab from '@/components/task/TaskAttachmentTab.vue'
 import DetailTab from './DetailTab.vue'
 import { defineEmits } from 'vue'
 import { useUserStore } from '@/stores/userStore'
+import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 
 const emit = defineEmits()
 const openModal = () => {
@@ -153,88 +154,69 @@ const closeModal = () => {
   showModal.value = false // 모달을 닫기 위해 상태값을 false로 설정
 }
 
-const isSubmitting = ref(false); // 제출 중 상태를 관리
+const showModal = ref(false);
+const form = ref({
+  title: '',
+  description: '',
+  startDate: '',
+  endDate: '',
+  department: '',
+  precedingTasks: [''],
+  followingTasks: [''],
+  responsible: '',
+  participants: [], // 참여자 배열
+});
 
+const isSubmitting = ref(false);
+
+// 폼 제출 처리
 const submitForm = async () => {
-  // 제출 중이면 아무 것도 하지 않도록 방지
-  if (isSubmitting.value) return;
+  if (isSubmitting.value) return; // 이미 제출 중이면 막기
 
-  // 제출 중 상태로 설정
-  isSubmitting.value = true;
+  isSubmitting.value = true; // 제출 중 상태
 
-  // 필수 입력 항목 체크
+  // 필수 입력 체크
   if (!form.value.department) {
-    alert("부서를 선택해주세요.");
-    isSubmitting.value = false; // 제출 완료 후 상태 변경
+    alert('부서를 선택해주세요.');
+    isSubmitting.value = false;
     return;
   }
   if (!form.value.title || !form.value.description || !form.value.startDate || !form.value.endDate) {
-    alert("필수 항목이 비어있습니다. 모든 항목을 채워주세요.");
-    isSubmitting.value = false; // 제출 완료 후 상태 변경
+    alert('필수 항목이 비어있습니다. 모든 항목을 채워주세요.');
+    isSubmitting.value = false;
     return;
   }
   if (!form.value.responsible) {
-    alert("책임자를 입력해주세요.");
-    isSubmitting.value = false; // 제출 완료 후 상태 변경
+    alert('책임자를 입력해주세요.');
+    isSubmitting.value = false;
     return;
   }
   if (!form.value.participants || form.value.participants.length === 0) {
-    alert("참여자를 입력해주세요.");
-    isSubmitting.value = false; // 제출 완료 후 상태 변경
+    alert('참여자를 입력해주세요.');
+    isSubmitting.value = false;
     return;
   }
 
-  // API 요청 데이터 준비
-  const requestData = {
-    projectId: sessionStorage.getItem('projectId'), // 세션에서 프로젝트 ID 가져오기
-    parentTaskId: props.taskData.selectTask.taskId, // parentTaskId 가져오기
-    name: form.value.title, // 제목
-    description: form.value.description, // 설명
-    startBase: form.value.startDate, // 시작 베이스라인
-    endBase: form.value.endDate, // 마감 베이스라인
-    deptId: form.value.department, // 부서 ID
-    source: null, // 필요시 추가
-    target: null, // 필요시 추가
-    assigneeId: form.value.responsible, // 책임자 ID
-    participantIds: form.value.participants // 참여자 IDs
-  };
-
-  // 요청 전송
+  // 토큰과 taskId를 넘겨서 store의 createItem 메서드 호출
   const userStore = useUserStore();
   const token = userStore.accessToken;
 
   if (!token) {
-    console.error("토큰이 없습니다.");
-    isSubmitting.value = false; // 제출 완료 후 상태 변경
+    console.error('토큰이 없습니다.');
+    isSubmitting.value = false;
     return;
   }
 
-  try {
-    const response = await fetch('http://localhost:5000/api/detail/create', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestData)
-    });
+  const taskStore = useTaskStore();
+  const result = await taskStore.createItem(form.value, props.taskData.selectTask.taskId, token);
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log("폼 제출 성공:", data);
-      closeModal(); // 폼 제출 후 모달 닫기
-      // 여기서 필요한 추가 동작을 처리할 수 있어 (예: 새로 생성된 세부일정 갱신)
-    } else {
-      const errorData = await response.json();
-      console.error("폼 제출 실패:", errorData.message);
-    }
-  } catch (error) {
-    console.error("폼 제출 중 오류 발생:", error);
-  } finally {
-    isSubmitting.value = false; // 제출 완료 후 상태 변경
+  if (result) {
+    // 성공적인 처리 후 추가 동작 (예: 모달 닫기)
+    closeModal();
   }
-};
 
+  isSubmitting.value = false;
+};
 
 const addPrecedingTask = () => form.value.precedingTasks.push("") // 선행 일정 추가
 const addFollowingTask = () => form.value.followingTasks.push("") // 후행 일정 추가
@@ -256,19 +238,6 @@ const tabs = [
 const selectedTab = ref('info')
 const selectedComponent = computed(() => {
   return tabs.find(tab => tab.name === selectedTab.value)?.component || TaskInfoTab
-})
-
-const showModal = ref(false) // 모달 상태 관리
-const form = ref({
-  title: '',
-  description: '',
-  startDate: '',
-  endDate: '',
-  department: '',
-  precedingTasks: [''],
-  followingTasks: [''],
-  responsible: '',
-  participants: [] //참여자배열
 })
 
 const tasks = ref([]) // task 목록을 저장할 배열
