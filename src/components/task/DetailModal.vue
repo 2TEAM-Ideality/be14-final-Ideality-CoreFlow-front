@@ -382,9 +382,7 @@ validateForm() {
               // Store에서 삭제된 항목을 즉시 반영
       const taskStore = useTaskStore();
       taskStore.removeItem(this.workId); // 작업 삭제 후 store에서 해당 항목 제거
-                 const route = useRoute();
-        const parentTaskId = route.params.taskId;
-      await taskStore.fetchTotalProgress(parentTaskId, token); // 총 진척률 가져오기
+
       
         this.$emit('close-modal');
       } catch (error) {

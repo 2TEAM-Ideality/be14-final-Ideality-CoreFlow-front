@@ -57,19 +57,28 @@ export const useTaskStore = defineStore('taskStore', {
 
      // createItem 메서드
     async createItem(form, taskId, token) {
-      const requestData = {
-        projectId: sessionStorage.getItem('projectId'), // 세션에서 프로젝트 ID
-        parentTaskId: taskId, // 부모 작업 ID
-        name: form.title, // 제목
-        description: form.description, // 설명
-        startBase: form.startDate, // 시작 베이스라인
-        endBase: form.endDate, // 마감 베이스라인
-        deptId: form.department, // 부서 ID
-        source: null, // 필요시 추가
-        target: null, // 필요시 추가
-        assigneeId: form.responsible, // 책임자 ID
-        participantIds: form.participants, // 참여자 IDs
-      };
+  // 선행 일정과 후행 일정이 비어 있으면 null로 설정
+  const precedingTasks = Array.isArray(form.precedingTasks) && form.precedingTasks.length > 0 
+    ? form.precedingTasks 
+    : null;
+  const followingTasks = Array.isArray(form.followingTasks) && form.followingTasks.length > 0 
+    ? form.followingTasks 
+    : null;
+
+  const requestData = {
+    projectId: sessionStorage.getItem('projectId'), // 세션에서 프로젝트 ID
+    parentTaskId: taskId, // 부모 작업 ID
+    name: form.name, // 제목
+    description: form.description, // 설명
+    startBase: form.startBase, // 시작 베이스라인
+    endBase: form.endBase, // 마감 베이스라인
+    deptId: form.deptId, // 부서 ID
+    source: form.source, // 선행 일정
+    target: form.target, // 후행 일정
+    assigneeId: form.assigneeId, // 책임자 ID
+    participantIds: form.participantIds, // 참여자 IDs
+  };
+
 
       try {
         const response = await fetch('http://localhost:5000/api/detail/create', {

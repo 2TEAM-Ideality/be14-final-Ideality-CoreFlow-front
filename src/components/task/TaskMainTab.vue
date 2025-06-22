@@ -162,8 +162,8 @@ const form = ref({
   startDate: '',
   endDate: '',
   department: '',
-  precedingTasks: [''],
-  followingTasks: [''],
+  precedingTasks: [],
+  followingTasks: [],
   responsible: '',
   participants: [], // 참여자 배열
 });
@@ -198,6 +198,30 @@ const submitForm = async () => {
     return;
   }
 
+  console.log(form.value.precedingTasks);
+console.log(form.value.followingTasks);
+console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
+  
+  // 선행 일정과 후행 일정이 비어 있으면 null로 설정
+  const precedingTasks = form.value.precedingTasks.length > 0 ? form.value.precedingTasks : null;
+  const followingTasks = form.value.followingTasks.length > 0 ? form.value.followingTasks : null;
+
+  // 요청 데이터 구성
+  const requestData = {
+    projectId: sessionStorage.getItem('projectId'), // 세션에서 프로젝트 ID
+    parentTaskId: props.taskData.selectTask.taskId, // 부모 작업 ID
+    name: form.value.title, // 제목
+    description: form.value.description, // 설명
+    startBase: form.value.startDate, // 시작 베이스라인
+    endBase: form.value.endDate, // 마감 베이스라인
+    deptId: form.value.department, // 부서 ID
+    source: Array.from(form.value.precedingTasks), // Proxy 객체를 배열로 변환
+    target: Array.from(form.value.followingTasks), // Proxy 객체를 배열로 변환
+    assigneeId: form.value.responsible, // 책임자 ID
+    participantIds: Array.from(form.value.participants), // Proxy 객체를 배열로 변환
+  };
+
+   console.log(requestData)
   // 토큰과 taskId를 넘겨서 store의 createItem 메서드 호출
   const userStore = useUserStore();
   const token = userStore.accessToken;
@@ -209,12 +233,9 @@ const submitForm = async () => {
   }
 
   const taskStore = useTaskStore();
-  const result = await taskStore.createItem(form.value, props.taskData.selectTask.taskId, token);
+  const result = await taskStore.createItem(requestData, props.taskData.selectTask.taskId, token);
 
-            // 수정 후 totalProgress 갱신
-      const route = useRoute();
-      const parentTaskId = route.params.taskId;
-      await taskStore.fetchTotalProgress(parentTaskId, token); // 수정 후 totalProgress 갱신
+            
 
   if (result) {
     // 성공적인 처리 후 추가 동작 (예: 모달 닫기)
