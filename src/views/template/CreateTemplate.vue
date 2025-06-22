@@ -44,7 +44,6 @@ const duration = ref(0)
 const taskCount = ref(0)
 
 
-
 const completedProjectList = ref([])
 const selectedProject = ref(null)
 const loadProject = ref(false)
@@ -285,6 +284,8 @@ watch(loadProject, (newVal) => {
     flowEdges.value = []
   }
 })
+
+
 </script>
 
 <template>
@@ -379,6 +380,7 @@ watch(loadProject, (newVal) => {
           </v-btn>
         </div>
       </div>
+      
       <!-- 전체 보기 모달 -->
       <v-dialog v-model="showFullScreen" fullscreen persistent transition="dialog-bottom-transition">
         <v-card class="pa-4">

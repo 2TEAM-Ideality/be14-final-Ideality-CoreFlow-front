@@ -2,13 +2,13 @@
   <div v-if="show" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title">프로젝트 템플릿화</h3>
+        <h3 class="modal-title">프로젝트 기반 템플릿 선택</h3>
         <button class="close-button" @click="$emit('close')">×</button>
       </div>
 
       <!-- 검색창 -->
-      <div class="search-project">
-        <input type="text" v-model="search" placeholder="프로젝트명 검색..." />
+      <div class="search-template">
+        <input type="text" v-model="search" placeholder="템플릿명 검색..." />
       </div>
 
       <!-- 테이블 형식 목록 -->
@@ -20,31 +20,32 @@
               <th>프로젝트명</th>
               <th>총 소요일</th>
               <th>전체 태스크</th>
-              <th>지연일</th>
-              <th>완료일</th>
+              <th>생성일</th>
+              <th>생성자</th>
+              <!-- <th>참여 부서</th> -->
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="project in filteredProjects"
-              :key="project?.id"
-              :class="{ selected: selected?.id === project?.id }"
-              @click="toggleSelection(project)"
+              v-for="template in filteredTemplates"
+              :key="template?.id"
+              :class="{ selected: selected?.id === template?.id }"
+              @click="toggleSelection(template)"
               style="cursor: pointer;"
             >
               <td>
                 <input
                   type="radio"
-                  :id="`project-${project?.id}`"
-                  :value="project"
+                  :id="`template-${template?.id}`"
+                  :value="template"
                   v-model="selected"
                 />
               </td>
-              <td>{{ project?.name }}</td>
-              <td>{{ project?.duration }}일</td>
-              <td>{{ project?.taskCount }}</td>
-              <td>{{ project?.delayDays }}</td>
-              <td>{{ project?.endDate }}</td>
+              <td>{{ template?.name }}</td>
+              <td>{{ template?.duration }}일</td>
+              <td>{{ template?.taskCount }}</td>
+              <td>{{ template?.createdAt.split("T")[0] }}</td>
+              <td>{{ template?.createdBy }}</td>
             </tr>
             </tbody>
 
@@ -65,7 +66,7 @@ import { ref, computed } from 'vue'
 
 const props = defineProps({
   show: Boolean,
-  projects: Array
+  templates: Array
 })
 
 const emit = defineEmits(['select', 'close'])
@@ -75,17 +76,17 @@ const selected = ref(null)
 
 
 
-const filteredProjects = computed(() => {
-  return props.projects.filter(p =>
+const filteredTemplates = computed(() => {
+  return props.templates.filter(p =>
     p.name?.toLowerCase().includes(search.value.toLowerCase())
   )
 })
 
-const toggleSelection = (project) => {
-  if (selected.value?.id === project.id) {
+const toggleSelection = (template) => {
+  if (selected.value?.id === template.id) {
     selected.value = null // 선택 취소
   } else {
-    selected.value = project
+    selected.value = template
   }
 }
 
@@ -130,10 +131,10 @@ const confirmSelection = () => {
   border: none;
   cursor: pointer;
 }
-.search-project {
+.search-template {
   margin: 16px 0;
 }
-.search-project input {
+.search-template input {
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
