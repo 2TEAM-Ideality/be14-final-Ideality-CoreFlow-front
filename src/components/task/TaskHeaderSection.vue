@@ -1,25 +1,63 @@
 <template>
     <div class="task-header">
-        <p class="breadcrumb">프로젝트 > 25ss 퍼셜 자켓 > TASK {{ taskId }} : 봉제 공정</p>
+        <p class="breadcrumb">프로젝트 > {{ task.projectName }} > TASK {{ task.taskId }} : {{ task.taskName }}</p>
 
         <div class="task-header-box">
-        <span class="status-badge">진행중</span>
-        <h1 class="task-title">TASK {{ taskId }} : 봉제 공정</h1>
+            <span :class="['status-badge', statusClass]">
+                {{ statusText }}
+            </span>
+        <h1 class="task-title">
+            <v-icon :color="statusMeta.color" size="32" class="mr-1">{{ statusMeta.icon }}</v-icon>
+            TASK {{ task.taskId }} : {{ task.taskName }}
+        </h1>
         </div>
     </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 const route = useRoute()
-const taskId = route.params.taskId
 
-const tabs = [
-{ name: 'TaskInfo', label: '태스크 정보', route: `/task/${taskId}` },
-{ name: 'TaskDetails', label: '세부 일정', route: `/task/${taskId}/detail` },
-{ name: 'TaskAttachment', label: '자료 검색', route: `/task/${taskId}/attachments` },
-{ name: 'TaskApproval', label: '결재 내역', route: `/task/${taskId}/approval` }
-]
+const props = defineProps({
+    task: {
+        type: Object,
+        required: true
+    }
+})
+
+const statusTextMap = {
+    PENDING: '시작전',
+    PROGRESS: '진행중',
+    COMPLETE: '완료'
+}
+
+const statusClassMap = {
+    PENDING: 'badge-pending',
+    PROGRESS: 'badge-progress',
+    COMPLETE: 'badge-complete'
+}
+
+const statusText = computed(() => statusTextMap[props.task.status] || '알 수 없음')
+const statusClass = computed(() => statusClassMap[props.task.status] || '')
+
+// 아이콘
+const statusMeta = computed(() => {
+    switch (props.task.status) {
+        case 'PENDING':
+            return { text: '시작전', color: 'grey', icon: 'mdi-play-circle-outline' }
+        case 'PROGRESS':
+            return { text: '진행중', color: 'blue', icon: 'mdi-progress-clock' }
+        case 'COMPLETED':
+            return { text: '완료', color: 'green', icon: 'mdi-check-circle-outline' }
+        case 'DELETED':
+            return { text: '삭제됨', color: 'red', icon: 'mdi-delete-outline' }
+        case 'CANCELLED':
+            return { text: '취소됨', color: 'orange', icon: 'mdi-cancel' }
+        default:
+            return { text: '기타', color: 'default', icon: 'mdi-alert-circle-outline' }
+    }
+})
 </script>
 
 <style scoped>
@@ -43,17 +81,32 @@ gap: 4px;
 }
 
 .status-badge {
-background-color: #EBF2FF;
-color: #307CFF;
-font-size: 12px;
-padding: 4px 10px;
+font-size: 13px;
+padding: 6px 10px;
 border-radius: 6px;
 line-height: 1;
+margin-left: 40px;
 }
 
 .task-title {
 font-size: 22px;
 font-weight: 700;
 margin: 0;
+}
+
+/* 상태별 스타일 */
+.badge-pending {
+background-color: #f1f1f1;
+color: #666;
+}
+
+.badge-progress {
+background-color: #EBF2FF;
+color: #307CFF;
+}
+
+.badge-complete {
+background-color: #DFFFE2;
+color: #28a745;
 }
 </style>
