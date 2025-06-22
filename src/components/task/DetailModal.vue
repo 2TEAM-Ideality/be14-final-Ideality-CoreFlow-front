@@ -132,6 +132,7 @@
 <script>
 import { useUserStore } from "@/stores/userStore";
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
+import { useRoute } from "vue-router";
 
 export default {
   props: {
@@ -302,6 +303,7 @@ validateForm() {
             this.localEditMode = false; // 저장 후 수정모드 종료
       const userStore = useUserStore();
       const token = userStore.accessToken;
+      const taskStore = useTaskStore();
 
       if (!token) {
         console.error("토큰이 없습니다.");
@@ -340,6 +342,10 @@ validateForm() {
         .then(async (data) => {
           console.log('세부일정 업데이트 성공:', data);
           await this.fetchTaskDetails(this.workId);
+           const route = useRoute();
+        const parentTaskId = route.params.taskId;
+          await taskStore.fetchTotalProgress(parentTaskId, token); // 총 진척률 가져오기
+
           this.$emit('update-task', this.taskDetails);
           this.$emit('close-modal');
         })
@@ -376,6 +382,9 @@ validateForm() {
               // Store에서 삭제된 항목을 즉시 반영
       const taskStore = useTaskStore();
       taskStore.removeItem(this.workId); // 작업 삭제 후 store에서 해당 항목 제거
+                 const route = useRoute();
+        const parentTaskId = route.params.taskId;
+      await taskStore.fetchTotalProgress(parentTaskId, token); // 총 진척률 가져오기
       
         this.$emit('close-modal');
       } catch (error) {

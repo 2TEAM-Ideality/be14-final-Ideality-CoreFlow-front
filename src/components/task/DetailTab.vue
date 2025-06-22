@@ -85,12 +85,19 @@ export default {
     }
   },
   methods: {
-      updateTaskInList(updatedTask) {
+      async updateTaskInList(updatedTask) {
     const index = this.items.findIndex(item => item.workId === updatedTask.workId);
     if (index !== -1) {
       // 수정된 항목을 배열에서 업데이트
       this.items.splice(index, 1, updatedTask);
     }
+          // 수정 후 totalProgress 갱신
+      const route = useRoute();
+      const parentTaskId = route.params.taskId;
+      const userStore = useUserStore();
+      const token = userStore.accessToken;
+      const taskStore = useTaskStore();
+      await taskStore.fetchTotalProgress(parentTaskId, token); // 수정 후 totalProgress 갱신
   },
 
     openModal(workId) {

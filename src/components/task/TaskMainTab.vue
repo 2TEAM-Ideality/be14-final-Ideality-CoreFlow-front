@@ -134,6 +134,7 @@
 </template>
 
 <script setup>
+import { useRoute } from "vue-router";
 import { ref, computed,onMounted } from 'vue'
 import TaskInfoTab from '@/components/task/TaskInfoTab.vue'
 import TaskApprovalTab from '@/components/task/TaskApprovalTab.vue'
@@ -209,6 +210,11 @@ const submitForm = async () => {
 
   const taskStore = useTaskStore();
   const result = await taskStore.createItem(form.value, props.taskData.selectTask.taskId, token);
+
+            // 수정 후 totalProgress 갱신
+      const route = useRoute();
+      const parentTaskId = route.params.taskId;
+      await taskStore.fetchTotalProgress(parentTaskId, token); // 수정 후 totalProgress 갱신
 
   if (result) {
     // 성공적인 처리 후 추가 동작 (예: 모달 닫기)
