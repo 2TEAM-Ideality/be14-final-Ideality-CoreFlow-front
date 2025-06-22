@@ -6,6 +6,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './', // cloud front를 위해 필요
   plugins: [
     vue(),
     vueDevTools(),
@@ -15,7 +16,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-   server: {
+  server: {
     proxy: {
       '/api': {
         target: 'http://localhost:5000', // 백엔드 주소
