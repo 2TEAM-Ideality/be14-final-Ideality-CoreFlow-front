@@ -23,11 +23,14 @@
       </tbody>
     </table>
 
-    <!-- 모달 컴포넌트 추가 -->
+    <!-- 수정 가능한 모달 컴포넌트 추가 -->
     <TaskModal
       :workId="selectedWorkId"
       :isVisible="isModalVisible"
-      @close-modal="closeModal"
+      :isEditMode="isEditMode"
+      @close-modal="closeModal" 
+      @open-edit-modal="openEditModal" 
+      @update-task="updateTaskInList" 
     />
     
     <div class="total-progress">
@@ -39,6 +42,7 @@
 <script>
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
+import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import TaskModal from "@/components/task/DetailModal.vue"; // 모달 컴포넌트 import
 
 export default {
@@ -47,60 +51,57 @@ export default {
   },
   data() {
     return {
-      items: [],
+
       totalProgress: 0,
       selectedWorkId: null, // 클릭한 세부일정의 workId 저장
       isModalVisible: false, // 모달 표시 여부
+      isEditMode: false, // 수정 모드 상태
     };
+  },
+  computed: {
+    // Pinia store에서 상태 가져오기
+    items() {
+      const taskStore = useTaskStore();
+      return taskStore.items;
+    }
   },
   async mounted() {
     const route = useRoute();
     const parentTaskId = route.params.taskId;
-    
-    if (parentTaskId) {
-      const userStore = useUserStore();
-      const token = userStore.accessToken;
+    const userStore = useUserStore();
+    const token = userStore.accessToken;
 
-      if (!token) {
-        console.error("토큰이 없습니다.");
-        return;
-      }
-
-      try {
-        const response = await fetch(`http://localhost:5000/api/work/detailList?parentTaskId=${parentTaskId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('네트워크 응답이 정상적이지 않습니다.');
-        }
-
-        const data = await response.json();
-        this.items = data.data; // 세부일정 목록 데이터 저장
-        this.totalProgress = data.totalProgress; // 총 진척률 값 저장
-      } catch (error) {
-        console.error('데이터를 불러오는 중 오류가 발생했습니다:', error);
-      }
+    if (parentTaskId && token) {
+      const taskStore = useTaskStore();
+      await taskStore.fetchItems(parentTaskId, token); // 데이터를 불러옴
     } else {
-      console.error('parentTaskId가 없습니다.');
+      console.error("parentTaskId나 token이 없습니다.");
     }
   },
   methods: {
+      updateTaskInList(updatedTask) {
+    const index = this.items.findIndex(item => item.workId === updatedTask.workId);
+    if (index !== -1) {
+      // 수정된 항목을 배열에서 업데이트
+      this.items.splice(index, 1, updatedTask);
+    }
+  },
+
     openModal(workId) {
       this.selectedWorkId = workId; // 클릭한 세부일정의 workId 저장
       this.isModalVisible = true; // 모달 표시
+      this.isEditMode = false; // 기본적으로 조회 모드로 설정
     },
     closeModal() {
       this.isModalVisible = false; // 모달 숨기기
-      this.selectedWorkId = null; // 모달 닫을 때 workId 초기화
+    },
+    openEditModal() {
+      this.isEditMode = true; // 수정 모드로 설정
     },
   },
 };
 </script>
+
 
 <style scoped>
 .container {
