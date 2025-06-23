@@ -1,6 +1,5 @@
 <template>
-    <v-container class="pa-4 d-flex" fluid>
-        <div class="left-area">
+    <v-container class="pa-4 d-flex approval-container" fluid>
             <v-row>
                 <v-col>
                 <div class="d-flex align-center mb-1">
@@ -44,6 +43,29 @@
                 />
                 </v-col>
             </v-row>
+            <div class="d-flex align-center mb-1">
+                <span class="text-subtitle-2 font-weight-bold">결재자</span>
+                <span class="not-null">*</span>
+            </div>
+            <div style="display:flex; flex-direction: row; gap: 10px;">
+                <v-btn @click="openModal('approver')" :disabled="selectedProjectId === null">조회</v-btn>
+                <span v-for="(user, index) in selectedApprover" :key="user.id">
+                        {{ user.name }}<span v-if="index < selectedApprover.length - 1">, </span>
+                </span>
+            </div>
+            <!-- 참조자 -->
+            <div class="d-flex align-center mb-1">
+                <span class="text-subtitle-2 font-weight-bold">참조자</span>
+                <span class="not-null">*</span>
+            </div>
+            <div style="display:flex; flex-direction: row; gap: 10px;">
+                <v-btn @click="openModal('viewer')">조회</v-btn>
+                <span v-for="(user, index) in selectedViewers" :key="user.id">
+                    {{ user.name }}<span v-if="index < selectedViewers.length - 1">, </span>
+                </span>
+            </div>
+          
+           
             <!-- 구분 -->
             <v-row>
                 <v-col>
@@ -122,60 +144,9 @@
                 />
                 </v-col>
             </v-row>
-        </div>
         
-        <div class="right-area">
-            <div class="participant-box">
-                <div class="sub-area">
-                    <div class="title-area">
-                        <div class="participant-title">결재자</div>
-                        <span class="not-null">⚹</span>
-                    </div>
-                    <v-btn @click="openModal('approver')" :disabled="selectedProjectId === null">조회</v-btn>
-                </div>
-                <div class="approval-participant">
-                    {{ selectedApprover?.name || '선택 안됨' }}
-                </div>
-
-                <div class="approval-participant">
-                <template v-if="!selectedApprover || selectedApprover.length === 0">
-                    선택 안됨
-                </template>
-                <template v-else>
-                    <span v-for="(user, index) in selectedApprover" :key="user.id">
-                    {{ user.name }}<span v-if="index < selectedApprover.length - 1">, </span>
-                    </span>
-                </template>
-                </div>
-            </div>
-            <br>
-            <div class="participant-box">
-                <div class="sub-area">
-                    <div class="participant-title">참조자</div>
-                    <v-btn @click="openModal('viewer')">조회</v-btn>
-                </div>
-                <div class="approval-participant" @click.stop="toggleViewerList">
-                    {{ 
-                        selectedViewers.length === 0 
-                        ? '선택 안됨' 
-                        : selectedViewers.length === 1
-                            ? selectedViewers[0].name
-                            : `${selectedViewers[0].name} 외 ${selectedViewers.length - 1}명` }}
-                </div>
-                <!-- 전체 리스트 드롭다운 -->
-                <div
-                    v-if="showViewerList"
-                    class="viewer-list-dropdown"
-                >  
-                    <div>전체 참조자 목록</div>
-                    <ul>
-                        <li v-for="viewer in selectedViewers" :key="viewer.id">
-                            {{ viewer.name }}
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+            
+            
     </v-container>
     <div style="display:flex; justify-content: end;">
         <v-btn 
@@ -377,6 +348,11 @@ async function createApproval() {
 </script>
 
 <style scoped>
+.approval-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 .not-null {
   color: red;
   margin-left: 4px;

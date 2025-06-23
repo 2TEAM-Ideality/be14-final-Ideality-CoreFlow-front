@@ -503,7 +503,7 @@ const completionRate = computed(() => {
 .complete-button {
   width: 72px; 
   height: 36px;
-  background-color: #00cfc1;
+  background-color: #7578ee;
   color: white;
   border: none;
   border-radius: 6px;

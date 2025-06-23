@@ -17,7 +17,9 @@
           <div class="writer-with-modify">
                 <span class="comment-writer">📌 {{ comment.deptName + '_' + comment.name }}</span>
                 <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
-              </div>
+          </div>
+          <span class="comment-create">{{ comment.createdAt.split('T')[0] }}  {{ comment.createdAt.split('T')[1].split(':')[0] }}:{{ comment.createdAt.split('T')[1].split(':')[1] }}</span>
+
         </div>
 
         <div class="comment-box">
@@ -431,12 +433,12 @@ gap: 12px;
 background: none;
 border: none;
 font-size: 14px;
-color: #00cfc1; 
+color: #7578ee; 
 cursor: pointer;
 }
 
 .modal-confirm {
-background-color: #00cfc1;
+background-color: #7578ee;
 color: white;
 border: none;
 font-size: 14px;
@@ -456,5 +458,9 @@ cursor: pointer;
   align-items: center;
   gap: 6px;
   font-weight: bold;
+}
+.comment-create{
+  color: rgb(163, 163, 163);
+  font-size: 10px;
 }
 </style>

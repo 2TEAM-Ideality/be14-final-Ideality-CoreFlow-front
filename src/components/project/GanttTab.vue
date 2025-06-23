@@ -101,7 +101,7 @@ function onQueryTaskbarInfo(args) {
   } else if (status === 'COMPLETED') {
     args.taskbarBgColor='#90ff90'
   } else if (status === 'PROGRESS') {
-    args.taskbarBgColor='#9090ff'
+    args.taskbarBgColor='#7578ee'
   } else if (status === 'DELETED') {
     args.taskbarBgColor='#ff9090'
   } else {

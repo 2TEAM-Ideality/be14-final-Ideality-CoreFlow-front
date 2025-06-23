@@ -4,8 +4,6 @@
         <v-tabs v-model="currentTab" background-color="transparent" class="approval-tab">
             <v-tab value="received"  @click="selectTab('received')">수신</v-tab>
             <v-tab value="sent"  @click="selectTab('sent')">발신</v-tab>
-            <v-tab value="sent"  @click="selectTab('sent')">승인 대기</v-tab>
-            <v-tab value="sent"  @click="selectTab('sent')">승인 대기</v-tab>
         </v-tabs>
         <input type="text" placeholder="검색 🔍" class="approval-search" v-model="searchApproval"/>
         <v-table>

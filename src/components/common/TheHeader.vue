@@ -3,6 +3,7 @@
     <div class="logo">
       <router-link to="/">
         <img src="@/assets/black-logo.png" alt="Coreflow Logo" />
+        <!-- <img src="/logo-favicon.png" alt="Coreflow Logo" /> -->
       </router-link>
     </div>
 
@@ -234,7 +235,7 @@ onBeforeUnmount(() => {
 
 .nav a.router-link-active {
   font-weight: bold;
-  color: #2b6cb0;
+  color: #7578ee;
 }
 
 .user {
@@ -307,7 +308,7 @@ onBeforeUnmount(() => {
 }
 
 .dropdown-item:hover {
-  background-color: #9090ff;
+  background-color: #7578ee;
   color: white;
 }
 

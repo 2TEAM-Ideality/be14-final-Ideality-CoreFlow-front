@@ -412,7 +412,7 @@
         height: 32px;
     }
     .editing {
-        background-color: #9090ff;
+        background-color: #7578ee;
     }
     .complete {
         background-color: #ff9090;
@@ -448,7 +448,7 @@
         text-decoration: none;
     }
     .dropdown-item:hover {
-        background-color: #9090ff;
+        background-color: #7578ee;
         color: white;
     }
     .dropdown-item.deleted {

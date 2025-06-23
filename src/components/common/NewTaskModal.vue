@@ -368,7 +368,7 @@ const getNodeLabel = (item) => {
   width: 100px;
 }
 .color-button {
-  background-color: #25BEAD;
+  background-color: #7578ee;
   color: white;
   font-weight: 600;
   font-size: 12px;

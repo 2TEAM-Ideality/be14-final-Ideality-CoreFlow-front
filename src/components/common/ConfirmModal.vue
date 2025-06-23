@@ -70,12 +70,12 @@ transition: 0.2s all;
 
 .btn.cancel {
 background: transparent;
-color: #00cfc1;
+color: #7578ee;
 border: none;
 }
 
 .btn.confirm {
-background: #00cfc1;
+background: #7578ee;
 color: white;
 border: none;
 }

@@ -397,7 +397,7 @@ onMounted(() => {
   border-color: #000;
 }
 .schedule-button {
-  background-color: #00cfc1;
+  background-color: #7578ee;
   color: white;
   border: none;
   border-radius: 8px;

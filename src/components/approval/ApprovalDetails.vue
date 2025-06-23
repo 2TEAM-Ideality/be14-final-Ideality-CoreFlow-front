@@ -522,7 +522,7 @@
         background-color: #909090;
     }
     .approve {
-        background-color: #9090ff;
+        background-color: #7578ee;
     }
     .reject {
         background-color: #ff9090;
@@ -597,7 +597,7 @@
         background-color: black;
     }
     .approve-submit {
-        background-color: #9090ff;
+        background-color: #7578ee;
     }
     .reject-submit {
         background-color: #ff9090;

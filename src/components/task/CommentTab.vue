@@ -28,6 +28,8 @@
                 <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
                 <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
               </div>
+              <span class="comment-create">{{ comment.createdAt.split('T')[0] }}  {{ comment.createdAt.split('T')[1].split(':')[0] }}:{{ comment.createdAt.split('T')[1].split(':')[1] }}</span>
+
             </div>
 
                 <div class="comment-box">
@@ -346,7 +348,7 @@ watch(() => taskId, (newId) => {
   /* width: 100%; */
   /* border-bottom: 1px solid black;; */
   /* flex: 0 0 auto; */
-  /* background-color: #00cfc1; */
+  /* background-color: #7578ee; */
 }
 
 /* 세부일정 선택 input */
@@ -601,12 +603,12 @@ watch(() => taskId, (newId) => {
   background: none;
   border: none;
   font-size: 14px;
-  color: #00cfc1; 
+  color: #7578ee; 
   cursor: pointer;
 }
 
 .modal-confirm {
-  background-color: #00cfc1;
+  background-color: #7578ee;
   color: white;
   border: none;
   font-size: 14px;
@@ -625,5 +627,9 @@ watch(() => taskId, (newId) => {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+.comment-create{
+  color: rgb(163, 163, 163);
+  font-size: 10px;
 }
 </style>
