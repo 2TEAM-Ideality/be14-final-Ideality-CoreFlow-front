@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="task-main-container">
     <div class="tab-row">
       <div class="tab-menu">
         <button
@@ -16,7 +16,7 @@
     <!-- 선택된 탭에 맞는 컴포넌트를 표시 -->
     <component
       :is="selectedComponent"
-      v-bind="selectedTab === 'info' ? { taskData } : {}"
+      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
       :task-id="taskData.selectTask.taskId"
     />
 
@@ -252,6 +252,10 @@ const props = defineProps({
   taskData: {
     type: Object,
     required: true
+  },
+  detailList : {
+    type : Array,
+    required: true
   }
 });
 
@@ -365,7 +369,9 @@ onMounted(() => {
   fetchTasks()
 })
 </script>
+
 <style scoped>
+
 .tab-row {
   display: flex;
   justify-content: space-between;
@@ -391,13 +397,14 @@ onMounted(() => {
   border-color: #000;
 }
 .schedule-button {
-  background-color: #00cfc1;
+  background-color: #7578ee;
   color: white;
   border: none;
   border-radius: 8px;
   padding: 6px 40px;
   font-size: 14px;
   cursor: pointer;
+  margin-right: 2%;
 }
 .modal-overlay {
     position: fixed;

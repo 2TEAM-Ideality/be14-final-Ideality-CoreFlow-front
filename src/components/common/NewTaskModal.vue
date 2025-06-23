@@ -1,5 +1,6 @@
 <script setup>
 import { watch, computed, reactive } from 'vue'
+import cloneDeep from 'lodash/cloneDeep'
 
 const props = defineProps({
   show: Boolean,
@@ -40,8 +41,9 @@ watch(
       localNode.childIds = val.data.childIds || []
     }
   },
-  { immediate: true }
+  { immediate: true, deep: true } // 👈 이거 추가
 )
+
 
 watch(() => props.show, (val) => {
   // 모달이 닫힐 때 (false로 변경될 때)
@@ -115,8 +117,39 @@ const handleCreate = () => {
     alert('종료일은 시작일보다 빠를 수 없습니다.')
     return
   }
-  console.log(localNode.id, localNode)
-  emit('create', localNode)
+
+  emit('create', cloneDeep(localNode))
+}
+
+const handleUpdate = () => {
+  if (!localNode.label || !localNode.label.trim()) {
+    alert('태스크명을 입력해주세요.')
+    return
+  }
+  if (!localNode.startBase || !localNode.endBase) {
+    alert('시작일과 마감일을 모두 입력해주세요.')
+    return
+  }
+  if (totalDuration.value === 'invalid') {
+    alert('종료일은 시작일보다 빠를 수 없습니다.')
+    return
+  }
+
+  // 부서 ID → 이름으로 변환
+  const deptNames = localNode.deptList
+    .map(id => {
+      const found = props.deptList.find(d => d.deptId === id)
+      return found?.deptName
+    })
+    .filter(Boolean)
+
+  // ✅ 즉시 수정 emit
+  emit('update', {
+    ...cloneDeep(localNode),
+    deptList: deptNames  // ✅ 부서 이름 리스트로 수정
+  })
+
+  emit('close')
 }
 
 
@@ -239,10 +272,11 @@ const getNodeLabel = (item) => {
         <button @click="$emit('close')" class="basic-button">취소</button>
         
         <template v-if="props.initialData && props.initialData.id">
-          <button @click="() => {
+          <button @click="handleUpdate" class="color-button">수정</button>
+          <!-- <button @click="() => {
             $emit('update', localNode)
           $emit('close')
-            }" class="color-button">수정</button>
+            }" class="color-button">수정</button> -->
         </template>
         <template v-else>
           <button
@@ -254,7 +288,6 @@ const getNodeLabel = (item) => {
     </div>
   </div>
 </template>
-
 
 
 <style scoped>
@@ -335,7 +368,7 @@ const getNodeLabel = (item) => {
   width: 100px;
 }
 .color-button {
-  background-color: #25BEAD;
+  background-color: #7578ee;
   color: white;
   font-weight: 600;
   font-size: 12px;

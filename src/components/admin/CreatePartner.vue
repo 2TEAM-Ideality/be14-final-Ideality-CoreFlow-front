@@ -139,7 +139,7 @@
         cursor: pointer;
     }
     .create-btn {
-        background-color: #9090ff;
+        background-color: #7578ee;
         border-radius: 8px;
         width: 150px;
         height: 32px;

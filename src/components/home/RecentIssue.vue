@@ -1,5 +1,21 @@
 <template>
   <div class="issue-container">
+    <!-- 지연 임박 알림 -->
+    <div class="issue-item">
+      <div class="item-left">
+        <v-btn icon color="warning" class="approval-button" @click="goToDelayAlert">
+          <v-icon>mdi-alert-outline</v-icon>
+        </v-btn>
+        <div class="issue-data">
+          <div class="issue-title">마감 임박 태스크</div>
+          <div class="issue-desc">{{ props.delayCount || 0 }} 건</div>
+        </div>
+      </div>
+      <v-btn icon variant="plain" class="link-icon" size="small" @click="goToDelayAlert">
+        <v-icon color="gray">mdi-chevron-right</v-icon>
+      </v-btn>
+    </div>
+
     <!-- 결재 알림 -->
     <div class="issue-item">
       <div class="item-left">
@@ -23,8 +39,9 @@
           <v-icon>mdi-calendar-blank</v-icon>
         </v-btn>
         <div class="issue-data">
-          <div class="issue-title"> {{  props.deptInfo  }} 부서 일정</div>
-          <div class="issue-desc">{{ props.todayDeptList?.length || 0 }} 개</div>
+          <!-- <div class="issue-title"> {{  props.deptInfo  }} 일정</div> -->
+          <div class="issue-title">오늘의 일정 -  {{  props.deptInfo  }} </div>
+          <div class="issue-desc">{{ props.todayDeptList?.length + props.todayCount || 0 }} 개</div>
         </div>
       </div>
       <v-btn icon variant="plain" class="link-icon" size="small" @click="goToCalendar">
@@ -33,20 +50,20 @@
     </div>
 
     <!-- 개인 일정 -->
-    <div class="issue-item">
+    <!-- <div class="issue-item">
       <div class="item-left">
         <v-btn icon color="primary" class="approval-button">
           <v-icon>mdi-calendar-account</v-icon>
         </v-btn>
         <div class="issue-data">
-          <div class="issue-title">개인 일정</div>
-          <div class="issue-desc">{{ props.todayCount }} 개</div>
+          <div class="issue-title">오늘의 일정</div>
+          <div class="issue-desc">{{ props.todayDeptList?.length + props.todayCount }} 개</div>
         </div>
       </div>
       <v-btn icon variant="plain" class="link-icon" size="small" @click="goToCalendar">
         <v-icon color="gray">mdi-chevron-right</v-icon>
       </v-btn>
-    </div>
+    </div> -->
   </div>
 </template>
 

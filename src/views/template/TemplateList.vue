@@ -212,7 +212,7 @@ const goToCreateTemplate = () => {
   font-size: 14px;
   border-radius: 8px;
   height: 40px;
-  background-color: #25BEAD;
+  background-color: #7578ee;
   color: white;
   align-items: center;
   align-content: center;

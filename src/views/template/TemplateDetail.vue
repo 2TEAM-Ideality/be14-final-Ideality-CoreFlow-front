@@ -389,7 +389,7 @@ watch(selectedDeptName, (newDept) => {
   height: 30px;
 }
 .color-button{
-  background-color: #25BEAD;
+  background-color: #7578ee;
   color: white;
   font-weight: 500;
 }
@@ -470,8 +470,8 @@ watch(selectedDeptName, (newDept) => {
 }
 
 .custom-select:focus {
-  /* border-color: #25bead; */
-  /* box-shadow: 0 0 2px #25bead; */
+  /* border-color: #7578ee; */
+  /* box-shadow: 0 0 2px #7578ee; */
 }
 </style>
 

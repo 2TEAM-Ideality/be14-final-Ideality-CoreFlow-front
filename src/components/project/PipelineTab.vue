@@ -1,5 +1,6 @@
 
 <script setup>
+import FloatingInfo from '@/components/project/FloatingInfo.vue'
 import { nextTick, ref, onMounted, watch } from 'vue'
 import { Panel, VueFlow, useVueFlow, Position } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
@@ -22,8 +23,9 @@ const { layout } = useLayout()
 const { fitView, zoomTo } = useVueFlow()
 
 const route = useRoute()
-const projectInfo = ref({})   // 프로젝트 정보
+
 const projectId = route.params.id
+const projectInfo = ref({})   // 프로젝트 정보
 const projectName = ref('')
 const nodes = ref([])   // 원본 노드 데이터 
 const edges = ref([])   // 원본 엣지 데이터 
@@ -49,11 +51,27 @@ async function fetchPipeline() {
     })
     const data = res.data.data
     console.log(data)
-    projectInfo.value = data
+    // projectInfo.value = data
+   
     projectName.value = data.name
     
     const rawNodes = data.nodeList
     const rawEdges = data.edgeList
+
+    
+    // 상태별 개수 계산
+    const statusCounts = rawNodes.reduce((acc, node) => {
+      const status = node.status?.toUpperCase() || 'UNKNOWN'
+      acc[status] = (acc[status] || 0) + 1
+      return acc
+    }, {})
+
+    // 기존 projectInfo에 상태별 개수까지 포함해서 저장
+     projectInfo.value = {
+      ...data,
+      statusCounts
+    }
+    console.log("✅ 프로젝트 파이프라인 데이터 확인", projectInfo.value)
 
     // 중복 제거한 엣지
     const uniqueEdges = Array.from(
@@ -161,6 +179,11 @@ async function handleNodesInitialized() {
   })
 }
 
+function handleStartTask(taskId) {
+  // 태스크 시작 로직
+  console.log('Started task', taskId)
+}
+
 
 function getParentIds(nodeId) {
   return edges.value
@@ -175,7 +198,9 @@ function getChildIds(nodeId) {
 }
 
 
+
 function handleCreateNewNode(newNodeData) {
+  console.log(newNodeData)
   const newId = nanoid(6)
 
   const node = {
@@ -268,13 +293,13 @@ async function handleDeleteTask(nodeId) {
 }
 
 // 태스크 정보 수정
-function handleUpdateTask(updatedData) {
-  if (!updatedData || !updatedData.id) return
+async function handleUpdateTask(updatedData) {
+  if (!updatedData || !updatedData.id) return;
 
   const node = nodes.value.find(n => n.id === updatedData.id)
   if (!node) return
 
- // 실제 데이터 수정
+  // 1. 로컬 데이터 수정
   Object.assign(node.data, {
     label: updatedData.label,
     description: updatedData.description,
@@ -283,24 +308,36 @@ function handleUpdateTask(updatedData) {
     deptList: updatedData.deptList
   })
 
-  // TODO. 태스트 수정 요청 
-  // await api.put(`/api/task/${updatedData.id}`, {
-  //   label: updatedData.label,
-  //   description: updatedData.description,
-  //   startBaseLine: updatedData.startBase,
-  //   endBaseLine: updatedData.endBase,
-  //   deptList: updatedData.deptList.map(d => typeof d === 'object' ? d.id : d),
-  // })
+  // 2. 서버에 수정 요청 전송
+  try {
+    const requestBody = {
+      taskId: Number(updatedData.id),
+      projectId: Number(projectId),
+      description: updatedData.description,
+      deptLists: updatedData.deptList,  // 이미 부서명 문자열 리스트
+      prevTaskList: getParentIds(updatedData.id),
+      nextTaskList: getChildIds(updatedData.id),
+      startExpect: updatedData.startBase,
+      endExpect: updatedData.endBase
+    }
 
-  // // 다시 불러와서 반영
-  // await fetchPipeline()
+    await api.put(`/api/task/modify/${updatedData.id}`, requestBody)
+    console.log('✅ 태스크 수정 성공')
 
-  // 반영 후 레이아웃 재적용 (선택)
+    // 선택적으로 다시 불러오기 (동기화)
+    // await fetchPipeline()
+  } catch (err) {
+    console.error('태스크 수정 실패:', err)
+    alert('태스크 수정 요청에 실패했습니다.')
+  }
+
+  // 3. 상태 초기화 및 레이아웃 재정렬
   showEditModal.value = false
   editingNode.value = null
-
-  nextTick(() => layoutGraph('LR'))
+  await nextTick()
+  layoutGraph('LR')
 }
+
 
 
 // 태스크 노드 생성
@@ -413,8 +450,17 @@ watch(showFullscreenView, async (isOpen) => {
 
 
 <template>
-
+  <div>
+  <FloatingInfo
+    v-if="projectInfo.statusCounts"
+    :passedRate="projectInfo.passedRate"
+    :progressRate="projectInfo.progressRate"
+    :delayDays="projectInfo.delayDays"
+    :statusCounts="projectInfo.statusCounts"
+  />
+  </div>
   <div class="layout-flow" style="position: relative; overflow: visible">
+    
     <VueFlow
       ref="vueFlowRef"
       :nodes="nodes"
@@ -438,14 +484,11 @@ watch(showFullscreenView, async (isOpen) => {
 
       <Panel class="process-panel" position="top-right">
         <div class="layout-panel">
-          <button title="태스크 생성" @click="{{showFullscreenView = true; showNewTask = true;}}">
-            📝 태스크 생성
-          </button>
           <button title="정렬" @click="layoutGraph('LR')">
             ↔️ 정렬
           </button>
           <button title="전체 보기" @click="showFullscreenView = true">
-            🔍 전체 보기
+            ✏️ 편집하기
           </button>
         </div>
       </Panel>

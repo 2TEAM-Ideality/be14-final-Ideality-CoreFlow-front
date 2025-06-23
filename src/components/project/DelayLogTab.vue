@@ -67,17 +67,18 @@ const fileItems = computed(() => {
     )
   })
 
-  // 정렬
+  // 생성일 기준 정렬
   filtered = filtered.sort((a, b) => {
-    const nameA = a.taskName?.toLowerCase() || ''
-    const nameB = b.taskName?.toLowerCase() || ''
+    const dateA = new Date(a.createdDate)
+    const dateB = new Date(b.createdDate)
     return sortLabel.value === '오름차순'
-      ? nameA.localeCompare(nameB)
-      : nameB.localeCompare(nameA)
+      ? dateA - dateB
+      : dateB - dateA
   })
 
   return filtered.map(item => ({
     id: item.id,
+    taskId: item.taskId,
     taskName: item.taskName,
     approverName: item.approverName,
     approverJobRank: item.approverJobRank,
