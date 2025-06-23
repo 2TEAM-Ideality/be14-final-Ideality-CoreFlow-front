@@ -15,7 +15,7 @@
         </template>
 
         <template #sidebar>
-            <SidebarCommentSection :taskId="taskId" />
+            <SidebarCommentSection :task="originTaskValue.selectTask" />
         </template>
     </TaskLayout>
 </template>
@@ -29,6 +29,7 @@ import TaskMainTab from '@/components/task/TaskMainTab.vue';
 import SidebarCommentSection from '@/components/task/SidebarCommentSection.vue';
 import axios from 'axios';
 import { useUserStore } from '@/stores/userStore';
+import api from '@/api';
 
 const route = useRoute()
 const taskId = route.params.taskId
@@ -43,11 +44,7 @@ const userStore = useUserStore();
 
 const fetchTask = async (id) => {
     try {
-        const res = await axios.get(`http://localhost:5000/api/task/detail/${id}`, {
-        headers: {
-            Authorization: `Bearer ${userStore.accessToken}`
-        }
-        })
+        const res = await api.get(`/task/detail/${id}`);
         originTaskValue.value = res.data.data
         console.log(originTaskValue.value);
     } catch (error) {

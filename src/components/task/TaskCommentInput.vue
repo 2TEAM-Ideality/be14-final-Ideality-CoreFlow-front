@@ -53,6 +53,7 @@
 import { ref, watch, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { useUserStore } from '@/stores/userStore'
+import api from '@/api'
 
 const userStore = useUserStore()
 const fullName = `${userStore.deptName}_${userStore.name}`
@@ -61,10 +62,20 @@ const selectedFileName = ref(null);
 
 // props
 const props = defineProps({
-    taskId: [String, Number],
+    taskId: {
+        type: [String, Number],
+        required: true
+    },
+    projectId: {
+        type: [String, Number],
+        required: true
+    },
     replyTargetId: Number,
     replyTargetUser: String,
-    editData: { type: Object, default: null }
+    editData: {
+        type: Object,
+        default: null
+    }
 })
 
 // 상태 변수
@@ -89,10 +100,8 @@ const emit = defineEmits(['reset-reply', 'comment-updated'])
 // 멘션 자동완성 리스트 가져오기
 const fetchMentionUser = async (keyword) => {
 try {
-    const res = await axios.get(`http://localhost:5000/api/mention/search?projectId=1&mentionTarget=${keyword}`, {
-    headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-    }
+    const res = await api.get(`/mention/search`, {
+        params: { projectId: props.projectId, mentionTarget: keyword }
     })
     const mentions = res.data.data
     allUsers.value = mentions.map((mention, idx) => ({
@@ -110,11 +119,9 @@ try {
 
 const fetchDetailList = async (keyword) => {
 try {
-    const res = await axios.get(`http://localhost:5000/api/mention/detail?projectId=1&taskId=${props.taskId}&mentionTarget=${keyword}`, {
-    headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-    }
-    })
+    const res = await api.get(`/mention/detail`, {
+        params: { projectId: props.projectId, taskId: props.taskId, mentionTarget: keyword }
+    });
     const details = res.data.data || []
     allUsers.value = details.map((detail, idx) => ({
     id: idx,
@@ -288,18 +295,18 @@ const handleSubmit = async () => {
     try {
         if (editingCommentId.value) {
         // ✏️ 수정 요청
-        await axios.patch(`/api/comment/${editingCommentId.value}`, formData, {
-            headers: {
-            Authorization: `Bearer ${userStore.accessToken}`,
-            },
-        })
+            await api.patch(`/comment/${editingCommentId.value}`, formData, {
+                headers: {
+                Authorization: `Bearer ${userStore.accessToken}`,
+                },
+            })
         } else {
-        // ✅ 등록 요청
-        await axios.post(`/api/comment/write/${props.taskId}`, formData, {
-            headers: {
-            Authorization: `Bearer ${userStore.accessToken}`,
-            },
-        })
+            // ✅ 등록 요청
+            await api.post(`/comment/write/${props.taskId}`, formData, {
+                headers: {
+                Authorization: `Bearer ${userStore.accessToken}`,
+                },
+            })
     }
 
         // 초기화

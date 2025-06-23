@@ -84,6 +84,7 @@
     import { ref, nextTick, onMounted } from 'vue'
     import axios from 'axios'
     import LoadingModal from '@/components/common/LoadingModal.vue'
+    import api from '@/api'
 
     const emit = defineEmits(['close'])
     const companyCodeInput = ref(null)
@@ -111,12 +112,12 @@
 
         isLoading.value = true
         try {
-            await axios.post('/api/auth/reset-password/request', {
+            await api.post('/auth/reset-password/request', {
                 companyCode: companyCode.value,
                 employeeNum: employeeNum.value,
                 name: name.value,
                 email: email.value
-            })
+            });
             alert('인증번호가 이메일로 전송되었습니다.')
             codeRequested.value = true
         } catch (e) {
@@ -135,7 +136,7 @@
 
         isLoading.value = true
         try {
-            await axios.post('/api/auth/reset-password/verify', {
+            await api.post('/api/auth/reset-password/verify', {
                 companyCode: companyCode.value,
                 email: email.value,
                 verificationCode: verificationCode.value
