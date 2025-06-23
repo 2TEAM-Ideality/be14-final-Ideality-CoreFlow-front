@@ -127,6 +127,7 @@ async function login() {
             password: password.value
         }, {
             headers: {
+                withCredentials: true,
                 'Content-Type': 'application/json'
             }
         });
