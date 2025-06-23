@@ -281,7 +281,7 @@ const fetchTasks = async () => {
 
   try {
     // 부모 컴포넌트에서 전달된 taskId를 사용하여 API 호출
-    const response = await api.get(`/work/detail/nameList`, {
+    const response = await api.get(`/api/work/detail/nameList`, {
       params: { parentTaskId: props.taskData.selectTask.taskId }
     })
 
@@ -310,7 +310,7 @@ const fetchDepartments = async () => {
   }
 
   try {
-    const response = await api.get(`/dept/all`)
+    const response = await api.get(`/api/dept/all`)
 
     if (response.ok) {
       const data = await response.json()
@@ -342,7 +342,7 @@ const fetchUsersForDepartment = async () => {
     const deptName = selectedDept ? selectedDept.deptName : ''; // deptName을 가져오기
 
     console.log("Fetching users for dept:", deptName); // 부서명 확인
-    const response = await api.get(`/users/dept`, {
+    const response = await api.get(`/api/users/dept`, {
       params: { deptName }
     })
 

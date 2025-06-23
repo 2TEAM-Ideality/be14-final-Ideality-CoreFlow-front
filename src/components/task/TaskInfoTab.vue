@@ -193,6 +193,7 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
+import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -256,11 +257,7 @@ const taskList = ref([])
 const handleDeptDropdown = async () => {
   // 프로젝트 id 필히 수정 필요
   try {
-    const res = await axios.get(`http://localhost:5000/api/projects/${task.value.selectTask.projectId}/participants/department`, {
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-      }
-    });
+    const res = await api.get(`/api/projects/${task.value.selectTask.projectId}/participants/department`)
     // 이름만 추출
     deptList.value = res.data.data.map(d => d.deptName);
     showDeptDropdown.value = !showDeptDropdown.value;
@@ -287,11 +284,7 @@ const selectDept = (dept) => {
 const TaskList = async () => {
   // 프로젝트 id는 바로 수정 필요
   try {
-    const res = await axios.get(`http://localhost:5000/api/task/${task.value.selectTask.projectId}`, {
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-      }
-    });
+    const res = await api.get(`/api/task/${task.value.selectTask.projectId}`)
     // 이름만 추출
     taskList.value = res.data.data;
     console.log(taskList.value);
@@ -403,12 +396,7 @@ const fetchModify = async () => {
       startExpect: task.value.selectTask.expectStartDate,
       endExpect: task.value.selectTask.expectEndDate
     };
-    await axios.patch(`http://localhost:5000/api/task/modify/${dto.taskId}`, dto, {
-      headers: {
-        'Authorization': `Bearer ${userStore.accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    await api.patch(`/api/task/modify/${dto.taskId}`, dto)
     alert("수정되었습니다.");
   } catch (error) {
     if (error.response && error.response.status === 403) {

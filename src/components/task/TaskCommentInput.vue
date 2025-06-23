@@ -100,7 +100,7 @@ const emit = defineEmits(['reset-reply', 'comment-updated'])
 // 멘션 자동완성 리스트 가져오기
 const fetchMentionUser = async (keyword) => {
 try {
-    const res = await api.get(`/mention/search`, {
+    const res = await api.get(`/api/mention/search`, {
         params: { projectId: props.projectId, mentionTarget: keyword }
     })
     const mentions = res.data.data
@@ -119,7 +119,7 @@ try {
 
 const fetchDetailList = async (keyword) => {
 try {
-    const res = await api.get(`/mention/detail`, {
+    const res = await api.get(`/api/mention/detail`, {
         params: { projectId: props.projectId, taskId: props.taskId, mentionTarget: keyword }
     });
     const details = res.data.data || []
@@ -295,14 +295,14 @@ const handleSubmit = async () => {
     try {
         if (editingCommentId.value) {
         // ✏️ 수정 요청
-            await api.patch(`/comment/${editingCommentId.value}`, formData, {
+            await api.patch(`/api/comment/${editingCommentId.value}`, formData, {
                 headers: {
                 Authorization: `Bearer ${userStore.accessToken}`,
                 },
             })
         } else {
             // ✅ 등록 요청
-            await api.post(`/comment/write/${props.taskId}`, formData, {
+            await api.post(`/api/comment/write/${props.taskId}`, formData, {
                 headers: {
                 Authorization: `Bearer ${userStore.accessToken}`,
                 },

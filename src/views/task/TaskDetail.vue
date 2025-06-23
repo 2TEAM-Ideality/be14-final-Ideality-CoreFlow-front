@@ -44,7 +44,7 @@ const userStore = useUserStore();
 
 const fetchTask = async (id) => {
     try {
-        const res = await api.get(`/task/detail/${id}`);
+        const res = await api.get(`/api/task/detail/${id}`);
         originTaskValue.value = res.data.data
         console.log(originTaskValue.value);
     } catch (error) {

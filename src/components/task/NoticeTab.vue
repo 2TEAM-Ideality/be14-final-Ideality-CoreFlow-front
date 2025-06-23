@@ -81,7 +81,7 @@ const taskId = props.taskId;
 // 댓글 fetch + 정렬 적용
 const fetchComments = async (id) => {
   try {
-    const res = await api.get(`/comment/task/${id}/notice`);
+    const res = await api.get(`/api/comment/task/${id}/notice`);
     comments.value = convertToTree(res.data.data);
     sortComments();
   } catch (error) {
@@ -132,7 +132,7 @@ const closeDeleteModal = () => {
 
 const deleteComment = async () => {
   try {
-    await api.patch(`/comment/${deleteTargetId.value}/delete`);
+    await api.patch(`/api/comment/${deleteTargetId.value}/delete`);
     closeDeleteModal();
     await fetchComments(taskId);
   } catch (error) {

@@ -207,7 +207,7 @@ validateForm() {
       }
 
       try {
-        const response = await api.get(`/work/detail`, {
+        const response = await api.get(`/api/work/detail`, {
           params: { workId }
         });
 
@@ -237,7 +237,7 @@ validateForm() {
       }
 
       try {
-        const response = await api.get('/dept/all');
+        const response = await api.get('/api/dept/all');
 
         if (response.ok) {
           const data = await response.json();
@@ -259,7 +259,7 @@ validateForm() {
 
       try {
         console.log("Fetching users for dept:", deptName); // 부서명 확인
-        const response = await api.get('/users/dept', {
+        const response = await api.get('/api/users/dept', {
           params: { deptName }
         });
 
@@ -317,7 +317,7 @@ validateForm() {
         progress: this.taskDetails.progressRate,
       };
 
-      const response = await api.put(`/detail/update/${this.workId}`, updatedData)
+      const response = await api.put(`/api/detail/update/${this.workId}`, updatedData)
         .then(response => response.json())
         .then(async (data) => {
           console.log('세부일정 업데이트 성공:', data);
@@ -343,7 +343,7 @@ validateForm() {
       }
 
       try {
-        const response = await api.patch(`/detail/${this.workId}/delete`);
+        const response = await api.patch(`/api/detail/${this.workId}/delete`);
 
         if (!response.ok) {
           throw new Error('세부일정 삭제 실패');

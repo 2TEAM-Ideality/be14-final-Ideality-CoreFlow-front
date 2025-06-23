@@ -126,7 +126,7 @@ const taskId = computed(() => props.task?.taskId); // ✅ 안전하게 computed�
 // 댓글 불러오기
 const fetchComments = async (id)=> {
   try {
-    const res = await api.get(`/comment/task/${id}`);
+    const res = await api.get(`/api/comment/task/${id}`);
     comments.value = convertToTree(res.data.data);
   } catch (error) {
     const status = error.response?.status;
