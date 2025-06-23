@@ -321,6 +321,9 @@ validateForm() {
         if (response.status === 200) {
           console.log('세부일정 업데이트 성공:', response.data);
           await this.fetchTaskDetails(this.workId);
+          // 완료 후 바로 조회 모달 갱신을 위한 데이터 다시 불러오기
+      const taskStore = useTaskStore();
+      await taskStore.fetchTaskDetails(this.workId); 
           const route = useRoute();
           const parentTaskId = route.params.taskId;
           await taskStore.fetchTotalProgress(parentTaskId, token); // 총 진척률 가져오기

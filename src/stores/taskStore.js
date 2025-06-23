@@ -55,7 +55,44 @@ async completeTask(workId) {
   }
 }
 ,
+async fetchTaskDetails(workId) {
+  const userStore = useUserStore();
+  const token = userStore.accessToken;
 
+  if (!token) {
+    console.error("토큰이 없습니다.");
+    return;
+  }
+
+  try {
+    const response = await api.get(`/api/work/detail`, {
+      params: { workId }
+    });
+
+    if (response.status === 200) {
+      this.taskDetails = response.data.data;  // DB에서 최신 데이터 가져오기
+
+      // taskDetails가 정의되었는지 확인 후 처리
+      if (this.taskDetails && this.taskDetails.deptId) {
+
+      // 부서 정보 및 사용자 목록 업데이트
+      const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
+      if (selectedDept) {
+        this.taskDetails.deptName = selectedDept.deptName;
+        this.fetchUsersByDept(selectedDept.deptName);
+      }
+
+      if (this.localEditMode) {
+        this.fetchUsersByDept(this.taskDetails.deptName);
+      }
+    } }else {
+      console.error("세부일정 조회 실패:", response.status);
+    }
+  } catch (error) {
+    console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
+  }
+}
+,
     async fetchItems(parentTaskId, token) {
       try {
         const response = await api.get('/api/work/detailList', {
