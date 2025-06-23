@@ -122,9 +122,9 @@ async function login() {
     // 로그인 요청
     try {
         const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-            companyCode,
-            identifier,
-            password
+            companyCode: companyCode.value,
+            identifier: identifier.value,
+            password: password.value
         }, {
             headers: {
                 'Content-Type': 'application/json'
