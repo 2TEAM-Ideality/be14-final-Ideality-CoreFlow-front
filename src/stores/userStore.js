@@ -38,7 +38,7 @@ export const useUserStore = defineStore('user', () => {
         isResign.value = data.isResign
         resignDate.value = data.resignDate
         profileImage.value = data.profileImage || '/images/profile/defaultProfile.png',
-        deptName.value = data.deptName
+            deptName.value = data.deptName
         jobRankName.value = data.jobRankName
         jobRoleName.value = data.jobRoleName
         roles.value = data.roles
@@ -116,15 +116,13 @@ export const useUserStore = defineStore('user', () => {
         const savedUser = localStorage.getItem('user')
         const parsedUser = JSON.parse(savedUser);
         const schemaName = localStorage.getItem('schemaName')
-        
+
         if (!savedUser || !refreshToken) return
 
         try {
-            const response = await axios.post('/api/auth/reissue', {
+            const response = await api.post('/api/auth/reissue', {
                 userId: parsedUser.id,
                 companySchema: schemaName
-            }, {
-                withCredentials: true
             })
 
             const reissueResponse = response.data.data
@@ -156,7 +154,7 @@ export const useUserStore = defineStore('user', () => {
         } catch (e) {
             forcedLogout.value = true
             logout()
-            
+
             return false
         }
     }
@@ -165,7 +163,7 @@ export const useUserStore = defineStore('user', () => {
         accessToken.value = token;
         sessionStorage.setItem('accessToken', token)
     }
-    
+
     async function updateUserInfo(userId) {
         console.log('savedUser', userId)
         try {

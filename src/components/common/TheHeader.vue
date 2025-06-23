@@ -135,14 +135,7 @@ const fetchNotifications = async () => {
   }
 
   try {
-    const response = await fetch('/api/notifications', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      }
-    })
-
+    const response = await api.get('/api/notifications');
     const data = await response.json()
     if (data && data.data) {
       data.data.filter(notice => !notice.isAutoDelete).forEach(notification => {

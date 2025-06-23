@@ -18,7 +18,7 @@
         </template>
 
         <template #sidebar>
-            <SidebarCommentSection :taskId="taskId" />
+            <SidebarCommentSection :task="originTaskValue.selectTask" />
         </template>
     </TaskLayout>
 </template>
@@ -49,11 +49,7 @@ const detailList = ref([]);
 
 const fetchTask = async (id) => {
     try {
-        const res = await axios.get(`http://localhost:5000/api/task/detail/${id}`, {
-        headers: {
-            Authorization: `Bearer ${userStore.accessToken}`
-        }
-        })
+        const res = await api.get(`/task/detail/${id}`);
         originTaskValue.value = res.data.data
         console.log(originTaskValue.value);
     } catch (error) {

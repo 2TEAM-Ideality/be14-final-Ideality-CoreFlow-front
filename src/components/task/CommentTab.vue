@@ -110,10 +110,10 @@ import { ref, watch, onUpdated, nextTick, onMounted, onBeforeUnmount } from 'vue
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
+import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
-const taskId = ref(route.params.taskId);
 // 댓글 삭제 구현
 const isDeleteModalOpen = ref(false);
 const deleteTargetId = ref(null);
@@ -135,11 +135,7 @@ const scrollToBottom = () => {
 
 const fetchComments = async (id)=> {
   try {
-    const res = await axios.get(`http://localhost:5000/api/comment/task/${id}`, {
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-      }
-    });
+    const res = await api.get(`/comment/task/${id}`);
     comments.value = convertToTree(res.data.data);
     nextTick(() => scrollToBottom())
     
@@ -210,13 +206,9 @@ const closeDeleteModal = () => {
 
 const deleteComment = async () => {
   try {
-    await axios.patch(`http://localhost:5000/api/comment/${deleteTargetId.value}/delete`, {} ,{
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-      }
-    })
+    await api.patch(`/comment/${deleteTargetId.value}/delete`)
     closeDeleteModal()
-    fetchComments(taskId.value)
+    fetchComments(taskId)
     emit('comment-updated')
   } catch (error) {
     const status = error.response?.status;
@@ -238,13 +230,9 @@ const deleteComment = async () => {
 
 const updateNoticeComment = async (id) => {
   try {
-    const res = await axios.patch(`http://localhost:5000/api/comment/${id}/notice`, {}, {
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-      }
-    });
+    const res = await api.patch(`/comment/${id}/notice`)
     alert(res.data?.message);
-    fetchComments(taskId.value)
+    fetchComments(taskId)
     emit('comment-updated')
   } catch (error) {
     const status = error.response?.status;
@@ -255,7 +243,7 @@ const updateNoticeComment = async (id) => {
 
 onMounted(() => {
   window.addEventListener('click', handleClickOutside)
-  fetchComments(taskId.value);
+  fetchComments(taskId);
 })
 
 onBeforeUnmount(() => {
@@ -269,11 +257,13 @@ onUpdated(() => {
 const emit = defineEmits(['edit-comment', 'set-reply']);
 
 const props = defineProps({
-  taskId: {
-    type: [String, Number],
+  task: {
+    type: Object,
     required: true
   }
 });
+
+const taskId = props.task.taskId;
 
 const onEditComment = (comment) => {
   emit('edit-comment', {

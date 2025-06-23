@@ -133,6 +133,7 @@
 import { useUserStore } from "@/stores/userStore";
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import { useRoute } from "vue-router";
+import api from "@/api";
 
 export default {
   props: {
@@ -206,12 +207,8 @@ validateForm() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/work/detail?workId=${workId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+        const response = await api.get(`/work/detail`, {
+          params: { workId }
         });
 
         if (!response.ok) {
@@ -240,13 +237,7 @@ validateForm() {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/api/dept/all", {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const response = await api.get('/dept/all');
 
         if (response.ok) {
           const data = await response.json();
@@ -268,12 +259,8 @@ validateForm() {
 
       try {
         console.log("Fetching users for dept:", deptName); // 부서명 확인
-        const response = await fetch(`http://localhost:5000/api/users/dept?deptName=${deptName}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        const response = await api.get('/users/dept', {
+          params: { deptName }
         });
 
         if (response.ok) {
@@ -330,19 +317,12 @@ validateForm() {
         progress: this.taskDetails.progressRate,
       };
 
-      fetch(`http://localhost:5000/api/detail/update/${this.workId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedData),
-      })
+      const response = await api.put(`/detail/update/${this.workId}`, updatedData)
         .then(response => response.json())
         .then(async (data) => {
           console.log('세부일정 업데이트 성공:', data);
           await this.fetchTaskDetails(this.workId);
-           const route = useRoute();
+          const route = useRoute();
         const parentTaskId = route.params.taskId;
           await taskStore.fetchTotalProgress(parentTaskId, token); // 총 진척률 가져오기
 
@@ -363,13 +343,7 @@ validateForm() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/detail/${this.workId}/delete`, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await api.patch(`/detail/${this.workId}/delete`);
 
         if (!response.ok) {
           throw new Error('세부일정 삭제 실패');

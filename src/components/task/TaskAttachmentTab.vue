@@ -23,6 +23,7 @@ import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
+import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -82,11 +83,7 @@ const originItems = ref([]);
 
 const fetchAttachment = async () => {
     try {
-        const res = await axios.get(`http://localhost:5000/api/task/${taskId.value}/attachment/list`, {
-            headers: {
-                Authorization: `Bearer ${userStore.accessToken}`
-            }
-        })
+        const res = await api.get(`/task/${taskId.value}/attachment/list`)
 
         console.log(res);
         originItems.value = res.data.data;

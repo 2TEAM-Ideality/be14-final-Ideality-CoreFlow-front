@@ -285,12 +285,8 @@ const fetchTasks = async () => {
 
   try {
     // 부모 컴포넌트에서 전달된 taskId를 사용하여 API 호출
-    const response = await fetch(`http://localhost:5000/api/work/detail/nameList?parentTaskId=${props.taskData.selectTask.taskId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+    const response = await api.get(`/work/detail/nameList`, {
+      params: { parentTaskId: props.taskData.selectTask.taskId }
     })
 
     const data = await response.json()
@@ -318,13 +314,7 @@ const fetchDepartments = async () => {
   }
 
   try {
-    const response = await fetch("http://localhost:5000/api/dept/all", {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
+    const response = await api.get(`/dept/all`)
 
     if (response.ok) {
       const data = await response.json()
@@ -356,13 +346,9 @@ const fetchUsersForDepartment = async () => {
     const deptName = selectedDept ? selectedDept.deptName : ''; // deptName을 가져오기
 
     console.log("Fetching users for dept:", deptName); // 부서명 확인
-    const response = await fetch(`http://localhost:5000/api/users/dept?deptName=${deptName}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const response = await api.get(`/users/dept`, {
+      params: { deptName }
+    })
 
     if (response.ok) {
       const data = await response.json();

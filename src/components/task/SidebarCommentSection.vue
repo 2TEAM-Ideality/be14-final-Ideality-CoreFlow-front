@@ -64,11 +64,13 @@ import NoticeTab from './NoticeTab.vue'
 import TaskCommentInput from './TaskCommentInput.vue'
 
 const props = defineProps({
-  taskId: {
-    type: [Number, String],
+  task: {
+    type: Object,
     required: true
   }
 })
+
+// 예시: task.taskId, task.projectId 등에서 꺼내서 사용 가능
 
 const editData = ref(null)
 const replyTargetId = ref(null)
