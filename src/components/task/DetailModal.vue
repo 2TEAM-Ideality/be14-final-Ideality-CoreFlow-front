@@ -143,7 +143,10 @@ export default {
   },
   data() {
     return {
-      taskDetails: {},
+      taskDetails: {
+          assignees: [], // 여기서 빈 배열로 초기화
+      participants: []
+      },
       departments: [], // 부서 목록을 저장하는 변수
       users: [], // 사용자 목록을 저장하는 변수
       localEditMode: this.isEditMode, // `isEditMode` 상태를 local로 관리
@@ -249,6 +252,10 @@ validateForm() {
       }
     },
      async fetchUsersByDept(deptName) {
+        if (!deptName) {
+    this.errorMessage = "담당 부서를 먼저 선택해주세요.";
+    return;
+  }
       const userStore = useUserStore();
       const token = userStore.accessToken;
 
