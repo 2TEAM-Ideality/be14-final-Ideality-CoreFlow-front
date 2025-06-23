@@ -1,6 +1,10 @@
 // stores/taskStore.js
 import { defineStore } from 'pinia';
+<<<<<<< HEAD
 import { useUserStore } from "@/stores/userStore";
+=======
+import api from '@/api';
+>>>>>>> 4fbc54704843b55dae606f91518a31b1101a4193
 
 export const useTaskStore = defineStore('taskStore', {
   state: () => ({
@@ -75,12 +79,8 @@ export const useTaskStore = defineStore('taskStore', {
 
     async fetchItems(parentTaskId, token) {
       try {
-        const response = await fetch(`http://localhost:5000/api/work/detailList?parentTaskId=${parentTaskId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+        const response = await api.get('/api/work/detailList', {
+          params: { parentTaskId }
         });
 
         if (!response.ok) {
@@ -96,13 +96,7 @@ export const useTaskStore = defineStore('taskStore', {
     },
     async fetchTotalProgress(taskId, token) {
       try {
-        const response = await fetch(`http://localhost:5000/api/task/detail/${taskId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await api.get(`/api/task/detail/${taskId}`);
 
         if (!response.ok) {
           throw new Error('태스크 상세 정보 조회 실패');
@@ -120,47 +114,40 @@ export const useTaskStore = defineStore('taskStore', {
       this.items = this.items.filter(item => item.workId !== workId);
     },
 
-     // createItem 메서드
+    // createItem 메서드
     async createItem(form, taskId, token) {
-  // 선행 일정과 후행 일정이 비어 있으면 null로 설정
-  const precedingTasks = Array.isArray(form.precedingTasks) && form.precedingTasks.length > 0 
-    ? form.precedingTasks 
-    : null;
-  const followingTasks = Array.isArray(form.followingTasks) && form.followingTasks.length > 0 
-    ? form.followingTasks 
-    : null;
+      // 선행 일정과 후행 일정이 비어 있으면 null로 설정
+      const precedingTasks = Array.isArray(form.precedingTasks) && form.precedingTasks.length > 0
+        ? form.precedingTasks
+        : null;
+      const followingTasks = Array.isArray(form.followingTasks) && form.followingTasks.length > 0
+        ? form.followingTasks
+        : null;
 
-  const requestData = {
-    projectId: sessionStorage.getItem('projectId'), // 세션에서 프로젝트 ID
-    parentTaskId: taskId, // 부모 작업 ID
-    name: form.name, // 제목
-    description: form.description, // 설명
-    startBase: form.startBase, // 시작 베이스라인
-    endBase: form.endBase, // 마감 베이스라인
-    deptId: form.deptId, // 부서 ID
-    source: form.source, // 선행 일정
-    target: form.target, // 후행 일정
-    assigneeId: form.assigneeId, // 책임자 ID
-    participantIds: form.participantIds, // 참여자 IDs
-  };
+      const requestData = {
+        projectId: sessionStorage.getItem('projectId'), // 세션에서 프로젝트 ID
+        parentTaskId: taskId, // 부모 작업 ID
+        name: form.name, // 제목
+        description: form.description, // 설명
+        startBase: form.startBase, // 시작 베이스라인
+        endBase: form.endBase, // 마감 베이스라인
+        deptId: form.deptId, // 부서 ID
+        source: form.source, // 선행 일정
+        target: form.target, // 후행 일정
+        assigneeId: form.assigneeId, // 책임자 ID
+        participantIds: form.participantIds, // 참여자 IDs
+      };
 
 
       try {
-        const response = await fetch('http://localhost:5000/api/detail/create', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
-        });
+        const response = await api.post('/api/detail/create', requestData);
 
         if (response.ok) {
           const data = await response.json();
           // 성공적으로 제출된 데이터 추가
           this.items = [...this.items, data.data];  // 기존 items 배열을 새로 할당
-           // 세부일정 목록을 다시 불러오는 함수 호출
-      await this.fetchItems(taskId, token);
+          // 세부일정 목록을 다시 불러오는 함수 호출
+          await this.fetchItems(taskId, token);
           return data; // 필요시 추가 처리
         } else {
           const errorData = await response.json();

@@ -61,10 +61,10 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios'
+import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
-const taskId = ref(route.params.taskId);
 
 const isDeleteModalOpen = ref(false);
 const deleteTargetId = ref(null);
@@ -72,12 +72,16 @@ const dropdownIndex = ref(null);
 const sortOrder = ref('asc');
 const comments = ref([]);
 
+const props = defineProps({
+  taskId: { type: [String, Number], required: true }
+})
+
+const taskId = props.taskId;
+
 // 댓글 fetch + 정렬 적용
 const fetchComments = async (id) => {
   try {
-    const res = await axios.get(`http://localhost:5000/api/comment/task/${id}/notice`, {
-      headers: { Authorization: `Bearer ${userStore.accessToken}` }
-    });
+    const res = await api.get(`/comment/task/${id}/notice`);
     comments.value = convertToTree(res.data.data);
     sortComments();
   } catch (error) {
@@ -128,11 +132,9 @@ const closeDeleteModal = () => {
 
 const deleteComment = async () => {
   try {
-    await axios.patch(`http://localhost:5000/api/comment/${deleteTargetId.value}/delete`, {}, {
-      headers: { Authorization: `Bearer ${userStore.accessToken}` }
-    });
+    await api.patch(`/comment/${deleteTargetId.value}/delete`);
     closeDeleteModal();
-    await fetchComments(taskId.value);
+    await fetchComments(taskId);
   } catch (error) {
     const status = error.response?.status;
     if (status === 403 || status === 409) {
@@ -143,10 +145,6 @@ const deleteComment = async () => {
 };
 
 const emit = defineEmits(['edit-comment']);
-
-const props = defineProps({
-  taskId: { type: [String, Number], required: true }
-});
 
 const onEditComment = (comment) => {
   emit('edit-comment', {
@@ -169,7 +167,7 @@ watch(sortOrder, sortComments);
 
 onMounted(() => {
   window.addEventListener('click', handleClickOutside);
-  fetchComments(taskId.value);
+  fetchComments(taskId);
 });
 
 onBeforeUnmount(() => {

@@ -12,32 +12,33 @@
         </div>
 
         <div class="comment-panel">
+        <!-- comment / notice / input 에 모두 task 객체 전달 -->
         <CommentTab
-            v-if="selectedTab === 'comment'"
-            :key="`comment-${refreshKey}`"
-            :taskId="taskId"
-            @edit-comment="handleEditComment"
-            @set-reply="handleSetReply"
-            @comment-updated="refreshKey++" 
+          v-if="selectedTab === 'comment'"
+          :key="`comment-${refreshKey}`"
+          :task="task"
+          @edit-comment="handleEditComment"
+          @set-reply="handleSetReply"
+          @comment-updated="refreshKey++" 
         />
 
         <NoticeTab
-            v-if="selectedTab === 'notice'"
-            :key="`notice-${refreshKey}`" 
-            :taskId="taskId"
-            @edit-comment="handleEditComment"
-            @set-reply="handleSetReply"
-            @comment-updated="refreshKey++"
+          v-if="selectedTab === 'notice'"
+          :key="`notice-${refreshKey}`" 
+          :task="task"
+          @edit-comment="handleEditComment"
+          @set-reply="handleSetReply"
+          @comment-updated="refreshKey++"
         />
         </div>
 
         <TaskCommentInput
-        :taskId="taskId"
-        :replyTargetId="replyTargetId"
-        :replyTargetUser="replyTargetUser"
-        :editData="editData"
-        @reset-reply="resetReply"
-        @comment-updated="refreshKey++"
+          :task="task"
+          :replyTargetId="replyTargetId"
+          :replyTargetUser="replyTargetUser"
+          :editData="editData"
+          @reset-reply="resetReply"
+          @comment-updated="refreshKey++"
         />
 
     </div>
@@ -50,11 +51,13 @@ import NoticeTab from './NoticeTab.vue'
 import TaskCommentInput from './TaskCommentInput.vue'
 
 const props = defineProps({
-  taskId: {
-    type: [Number, String],
+  task: {
+    type: Object,
     required: true
   }
 })
+
+// 예시: task.taskId, task.projectId 등에서 꺼내서 사용 가능
 
 const editData = ref(null);
 const replyTargetId = ref(null);

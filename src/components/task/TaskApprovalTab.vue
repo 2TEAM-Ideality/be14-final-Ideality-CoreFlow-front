@@ -26,6 +26,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
+import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -37,11 +38,7 @@ const taskId = ref(route.params.taskId);
 // 승인된 결재 서류 조회
 const fetchApproval = async() => {
     try {
-        const res = await axios.get(`http://localhost:5000/api/approval/task-approval/${taskId.value}`, {
-            headers: {
-                Authorization: `Bearer ${userStore.accessToken}`
-            }
-        })
+        const res = await api.get(`/approval/task-approval/${taskId.value}`)
         approvalList.value = res.data.data;
         console.log(approvalList.value);
     } catch (error) {

@@ -4,7 +4,7 @@ import {computed} from 'vue'
 import DonutChart from '@/components/common/DonutChart.vue'
 import profileDummy from '@/assets/profileDummy.png'
 import { useRouter } from 'vue-router'
-
+import api from '@/api'
 
 const props = defineProps({
     project:{
