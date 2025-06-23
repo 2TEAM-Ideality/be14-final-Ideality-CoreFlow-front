@@ -311,6 +311,15 @@ const handleStyle = {
 
         <!-- DOT more 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
         <v-btn
+        v-if=" showFullscreenView === true"
+        size="small"
+        variant="text"
+        icon
+        @click.stop="emit('edit', props.id)"
+        ><v-icon style="color: gray;">mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn
+        v-if="showFullscreenView === false"
           @click="goToTask"
           icon
           size="small"

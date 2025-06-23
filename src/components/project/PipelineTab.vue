@@ -198,7 +198,9 @@ function getChildIds(nodeId) {
 }
 
 
+
 function handleCreateNewNode(newNodeData) {
+  console.log(newNodeData)
   const newId = nanoid(6)
 
   const node = {
@@ -291,13 +293,13 @@ async function handleDeleteTask(nodeId) {
 }
 
 // 태스크 정보 수정
-function handleUpdateTask(updatedData) {
-  if (!updatedData || !updatedData.id) return
+async function handleUpdateTask(updatedData) {
+  if (!updatedData || !updatedData.id) return;
 
   const node = nodes.value.find(n => n.id === updatedData.id)
   if (!node) return
 
- // 실제 데이터 수정
+  // 1. 로컬 데이터 수정
   Object.assign(node.data, {
     label: updatedData.label,
     description: updatedData.description,
@@ -306,24 +308,36 @@ function handleUpdateTask(updatedData) {
     deptList: updatedData.deptList
   })
 
-  // TODO. 태스트 수정 요청 
-  // await api.put(`/api/task/${updatedData.id}`, {
-  //   label: updatedData.label,
-  //   description: updatedData.description,
-  //   startBaseLine: updatedData.startBase,
-  //   endBaseLine: updatedData.endBase,
-  //   deptList: updatedData.deptList.map(d => typeof d === 'object' ? d.id : d),
-  // })
+  // 2. 서버에 수정 요청 전송
+  try {
+    const requestBody = {
+      taskId: Number(updatedData.id),
+      projectId: Number(projectId),
+      description: updatedData.description,
+      deptLists: updatedData.deptList,  // 이미 부서명 문자열 리스트
+      prevTaskList: getParentIds(updatedData.id),
+      nextTaskList: getChildIds(updatedData.id),
+      startExpect: updatedData.startBase,
+      endExpect: updatedData.endBase
+    }
 
-  // // 다시 불러와서 반영
-  // await fetchPipeline()
+    await api.put(`/api/task/modify/${updatedData.id}`, requestBody)
+    console.log('✅ 태스크 수정 성공')
 
-  // 반영 후 레이아웃 재적용 (선택)
+    // 선택적으로 다시 불러오기 (동기화)
+    // await fetchPipeline()
+  } catch (err) {
+    console.error('태스크 수정 실패:', err)
+    alert('태스크 수정 요청에 실패했습니다.')
+  }
+
+  // 3. 상태 초기화 및 레이아웃 재정렬
   showEditModal.value = false
   editingNode.value = null
-
-  nextTick(() => layoutGraph('LR'))
+  await nextTick()
+  layoutGraph('LR')
 }
+
 
 
 // 태스크 노드 생성

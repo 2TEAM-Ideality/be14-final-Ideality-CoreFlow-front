@@ -34,9 +34,14 @@
 
     
     <div style="display: flex; flex-direction: row; gap: 50px;">
-      <DonutChart  
+      <div style="width: 250px; height: 250px;">
+        <TaskDonutChart :taskInfo="props.taskData" 
+        :detailList="props.detailList"/>
+      </div>
+     
+      <!-- <CustomDonut  
       :taskInfo="props.taskData" 
-      :detailList="props.detailList" />
+      :detailList="props.detailList" /> -->
       <!-- 담당부서 -->
       <div style="display: flex; flex-direction: column; width: 100%;">
         <div class="form-row">
@@ -180,7 +185,7 @@ import { ref, watch, onMounted, computed, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
-import DonutChart from '@/components/task/DonutChart.vue'
+import TaskDonutChart from '@/components/task/TaskDonutChart.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 
 const route = useRoute();

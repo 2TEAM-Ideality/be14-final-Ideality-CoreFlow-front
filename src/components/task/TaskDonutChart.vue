@@ -1,6 +1,6 @@
 <template>
   <div class="donut-wrapper">
-    <Doughnut :data="chartData.value" :options="chartOptions" />
+    <canvas ref="chartRef"></canvas>
     <div class="center-text">
       <strong>{{ props.taskInfo.selectTask.progressRate }}%</strong>
       <div>완료</div>
@@ -9,82 +9,81 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { Doughnut } from 'vue-chartjs'
+import { onMounted, onUnmounted, watch, ref, computed } from 'vue'
 import {
-  Chart as ChartJS,
-  Title,
+  Chart,
+  ArcElement,
   Tooltip,
   Legend,
-  ArcElement,
+  Title,
+  DoughnutController,
 } from 'chart.js'
 
-ChartJS.register(Title, Tooltip, Legend, ArcElement)
+Chart.register(ArcElement, Tooltip, Legend, Title, DoughnutController)
 
 const props = defineProps({
   taskInfo: { type: Object, required: true },
-  detailList: {
-    type: Array,
-    default: () => []
-  }
+  detailList: { type: Array, default: () => [] }
 })
+
+const chartRef = ref(null)
+let chartInstance = null
 
 const statusCounts = computed(() => {
   const todo = props.detailList.filter(d => d.status === 'PENDING').length
   const delay = props.taskInfo.selectTask?.delayDays || 0
   const doing = props.detailList.filter(d => d.status === 'PROGRESS').length
   const done = props.detailList.filter(d => d.status === 'COMPLETED').length
-
   return [todo, delay, doing, done]
 })
 
-console.log(statusCounts.value )
-
-
-const chartData = computed(() => {
-  if (!props.detailList || !Array.isArray(props.detailList)) {
-    return {
-      labels: [],
-      datasets: []
-    }
+const renderChart = () => {
+  if (chartInstance) {
+    chartInstance.destroy()
   }
 
-  const todo = props.detailList.filter(d => d.status === 'PENDING').length
-  const delay = props.taskInfo?.selectTask?.delayDays || 0
-  const doing = props.detailList.filter(d => d.status === 'PROGRESS').length
-  const done = props.detailList.filter(d => d.status === 'COMPLETED').length
-
-  return {
-    labels: ['해야 할 일', '지연일', '진행 중', '완료'],
+  const data = {
+    labels: ['해야 할 일', '지연 발생', '진행 중', '완료'],
     datasets: [
       {
-        label: '상태 분포',
-        data: [todo, delay, doing, done],
+        data: [1, 1, 1, 1],
         backgroundColor: ['#DADADA', '#FF914D', '#4D91FF', '#56D193'],
         borderWidth: 0
       }
     ]
   }
-})
 
-
-const chartOptions = {
-  cutout: '70%',
-  responsive: true,
-  plugins: {
-    legend: { display: false },
-    tooltip: { enabled: true }
+  const options = {
+    cutout: '70%',
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true }
+    }
   }
-}
-</script>
 
+  chartInstance = new Chart(chartRef.value, {
+    type: 'doughnut',
+    data,
+    options
+  })
+}
+
+onMounted(renderChart)
+onUnmounted(() => chartInstance?.destroy())
+watch(statusCounts, renderChart)
+</script>
 
 <style scoped>
 .donut-wrapper {
   position: relative;
   width: 200px;
+  aspect-ratio: 1 / 1; /* ✅ 정사각형 유지 */
   text-align: center;
-  height: 200px;
+}
+canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 .center-text {
   position: absolute;
