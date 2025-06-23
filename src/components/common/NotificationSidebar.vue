@@ -28,6 +28,7 @@
 import { defineProps,defineEmits,watch } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationStore } from '@/stores/notificationStore';
+import api from '@/api';
 
   const userStore = useUserStore()
   const notificationStore = useNotificationStore()
@@ -61,15 +62,8 @@ const deleteNotification = async (notificationId, isAutoDelete) => {
 
   try {
     // API 요청: 알림의 isAutoDelete를 true로 설정
-    const response = await fetch(`/api/notifications/${notificationId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // 헤더에 토큰 추가
-      },
-      body: JSON.stringify({
-        isAutoDelete: isAutoDelete  // isAutoDelete 값을 던져줌
-      })
+    const response = await api.patch(`/api/notifications/${notificationId}`, {
+      isAutoDelete: isAutoDelete
     });
 
     // 서버에서 반환된 데이터를 파싱

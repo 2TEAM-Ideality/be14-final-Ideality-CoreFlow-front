@@ -2,6 +2,7 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/userStore'
 
 const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL,
     timeout: 50000,
     withCredentials: true
 })
@@ -35,12 +36,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(response => response, async error => {
     const originalRequest = error.config
     const userStore = useUserStore()
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true
 
         if (isRefreshing) {
-            return new Promise((resolve, reject)=> {
+            return new Promise((resolve, reject) => {
                 failedQueue.push({
                     resolve: (token) => {
                         originalRequest.headers.Authorization = `Bearer ${token}`
@@ -50,7 +51,7 @@ api.interceptors.response.use(response => response, async error => {
                 })
             })
         }
-            
+
         isRefreshing = true
 
         try {
