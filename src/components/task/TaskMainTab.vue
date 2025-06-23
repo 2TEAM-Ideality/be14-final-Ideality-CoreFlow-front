@@ -143,6 +143,7 @@ import DetailTab from './DetailTab.vue'
 import { defineEmits } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
+import api from "@/api";
 
 const emit = defineEmits()
 const openModal = () => {

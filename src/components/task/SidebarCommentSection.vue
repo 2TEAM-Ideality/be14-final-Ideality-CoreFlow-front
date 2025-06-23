@@ -33,7 +33,8 @@
         </div>
 
         <TaskCommentInput
-          :task="task"
+          :taskId="task.taskId"
+          :projectId="task.projectId"
           :replyTargetId="replyTargetId"
           :replyTargetUser="replyTargetUser"
           :editData="editData"
