@@ -404,6 +404,7 @@ onMounted(() => {
   padding: 6px 40px;
   font-size: 14px;
   cursor: pointer;
+  margin-right: 2%;
 }
 .modal-overlay {
     position: fixed;

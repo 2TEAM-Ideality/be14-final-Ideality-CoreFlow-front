@@ -465,10 +465,18 @@ const handleStyle = {
 }
 .node-toolbar {
   width: 220px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 6px;
 }
 .toolbar-list {
-  padding: 0;
-  width: 100%;
+  border: none;
+  font-size: 13px !important;
+  text-align: left;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: #333;
 }
 .add-btn {
   position: absolute;

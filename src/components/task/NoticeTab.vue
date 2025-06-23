@@ -223,6 +223,7 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   /* padding-right: 12px; */
   padding-right: 10%;
+  text-align: left;
   padding-bottom: 15px;
 }
 

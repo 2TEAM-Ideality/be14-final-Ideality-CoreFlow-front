@@ -50,10 +50,22 @@
             </ul>
         </div>
     
-    <div v-if="selectedFileName" class="file-name">
+      <div v-if="selectedFileName" class="file-name d-flex align-center">
+        첨부파일: {{ selectedFileName }}
+        <v-btn
+          icon
+          size="x-small"
+          class="ml-2"
+          color="grey-darken-1"
+          @click="removeFile"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </div>
+    <!-- <div v-if="selectedFileName" class="file-name">
         첨부파일: {{ selectedFileName }}
         <button @click="removeFile">❌</button>
-    </div>
+    </div> -->
     <!-- <div class="options">
         <label><input type="checkbox" v-model="isNotice" /> 공지</label>
         <v-btn class="submit-btn" @click="handleSubmit" variant="flat">

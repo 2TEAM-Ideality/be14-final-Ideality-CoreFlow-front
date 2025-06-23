@@ -1,12 +1,12 @@
 <template>
     <v-container class="py-4" @click="clearSelection">
-        <h2>결재 내역</h2>
-        <v-tabs v-model="currentTab" background-color="transparent" grow>
+        <h3 class="mb-5">결재 내역</h3>
+        <v-tabs v-model="currentTab" background-color="transparent" class="approval-tab">
             <v-tab value="received"  @click="selectTab('received')">수신</v-tab>
             <v-tab value="sent"  @click="selectTab('sent')">발신</v-tab>
         </v-tabs>
         <v-table>
-        <thead>
+        <thead style="background-color: #F8F8F8; height: 20px; ">
             <tr>
             <th class="text-left">{{ currentTab === 'received' ? '보낸 사람' : '받는 사람' }}</th>
             <th class="text-left">제목</th>
@@ -194,9 +194,20 @@ watch(currentPage, (newVal) => {
   border-collapse: collapse;
   margin-top: 12px;
 }
+::v-deep thead {
+  height: 20px !important;
+}
 
+::v-deep thead th {
+    height: 20px;
+  font-size: 13px;
+}
+.th.text-left {
+    height: 20px;
+}
 .history-table th {
     text-align: left;
+    height: 20px;
     padding: 12px;
     border-bottom: 1px solid #ddd;
 }

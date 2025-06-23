@@ -371,6 +371,7 @@ watch(() => taskId, (newId) => {
   /* padding-right: 12px; */
   padding-right: 10%;
   padding-bottom: 15px;
+  text-align: left;
 }
 /* comment list 스크롤 */
 .comment-list::-webkit-scrollbar {
