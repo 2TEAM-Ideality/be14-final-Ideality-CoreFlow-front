@@ -185,6 +185,7 @@ validateForm() {
 }
 ,
     closeModal() {
+      this.errorMessage = "";  // 오류 메시지 초기화
       this.$emit('close-modal'); // 부모 컴포넌트에 모달 닫기 이벤트 전달
     },
     openEditModal() {
@@ -207,27 +208,31 @@ validateForm() {
       }
 
       try {
-        const response = await api.get(`/work/detail`, {
+        const response = await api.get(`/api/work/detail`, {
           params: { workId }
         });
+          if (response.status === 200) {
+          this.taskDetails = response.data.data;
 
-        if (!response.ok) {
-          throw new Error('네트워크 응답이 정상적이지 않습니다.');
-        }
+          // 수정 모드일 때, 부서 정보를 기본값으로 설정
+          const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
+          if (selectedDept) {
+            this.taskDetails.deptName = selectedDept.deptName; // deptName을 부서 이름으로 설정
+            this.fetchUsersByDept(selectedDept.deptName); // 부서 이름으로 사용자 목록 가져오기
+          }
 
-        const data = await response.json();
-        this.taskDetails = data.data;
-
-        // 수정 모드일 때, 부서 정보를 기본값으로 설정
-        const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
-        if (selectedDept) {
-          this.taskDetails.deptName = selectedDept.deptName; // deptName을 부서 이름으로 설정
-          this.fetchUsersByDept(selectedDept.deptName); // 부서 이름으로 사용자 목록 가져오기
+          // 수정 모드일 때, 참여자와 담당자 목록을 부서명으로 자동 설정
+          if (this.localEditMode) {
+            this.fetchUsersByDept(this.taskDetails.deptName); // 부서명으로 사용자 목록 자동 불러오기
+          }
+        } else {
+          console.error("세부일정 조회 실패:", response.status);
         }
       } catch (error) {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
       }
-    }, async fetchDepartments() {
+    },
+     async fetchDepartments() {
       const userStore = useUserStore();
       const token = userStore.accessToken;
 
@@ -237,18 +242,18 @@ validateForm() {
       }
 
       try {
-        const response = await api.get('/dept/all');
+        const response = await api.get('/api/dept/all');
 
-        if (response.ok) {
-          const data = await response.json();
-          this.departments = data.data; // 부서 데이터를 departments에 저장
+        if (response.status === 200) {
+          this.departments = response.data.data; // 부서 데이터를 departments에 저장
         } else {
           console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status);
         }
       } catch (error) {
         console.error("부서 데이터를 불러오는 데 실패했습니다:", error);
       }
-    }, async fetchUsersByDept(deptName) {
+    },
+     async fetchUsersByDept(deptName) {
       const userStore = useUserStore();
       const token = userStore.accessToken;
 
@@ -259,14 +264,12 @@ validateForm() {
 
       try {
         console.log("Fetching users for dept:", deptName); // 부서명 확인
-        const response = await api.get('/users/dept', {
+        const response = await api.get('/api/users/dept', {
           params: { deptName }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Fetched users:", data.data); // 사용자 목록 출력
-          this.users = data.data; // 사용자 목록을 users에 저장
+        if (response.status === 200) {
+          this.users = response.data.data; // 사용자 목록을 users에 저장
         } else {
           console.error("사용자 데이터를 가져오는 데 실패했습니다:", response.status);
         }
@@ -317,21 +320,24 @@ validateForm() {
         progress: this.taskDetails.progressRate,
       };
 
-      const response = await api.put(`/detail/update/${this.workId}`, updatedData)
-        .then(response => response.json())
-        .then(async (data) => {
-          console.log('세부일정 업데이트 성공:', data);
+       try {
+        const response = await api.put(`/api/detail/update/${this.workId}`, updatedData);
+        
+        if (response.status === 200) {
+          console.log('세부일정 업데이트 성공:', response.data);
           await this.fetchTaskDetails(this.workId);
           const route = useRoute();
-        const parentTaskId = route.params.taskId;
+          const parentTaskId = route.params.taskId;
           await taskStore.fetchTotalProgress(parentTaskId, token); // 총 진척률 가져오기
 
           this.$emit('update-task', this.taskDetails);
           this.$emit('close-modal');
-        })
-        .catch(error => {
-          console.error('세부일정 업데이트 오류:', error);
-        });
+        } else {
+          console.error('세부일정 업데이트 오류:', response.status);
+        }
+      } catch (error) {
+        console.error('세부일정 업데이트 오류:', error);
+      }
     },
     async deleteTask() {
       const userStore = useUserStore();
@@ -343,22 +349,19 @@ validateForm() {
       }
 
       try {
-        const response = await api.patch(`/detail/${this.workId}/delete`);
+        const response = await api.patch(`/api/detail/${this.workId}/delete`);
+       
+        if (response.status === 200) {
+          console.log('세부일정 삭제 성공:', response.data);
 
-        if (!response.ok) {
-          throw new Error('세부일정 삭제 실패');
+          // Store에서 삭제된 항목을 즉시 반영
+          const taskStore = useTaskStore();
+          taskStore.removeItem(this.workId); // 작업 삭제 후 store에서 해당 항목 제거
+
+          this.$emit('close-modal');
+        } else {
+          console.error('세부일정 삭제 실패:', response.status);
         }
-
-        const data = await response.json();
-
-        console.log('세부일정 삭제 성공:', data);
-
-              // Store에서 삭제된 항목을 즉시 반영
-      const taskStore = useTaskStore();
-      taskStore.removeItem(this.workId); // 작업 삭제 후 store에서 해당 항목 제거
-
-      
-        this.$emit('close-modal');
       } catch (error) {
         console.error('세부일정 삭제 오류:', error);
       }

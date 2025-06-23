@@ -143,6 +143,7 @@ import DetailTab from './DetailTab.vue'
 import { defineEmits } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
+import api from '@/api';
 
 const emit = defineEmits()
 const openModal = () => {
@@ -280,20 +281,17 @@ const fetchTasks = async () => {
   }
 
   try {
-    // 부모 컴포넌트에서 전달된 taskId를 사용하여 API 호출
-    const response = await api.get(`/work/detail/nameList`, {
+    const response = await api.get(`/api/work/detail/nameList`, {
       params: { parentTaskId: props.taskData.selectTask.taskId }
-    })
+    });
 
-    const data = await response.json()
-
-    if (response.ok) {
-      tasks.value = data.data // API 응답에서 task 목록을 tasks에 저장
+    if (response.status === 200) {
+      tasks.value = response.data.data; // API 응답에서 task 목록을 tasks에 저장
     } else {
-      console.error('API 호출 실패', data.message)
+      console.error('API 호출 실패', response.data.message);
     }
   } catch (error) {
-    console.error('API 호출 오류', error)
+    console.error('API 호출 오류', error);
   }
 }
 
@@ -310,16 +308,14 @@ const fetchDepartments = async () => {
   }
 
   try {
-    const response = await api.get(`/dept/all`)
-
-    if (response.ok) {
-      const data = await response.json()
-      departments.value = data.data
+    const response = await api.get(`/api/dept/all`)
+    if (response.status === 200) {
+      departments.value = response.data.data; // 부서 데이터를 departments에 저장
     } else {
-      console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status)
+      console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status);
     }
   } catch (error) {
-    console.error("부서 데이터를 불러오는 데 실패했습니다:", error)
+    console.error("부서 데이터를 불러오는 데 실패했습니다:", error);
   }
 }
 
@@ -342,13 +338,12 @@ const fetchUsersForDepartment = async () => {
     const deptName = selectedDept ? selectedDept.deptName : ''; // deptName을 가져오기
 
     console.log("Fetching users for dept:", deptName); // 부서명 확인
-    const response = await api.get(`/users/dept`, {
+    const response = await api.get(`/api/users/dept`, {
       params: { deptName }
     })
 
-    if (response.ok) {
-      const data = await response.json();
-      users.value = data.data; // 부서에 해당하는 사용자 목록을 users 배열에 저장
+    if (response.status === 200) {
+      users.value = response.data.data; // 부서에 해당하는 사용자 목록을 users 배열에 저장
     } else {
       console.error("사용자 데이터를 가져오는 데 실패했습니다:", response.status);
     }
