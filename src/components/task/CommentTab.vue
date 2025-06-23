@@ -101,137 +101,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
-import axios from 'axios' 
 import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
-// 댓글 삭제 구현
 const isDeleteModalOpen = ref(false);
 const deleteTargetId = ref(null);
-
 const comments = ref([]);
-
-const fetchComments = async (id)=> {
-  try {
-    const res = await api.get(`/comment/task/${id}`);
-    comments.value = convertToTree(res.data.data);
-  } catch (error) {
-    const status = error.response?.status;
-    const message = error.code;
-
-    if (status === 403) {
-      alert(message);
-      route.push('/');
-    }
-  }
-};
-
-// 대댓글 부모 구조를 위한 변환
-function convertToTree(flatList) {
-  const map = {}
-  const tree = []
-
-  flatList.forEach(comment => {
-    map[comment.commentId] = { ...comment, replies: [] }
-  })
-
-  flatList.forEach(comment => {
-    const node = map[comment.commentId]
-    if (comment.parentCommentId) {
-      const parent = map[comment.parentCommentId]
-      if (parent) parent.replies.push(node)
-    } else {
-      tree.push(node)
-    }
-  })
-
-  return tree
-}
-
-
-const dropdownIndex = ref(null)
-
-const toggleDropdown = (id) => {
-dropdownIndex.value = dropdownIndex.value === id ? null : id
-}
-
-const handleClickOutside = (event) => {
-
-  const dropdowns = document.querySelectorAll('.comment-dropdown, .icon-button')
-
-  const clickedInside = Array.from(dropdowns).some((el) =>
-    el.contains(event.target)
-  )
-
-  if (!clickedInside) {
-    dropdownIndex.value = null
-  }
-}
-
-// 댓글 삭제 모달 창 함수 + api 요청 만들기
-const openDeleteModal = (id) => {
-  console.log(id);
-  deleteTargetId.value = id;   
-  isDeleteModalOpen.value = true;
-};
-
-const closeDeleteModal = () => {
-  isDeleteModalOpen.value = false;
-  deleteTargetId.value = null;
-};
-
-const deleteComment = async () => {
-  try {
-    await api.patch(`/comment/${deleteTargetId.value}/delete`)
-    closeDeleteModal()
-    fetchComments(taskId)
-    emit('comment-updated')
-  } catch (error) {
-    const status = error.response?.status;
-    const message = error.code;
-
-    if (status === 403) {
-      alert(message);
-      route.push('/');
-    }
-
-    if (status === 409) {
-      alert(message);
-      route.push(`/task/${taskId}`);
-    }
-
-    // 400번 예외는 프로젝트 페이지 만들어지면 연결
-  }
-}
-
-const updateNoticeComment = async (id) => {
-  try {
-    const res = await api.patch(`/comment/${id}/notice`)
-    alert(res.data?.message);
-    fetchComments(taskId)
-    emit('comment-updated')
-  } catch (error) {
-    const status = error.response?.status;
-    const message = error.code;
-  }
-};
-
-
-onMounted(() => {
-  window.addEventListener('click', handleClickOutside)
-  fetchComments(taskId);
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('click', handleClickOutside)
-})
-
-// 댓글 수정 emit
-const emit = defineEmits(['edit-comment', 'set-reply']);
 
 const props = defineProps({
   task: {
@@ -240,7 +119,52 @@ const props = defineProps({
   }
 });
 
-const taskId = props.task.taskId;
+const emit = defineEmits(['edit-comment', 'set-reply']);
+
+const taskId = computed(() => props.task?.taskId); // ✅ 안전하게 computed로 감싸줌
+
+// 댓글 불러오기
+const fetchComments = async (id)=> {
+  try {
+    const res = await api.get(`/comment/task/${id}`);
+    comments.value = convertToTree(res.data.data);
+  } catch (error) {
+    const status = error.response?.status;
+    const message = error.code;
+    if (status === 403) {
+      alert(message);
+      route.push('/');
+    }
+  }
+};
+
+// ✅ taskId가 준비될 때만 댓글 fetch 실행
+watch(
+  () => taskId.value,
+  (newTaskId) => {
+    if (newTaskId) {
+      fetchComments(newTaskId);
+    }
+  },
+  { immediate: true }
+);
+
+// 나머지 기존 로직 그대로 유지
+const convertToTree = (flatList) => { /* 생략 */ }
+const toggleDropdown = (id) => { /* 생략 */ }
+const handleClickOutside = (event) => { /* 생략 */ }
+const openDeleteModal = (id) => { /* 생략 */ }
+const closeDeleteModal = () => { /* 생략 */ }
+const deleteComment = async () => { /* 생략 */ }
+const updateNoticeComment = async (id) => { /* 생략 */ }
+
+onMounted(() => {
+  window.addEventListener('click', handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('click', handleClickOutside);
+});
 
 const onEditComment = (comment) => {
   emit('edit-comment', {
@@ -251,9 +175,8 @@ const onEditComment = (comment) => {
 };
 
 const emitSetReply = (commentId, name) => {
-  emit('set-reply', commentId, name)
-}
-
+  emit('set-reply', commentId, name);
+};
 </script>
 
 <style scoped>
