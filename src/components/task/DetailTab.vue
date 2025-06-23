@@ -40,7 +40,7 @@
               v-else-if="item.status === 'COMPLETED'" 
               icon small
               class="no-round-btn" 
-              style="background-color: transparent; color: rgb(0, 128, 0);" disabled> <!-- 초록색 완료 버튼 (비활성화) -->
+              style="background-color: transparent; color: rgb(0, 128, 0);"> <!-- 초록색 완료 버튼 (비활성화) -->
               <v-icon>mdi-check-circle</v-icon> <!-- 완료 버튼 아이콘 -->
             </v-btn>
           </td>
@@ -132,19 +132,31 @@ export default {
     }
   },
   methods: {
-      // 상태 변경 전 확인 대화상자
-    confirmAndUpdateStatus(item, newStatus) {
-      if (newStatus === "COMPLETED" && item.status === "COMPLETED") {
-          this.dialogMessage = "진척률이 100%가 아닙니다!";
-          this.showDialog = true; // 경고창 표시
-          return; // 진행 중인 상태로 유지
-      }
+confirmAndUpdateStatus(item, newStatus) {
+  if (item.status === "COMPLETED") {
+    this.dialogMessage = "이미 완료된 일정입니다!";
+    this.showDialog = true; // 경고창 표시
+    return; // 진행 중인 상태로 유지
+  }
 
-      this.dialogMessage = `해당 일정을 ${newStatus === "PROGRESS" ? "시작" : "완료"}하시겠습니까?`;
-      this.itemToUpdate = item;
-      this.newStatus = newStatus;
-      this.showDialog = true;
-    },
+  // 진척률이 100% 미만일 경우
+  if (newStatus === "COMPLETED" && item.progressRate < 100) {
+    this.dialogMessage = "진척률이 100%가 아닙니다!";
+    this.showDialog = true; // 경고창 표시
+    return; // 진행 중인 상태로 유지
+  }
+
+  this.dialogMessage = `해당 일정을 ${newStatus === "PROGRESS" ? "시작" : "완료"}하시겠습니까?`;
+  this.itemToUpdate = item;
+  this.newStatus = newStatus;
+  this.showDialog = true;
+},
+
+    handleCompletedStatus(item) {
+  this.dialogMessage = "이미 완료된 일정입니다!";
+  this.showDialog = true; // 경고창 표시
+}
+,
 
     // 확인 후 상태 변경
     async confirmStatusChange() {
@@ -175,6 +187,8 @@ export default {
       const token = userStore.accessToken;
       const taskStore = useTaskStore();
       await taskStore.fetchTotalProgress(parentTaskId, token); // 수정 후 totalProgress 갱신
+       // 리스트를 다시 불러와서 상태 반영
+    await taskStore.fetchItems(parentTaskId, token);
   },
 
 
