@@ -1,10 +1,7 @@
 // stores/taskStore.js
 import { defineStore } from 'pinia';
-<<<<<<< HEAD
 import { useUserStore } from "@/stores/userStore";
-=======
 import api from '@/api';
->>>>>>> 4fbc54704843b55dae606f91518a31b1101a4193
 
 export const useTaskStore = defineStore('taskStore', {
   state: () => ({
