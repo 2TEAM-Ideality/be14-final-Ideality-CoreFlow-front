@@ -5,6 +5,7 @@
             <v-tab value="received"  @click="selectTab('received')">수신</v-tab>
             <v-tab value="sent"  @click="selectTab('sent')">발신</v-tab>
         </v-tabs>
+        <input type="text" placeholder="검색 🔍" class="approval-search" v-model="searchApproval"/>
         <v-table>
         <thead style="background-color: #F8F8F8; height: 20px; ">
             <tr>
@@ -68,6 +69,7 @@ function selectTab(type) {
     currentTab.value = type
 }
 
+const searchApproval = ref('')
 const currentTab = ref('received')
 
 const approvalData = ref([])
@@ -91,10 +93,13 @@ onMounted(() => {
 
 
 const displayedList = computed(() => {
-    console.log('displayed', displayedList.value)
-    return currentTab.value === 'received'
-    ? approvalData.value.receivedApproval
-    : approvalData.value.sentApproval
+    const list = currentTab.value === 'received'
+    ? approvalData.value.receivedApproval ?? []
+    : approvalData.value.sentApproval ?? []
+
+    return list.filter(item =>
+        !searchApproval.value || item.title.includes(searchApproval.value)
+    )
 })
 function chipColor(status) {
   switch (status) {
@@ -161,6 +166,7 @@ function goToPage(page) {
 
 watch(currentPage, (newVal) => {
     targetPage.value = newVal
+    searchApproval.value = ''
 })
 </script>
 
@@ -174,6 +180,7 @@ watch(currentPage, (newVal) => {
   margin-bottom: 16px;
   margin-top: 12px;
   border-bottom: 1px solid #ccc;
+  justify-content: space-between;
 }
 
 .tabs button {
@@ -258,6 +265,16 @@ watch(currentPage, (newVal) => {
     .pagination-btn:hover {
         background-color: black;
         color: white
+    }
+
+    
+    .approval-search {
+        width: 200px;
+        padding: 3px;
+        padding-left: 12px;
+        background-color: white;
+        border-radius: 20px;
+        border: 1px solid gray;
     }
 .status-cell {
   vertical-align: middle;

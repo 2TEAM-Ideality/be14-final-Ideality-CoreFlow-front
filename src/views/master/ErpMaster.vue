@@ -4,36 +4,20 @@
             <table>
                     <thead>
                         <tr>
-                            <th>이름</th>
-                            <th>부서</th>
-                            <th>직위</th>
-                            <th>직책</th>
-                            <th>프로젝트 생성 권한</th>
-                            <th>계정 상태</th>
+                            <th>회사 명</th>
+                            <th>회사 코드</th>
+                            <th>DB 명</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- <tr v-for="(user, index) in paginatedUsers" :key="index" @click="handelUserClick(user.id)">
-                            <td>{{ user.name }}</td>
-                            <td>{{ user.deptName }}</td>
-                            <td>{{ user.jobRankName }}</td>
-                            <td>{{ user.jobRoleName }}</td>
-                            <td>{{ user.isCreation ? 'O' : 'X' }}</td>
-                            <td>
-                                <div
-                                    :style="{ 
-                                        color: user.isResign ? 'red' : 'blue',
-                                        backgroundColor: user.isResign ? '#ffdddd' : '#ddddff'
-                                    }"
-                                    class = "active-card"
-                                >
-                                    {{ user.isResign ? '비활성' : '활성' }}
-                                </div>
-                            </td>
-                        </tr> -->
+                        <tr v-for="(tenant, index) in tenantList" :key="index">
+                            <td>{{ tenant.companyName }}</td>
+                            <td>{{ tenant.companyCode }}</td>
+                            <td>{{ tenant.schemaName }}</td>
+                        </tr>
                     </tbody>
                 </table>
-                <div>{{ tenantList }}</div>
+                <!-- <div>{{ tenantList }}</div> -->
         </div>
     </div>
 </template>
@@ -73,6 +57,7 @@ onMounted(() => {
     }
     .content {
         border: 1px solid black;
+        width: 80%;
     }
     table {
         width: 100%;
