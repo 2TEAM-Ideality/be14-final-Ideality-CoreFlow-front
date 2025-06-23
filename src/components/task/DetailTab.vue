@@ -1,8 +1,10 @@
 <template>
   <div class="container">
+    <!-- 세부일정 테이블 -->
     <table class="progress-table">
       <thead>
         <tr>
+          <th>상태</th> <!-- 상태 컬럼 왼쪽으로 배치 -->
           <th>세부일정명</th>
           <th>담당부서</th>
           <th>예상마감일</th>
@@ -13,6 +15,36 @@
       </thead>
       <tbody>
         <tr v-for="(item, index) in items" :key="index" @click="openModal(item.workId)" style="cursor: pointer;">
+          <!-- 상태 버튼 -->
+          <td>
+            <!-- 상태에 따라 다른 버튼을 보여줌 -->
+            <v-btn 
+              v-if="item.status === 'PENDING'" 
+              @click.stop="confirmAndUpdateStatus(item, 'PROGRESS')" 
+              icon small
+              class="no-round-btn" 
+              style="background-color: transparent; color: rgb(0, 0, 0);"> <!-- 검정색 시작 버튼 -->
+              <v-icon>mdi-play-circle</v-icon> <!-- 시작 버튼 아이콘 -->
+            </v-btn>
+
+            <v-btn 
+              v-else-if="item.status === 'PROGRESS'" 
+              @click.stop="confirmAndUpdateStatus(item, 'COMPLETED')" 
+              icon small
+              class="no-round-btn" 
+              style="background-color: transparent; color: rgb(0, 0, 255);"> <!-- 파란색 진행 버튼 -->
+              <v-icon>mdi-pause-circle</v-icon> <!-- 진행 중 버튼 아이콘 -->
+            </v-btn>
+
+            <v-btn 
+              v-else-if="item.status === 'COMPLETED'" 
+              icon small
+              class="no-round-btn" 
+              style="background-color: transparent; color: rgb(0, 128, 0);" disabled> <!-- 초록색 완료 버튼 (비활성화) -->
+              <v-icon>mdi-check-circle</v-icon> <!-- 완료 버튼 아이콘 -->
+            </v-btn>
+          </td>
+          
           <td>{{ item.taskName }}</td>
           <td>{{ item.deptName }}</td>
           <td>{{ item.endExpect }}</td>
@@ -33,6 +65,17 @@
       @update-task="updateTaskInList" 
     />
     
+    <!-- 확인 대화상자 -->
+    <v-dialog v-model="showDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="headline">{{ dialogMessage }}</v-card-title>
+        <v-card-actions>
+          <v-btn color="primary" @click="confirmStatusChange">확인</v-btn>
+          <v-btn color="grey" @click="cancelStatusChange">취소</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    
     <div class="total-progress">
       <p class="right-align">총 진척률: {{ totalProgress }}%</p>
     </div>
@@ -44,6 +87,8 @@ import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import TaskModal from "@/components/task/DetailModal.vue"; // 모달 컴포넌트 import
+import { mdiPlayCircle, mdiPauseCircle, mdiCheckCircle } from '@mdi/js'; // MDI 아이콘 import
+import { ref } from 'vue'; // ref 추가 (경고창 처리)
 
 export default {
   components: {
@@ -51,11 +96,14 @@ export default {
   },
   data() {
     return {
-
       totalProgress: 0,
       selectedWorkId: null, // 클릭한 세부일정의 workId 저장
       isModalVisible: false, // 모달 표시 여부
       isEditMode: false, // 수정 모드 상태
+      showDialog: ref(false), // 확인 대화상자 상태
+      dialogMessage: ref(''), // 확인 메시지 내용
+      itemToUpdate: null, // 확인을 위한 임시 아이템
+      newStatus: null, // 새로운 상태값
     };
   },
   computed: {
@@ -64,7 +112,6 @@ export default {
       const taskStore = useTaskStore();
       return taskStore.items.filter(item => item.status !== "DELETED");
     },
-        // totalProgress 값을 userStore에서 가져오기
     totalProgress() {
       const taskStore = useTaskStore();
       return taskStore.totalProgress;
@@ -85,20 +132,36 @@ export default {
     }
   },
   methods: {
-      async updateTaskInList(updatedTask) {
-    const index = this.items.findIndex(item => item.workId === updatedTask.workId);
-    if (index !== -1) {
-      // 수정된 항목을 배열에서 업데이트
-      this.items.splice(index, 1, updatedTask);
-    }
-          // 수정 후 totalProgress 갱신
-      const route = useRoute();
-      const parentTaskId = route.params.taskId;
-      const userStore = useUserStore();
-      const token = userStore.accessToken;
+    // 대화상자를 표시하고 상태 변경을 확인받는 함수
+    confirmAndUpdateStatus(item, newStatus) {
+      if (newStatus === 'COMPLETED' && item.status === 'COMPLETED') {
+        // 완료 상태에서는 더 이상 상태를 변경할 수 없음
+        return;
+      }
+      
+      if (newStatus === 'PENDING' || newStatus === 'PROGRESS') {
+        this.dialogMessage = `해당 일정을 ${newStatus === 'PROGRESS' ? '시작' : '완료'}하시겠습니까?`;
+      } else if (newStatus === 'COMPLETED') {
+        this.dialogMessage = `해당 일정을 완료하시겠습니까?`;
+      }
+      
+      this.itemToUpdate = item;
+      this.newStatus = newStatus;
+      this.showDialog = true;
+    },
+    
+    // 대화상자에서 확인 후 상태 변경
+    confirmStatusChange() {
       const taskStore = useTaskStore();
-      await taskStore.fetchTotalProgress(parentTaskId, token); // 수정 후 totalProgress 갱신
-  },
+      this.itemToUpdate.status = this.newStatus;
+      taskStore.updateItemStatus(this.itemToUpdate); // 상태 변경
+      this.showDialog = false; // 대화상자 닫기
+    },
+
+    // 대화상자 닫기
+    cancelStatusChange() {
+      this.showDialog = false;
+    },
 
     openModal(workId) {
       this.selectedWorkId = workId; // 클릭한 세부일정의 workId 저장
@@ -114,7 +177,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 .container {
@@ -152,5 +214,22 @@ export default {
 
 .right-align {
   text-align: right; /* 총 진척률 오른쪽 정렬 */
+}
+
+/* 아이콘이 원에 감싸지지 않도록 버튼 스타일 수정 */
+.no-round-btn {
+  border-radius: 0; /* 기본 원 모양 제거 */
+  background-color: transparent; /* 배경 없애기 */
+  box-shadow: none; /* 그림자 없애기 */
+}
+
+.v-btn {
+  font-size: 16px;
+  padding: 0; /* 버튼 크기 최소화 */
+  margin: 0; /* 버튼 간격 없애기 */
+}
+
+.v-btn small {
+  font-size: 14px; /* 작은 버튼 사이즈 */
 }
 </style>

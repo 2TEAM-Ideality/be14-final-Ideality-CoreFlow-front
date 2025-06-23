@@ -8,6 +8,12 @@ export const useTaskStore = defineStore('taskStore', {
   }),
 
   actions: {
+        updateItemStatus(updatedItem) {
+      const index = this.items.findIndex(item => item.workId === updatedItem.workId);
+      if (index !== -1) {
+        this.items[index] = updatedItem; // 상태 변경
+      }
+    },
     async fetchItems(parentTaskId, token) {
       try {
         const response = await fetch(`http://localhost:5000/api/work/detailList?parentTaskId=${parentTaskId}`, {
