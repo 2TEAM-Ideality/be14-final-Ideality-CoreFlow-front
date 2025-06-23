@@ -100,7 +100,7 @@
                 </select>
               </td>
             </tr>
-            <tr v-if="taskDetails && taskDetails.participants">
+            <tr v-if="taskDetails && Array.isArray(taskDetails.participants)">
               <td colspan="2"><strong>참여자</strong></td>
               <td colspan="2" v-if="!localEditMode">{{taskDetails.participants.map(p => p.name).join(', ')}}</td>
               <td colspan="2" v-if="localEditMode">
@@ -190,11 +190,6 @@ validateForm() {
     },
     openEditModal() {
       this.localEditMode = true; // 수정 모드로 전환
-
-    // 수정 모드일 때 assignees와 participants 초기화
-    this.taskDetails.assignees =[]; // assignees가 없으면 빈 배열로 설정
-    this.taskDetails.participants =  []; // participants가 없으면 빈 배열로 설
-
       this.$emit('open-edit-modal');
       
     },
