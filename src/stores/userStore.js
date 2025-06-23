@@ -120,7 +120,7 @@ export const useUserStore = defineStore('user', () => {
         if (!savedUser || !refreshToken) return
 
         try {
-            const response = await api.post('/api/auth/reissue', {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/reissue`, {
                 userId: parsedUser.id,
                 companySchema: schemaName
             })

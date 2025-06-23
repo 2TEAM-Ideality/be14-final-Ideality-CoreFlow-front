@@ -55,7 +55,7 @@ api.interceptors.response.use(response => response, async error => {
         isRefreshing = true
 
         try {
-            const res = await api.post('/api/auth/reissue', {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/reissue`, {
                 userId: userStore.id,
                 companySchema: userStore.schemaName
             })

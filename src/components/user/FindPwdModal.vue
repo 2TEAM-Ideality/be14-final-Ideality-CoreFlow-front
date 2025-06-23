@@ -112,7 +112,7 @@
 
         isLoading.value = true
         try {
-            await api.post('/auth/reset-password/request', {
+            await axios.post(`${import.meta.env.VITE_API_URL}/auth/reset-password/request`, {
                 companyCode: companyCode.value,
                 employeeNum: employeeNum.value,
                 name: name.value,
@@ -136,11 +136,11 @@
 
         isLoading.value = true
         try {
-            await api.post('/api/auth/reset-password/verify', {
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/reset-password/verify`, {
                 companyCode: companyCode.value,
                 email: email.value,
                 verificationCode: verificationCode.value
-            })
+            });
 
             alert('임시 비밀번호가 이메일로 전송되었습니다.')
             emit('close')
