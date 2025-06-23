@@ -1,176 +1,230 @@
 <template>
-    <div class="modal-overlay">
-        <div class="modal">
-            <div class="modal-content">
-                <input v-model="search" placeholder="이름 검색" class="input-box" />
+  <v-dialog v-model="dialog" persistent max-width="700px" height="750px">
+    <v-card class="participant-card">
+      <v-card-title class="text-h6 header-title">결재자 선택</v-card-title>
 
+      <v-card-text class="main-area" style="display: flex; flex-direction: row; gap: 20px; justify-content: space-between;">
+        <!-- 왼쪽 영역: 사용자 목록 -->
+        <div style="width: 450px;">
+          <v-text-field
+            v-model="search"
+            label="이름 검색"
+            variant="outlined"
+            density="compact"
+            append-inner-icon="mdi-magnify"
+            class="mb-4"
+          />
 
-                <div v-for="user in paginatedUsers" :key="user.id">
-                    <label>
-                        <input
-                            v-if="props.type === 'viewer'"
-                            type="checkbox"
-                            v-model="selectedUsers"
-                            :value="user"
-                        />
-                        <input
-                            v-else
-                            type="radio"
-                            name="approver"
-                            v-model="selectedUser"
-                            :value="user"
-                        />
-                        {{ user.deptName}}_{{ user.name }}
-                    </label>
-                </div>
-
-                <!-- 페이지네이션 UI -->
-                <div class="pagination">
-                    <button class="pagination-btn" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">이전</button>
-                    <input type="number" v-model="targetPage" style="width: 40px; border: 1px solid black; border-radius: 6px; text-align: end;"/>
-                    <span>/ {{ totalPages }}</span>
-                    <button class="pagination-btn" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">다음</button>
-                    <button class="pagination-btn" @click="goToPage(targetPage)">이동</button>
-                </div>
-
-                <div class="btn-group">
-                    <button class="btn close-btn" @click="$emit('close')">취소</button>
-                    <button class="btn confirm-btn" @click="confirmSelection">확인</button>
-                </div>
-            </div>
+          <div class="group-scroll">
+            <v-expansion-panels multiple v-model="openedPanels">
+              <v-expansion-panel
+                v-for="(users, dept, index) in groupedUsers"
+                :key="dept"
+                :value="index"
+              >
+                <v-expansion-panel-title
+                style="
+                    background-color: #EEEFFA;
+                    min-height: 35px;
+                    font-size: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                "
+                >
+                <v-checkbox
+                    :indeterminate="isIndeterminate(dept)"
+                    :model-value="isAllSelected(dept)"
+                    @update:modelValue="toggleGroup(dept)"
+                    density="compact"
+                    hide-details
+                />
+                <span>{{ dept }}</span>
+                </v-expansion-panel-title>
+                <v-expansion-panel-text>
+                    <v-row>
+                        <v-col cols="12" v-for="user in users" :key="user.id">
+                            <v-checkbox
+                                v-model="selectedUserIds"
+                                :value="user.id"
+                                density="compact"
+                                hide-details
+                                >
+                                <template #label>
+                                    <div style="margin-left: 8px;">{{ user.name }} {{ user.jobRoleName }}</div>
+                                </template>
+                            </v-checkbox>
+                        </v-col>
+                    </v-row>
+                </v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
+          </div>
         </div>
-    </div>
+
+        <!-- 오른쪽 영역 -->
+        <div style="height: 100%;" class="right-area">
+            <div v-if="selectedUsers.length === 0" style="color: gray; font-size: 12px;">선택된 사용자가 없습니다.</div>
+            <v-chip
+                v-for="user in selectedUsers"
+                :key="user.id"
+                closable
+                class="ma-1 "
+                @click:close="removeUser(user.id)"
+            >
+                {{ user.name }} {{ user.jobRoleName }}
+            </v-chip>
+        </div>
+      </v-card-text>
+
+      <v-card-actions class="justify-end">
+        <v-btn color="gray" variant="tonal" @click="$emit('close')">취소</v-btn>
+        <v-btn color="blue" @click="confirmSelection">확인</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
-    type: String,
-    userList: Array,
-    selectedApprover: Object,
-    selectedViewers: Array
+  type: String, // 'approver' | 'viewer'
+  userList: Array,
+  selectedApprover: Array,
+  selectedViewers: Array
 })
+
 const emit = defineEmits(['close', 'select'])
 
+const dialog = ref(true)
 const search = ref('')
-const selectedUser = ref(null)
-const selectedUsers = ref([])
+const selectedUserIds = ref([])
+const openedPanels = ref([])
+
+const selectedUsers = computed(() =>
+  props.userList.filter(user => selectedUserIds.value.includes(user.id))
+)
+
+function removeUser(id) {
+  selectedUserIds.value = selectedUserIds.value.filter(uid => uid !== id)
+}
+
 
 onMounted(() => {
-    if (props.type === 'approver') {
-        selectedUser.value = props.selectedApprover || null
-    } else {
-        selectedUsers.value = [...props.selectedViewers]
-    }
+  selectedUserIds.value = props.type === 'approver'
+    ? (props.selectedApprover || []).map(v => v.id)
+    : (props.selectedViewers || []).map(v => v.id)
 })
 
-const filteredUsers = computed(() => {
-    if (!search.value) return props.userList
-    return props.userList.filter(user => user.name.toLowerCase().includes(search.value.toLocaleLowerCase()))
+const groupedUsers = computed(() => {
+  const groups = {}
+  props.userList.forEach(user => {
+    const dept = user.deptName || '기타'
+    if (!groups[dept]) groups[dept] = []
+    groups[dept].push(user)
+  })
+
+  const filtered = {}
+  for (const dept in groups) {
+    filtered[dept] = groups[dept].filter(user =>
+      user.name.toLowerCase().includes(search.value.toLowerCase())
+    )
+  }
+  return filtered
 })
+
+function isAllSelected(dept) {
+  const users = groupedUsers.value[dept]
+  return users.length > 0 && users.every(user =>
+    selectedUserIds.value.includes(user.id)
+  )
+}
+
+function isIndeterminate(dept) {
+  const users = groupedUsers.value[dept]
+  const selected = users.filter(user =>
+    selectedUserIds.value.includes(user.id)
+  )
+  return selected.length > 0 && selected.length < users.length
+}
+
+function toggleGroup(dept) {
+  const users = groupedUsers.value[dept]
+  const userIds = users.map(u => u.id)
+  if (isAllSelected(dept)) {
+    selectedUserIds.value = selectedUserIds.value.filter(
+      id => !userIds.includes(id)
+    )
+  } else {
+    const toAdd = userIds.filter(id => !selectedUserIds.value.includes(id))
+    selectedUserIds.value.push(...toAdd)
+  }
+}
 
 function confirmSelection() {
-    if (props.type === 'approver') {
-        console.log('자식 approver선택', selectedUser.value)
-        emit('select', selectedUser.value)
-    } else {
-        console.log('자식 viewer 선택', selectedUsers.value)
-        emit('select', selectedUsers.value)
-    }
-    emit('close')
+  const selectedUsers = props.userList.filter(u => selectedUserIds.value.includes(u.id))
+  emit('select', selectedUsers)
+  dialog.value = false
+  emit('close')
 }
 
-const currentPage = ref(1)
-const pageSize = 8
-const targetPage=ref(1)
-
-const paginatedUsers = computed(() => {
-    const start = (currentPage.value - 1) * pageSize
-    return filteredUsers.value.slice(start, start + pageSize)
-})
-
-const totalPages = computed(() => Math.ceil(filteredUsers.value.length / pageSize))
-
-function goToPage(page) {
-    if (page >= 1 && page <= totalPages.value) {
-        currentPage.value = page
-    } else {
-        alert('요청하신 페이지 값이 올바르지 않습니다.')
-    }
-}
-
-watch(currentPage, (newVal) => {
-    targetPage.value = newVal
+watch(groupedUsers, (val) => {
+  const panelList = Object.entries(val)
+    .map(([dept, users], index) => (users.length > 0 ? index : null))
+    .filter(index => index !== null)
+  openedPanels.value = panelList
 })
 </script>
 
 <style scoped>
-    .input-box {
-        border: 1px solid black;
-        border-radius: 6px;
-        padding-left: 6px;
-        margin-bottom: 12px;
-        width: 100%;
-    }
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-    .modal {
-        position: relative;
-        width: 300px;
-        border-radius: 20px;
-        background-color: white;
-        display: flex;
-        padding: 20px;
-    }
-    .modal-content {
-        width: 100%;
-    }
-    .btn-group {
-        margin-top: 10px;
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-    }
-    .btn {
-        border-radius: 6px;
-        width: 100%;
-        color: white
-    }
-    .btn:hover {
-        background-color: black;
-    }
-    .close-btn {
-        background-color: #ff9090;
-        border: 1px solid #720000;
-    }
-    .confirm-btn {
-        background-color: #9090ff;
-        border: 1px solid #000072;
-    }
-    .pagination {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-top: 12px;
-    }
-    .pagination-btn {
-        border-radius: 6px;
-        border: 1px solid black;
-        padding: 0 6px;
-    }
-    .pagination-btn:hover {
-        background-color: black;
-        color: white
-    }
+.main-area {
+  display: flex;
+  gap: 20px;
+  height: 100%; /* dialog 내부 높이 꽉 채우기 */
+  overflow: hidden; /* 전체 스크롤 방지 */
+}
+
+.left-area {
+  width: 450px;
+  display: flex;
+  flex-direction: column;
+}
+
+.group-scroll {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 100%;
+  padding-right: 4px;
+}
+
+.right-area {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-content: flex-start;
+  overflow-y: auto;
+}
+.participant-card {
+  /* padding:2%; */
+  padding: 20px;
+}
+
+.header-title {
+  height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.v-expansion-panel-title {
+  font-weight: bold;
+}
+
+.group-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
 </style>

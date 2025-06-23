@@ -1,129 +1,129 @@
 <template>
-    <div class="content-box">
+    <v-container class="pa-4 d-flex" fluid>
         <div class="left-area">
-            <div>
-                <div class="title-area">
-                    <div class="content-title">결재 제목</div>
-                    <span class="not-null">⚹</span>
+            <v-row>
+                <v-col>
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">결재 제목</span>
+                    <span class="not-null">*</span>
                 </div>
-                <input 
-                class="input-box"
-                v-model="title"
-                style="width: 500px"
+                <v-text-field density="compact"v-model="title" placeholder="제목 입력" variant="outlined" :style="{ width: '500px' }" />
+                </v-col>
+            </v-row>
+            <!-- 프로젝트/태크스 선택 -->
+            <v-row>
+                <v-col cols="6">
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">해당 프로젝트</span>
+                    <span class="not-null">*</span>
+                </div>
+                <v-select
+                density="compact"
+                    v-model="selectedProjectId"
+                    :items="projectList"
+                    item-title="name"
+                    item-value="id"
+                    placeholder="프로젝트 선택"
+                    variant="outlined"
                 />
-            </div>
-            <div class="two-space">
-                <!-- 프로젝트 드롭다운 -->
-                <div class="box">
-                    <div class="title-area">
-                        <div class="content-title">해당 프로젝트</div>
-                        <span class="not-null">⚹</span>
-                    </div>
-                    <select v-model="selectedProjectId" id="project" class="input-box">
-                        <option 
-                            v-for="project in projectList" 
-                            :key="project.id" 
-                            :value="project.id"
-                        >
-                            {{ project.name }}
-                        </option>
-                    </select>
+                </v-col>
+                <v-col cols="6">
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">해당 태스크</span>
+                    <span class="not-null">*</span>
                 </div>
-                <!-- 태스크 드롭다운 -->
-                <div class="box">
-                    <div class="title-area">
-                        <div class="content-title">해당 태스크</div>
-                        <span class="not-null">⚹</span>
-                    </div>
-                        <select v-model="selectedTaskId" id="task" class=input-box :disabled="!selectedProjectId">
-                        <option
-                        v-for="task in filteredTaskList"
-                        :key="task.id"
-                        :value="task.id"
-                        >
-                        {{ task.name }}
-                        </option>
-                    </select>
+                <v-select
+                    density="compact"
+                    v-model="selectedTaskId"
+                    :items="filteredTaskList"
+                    item-title="name"
+                    item-value="id"
+                    placeholder="태스크 선택"
+                    :disabled="!selectedProjectId"
+                    variant="outlined"
+                />
+                </v-col>
+            </v-row>
+            <!-- 구분 -->
+            <v-row>
+                <v-col>
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">구분</span>
+                    <span class="not-null">*</span>
                 </div>
-            </div>
-            <div>
-                <!-- 구분 드롭다운 -->
-                <div class="title-area">
-                    <div class="content-title">구분</div>
-                    <span class="not-null">⚹</span>
+                <v-select
+                    density="compact"
+                    v-model="approvalType"
+                    :items="approvalTypeList"
+                    placeholder="결재 구분"
+                    variant="outlined"
+                />
+                </v-col>
+            </v-row>
+            <!-- 지연 정보 -->
+            <v-row v-if="isDelay">
+                <v-col cols="6">
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">지연 사유</span>
+                    <span class="not-null">*</span>
                 </div>
-                <select v-model="approvalType" id="type" class="input-box">
-                    <option
-                        v-for="type in approvalTypeList"
-                        :key="type"
-                        :value="type"
-                    >
-                        {{ type }}
-                    </option>
-                </select>
-            </div>
-            <!-- 지연시 추가 입력 -->
-            <div v-if="isDelay" class="two-space">
-                <div>
-                    <!-- 지연 사유 리스트 -->
-                    <div class="title-area">
-                        <div class="content-title">지연 사유</div>
-                        <span class="not-null">⚹</span>
-                    </div>
-                    <select v-model="selectedDelayReasonId" id="delayReason" class="input-box">
-                        <option
-                            v-for="delayReason in delayResons"
-                            :key="delayReason.id"
-                            :value="delayReason.id"
-                        >
-                            {{ delayReason.reason }}
-                        </option>
-                    </select>
+                <v-select
+                    density="compact"
+                    v-model="selectedDelayReasonId"
+                    :items="delayResons"
+                    item-title="reason"
+                    item-value="id"
+                    placeholder="사유 선택"
+                    variant="outlined"
+                />
+                </v-col>
+                <v-col cols="6">
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">지연일</span>
+                    <span class="not-null">*</span>
                 </div>
-                <div>
-                    <div class="title-area">
-                        <div class="content-title">태스크 지연일</div>
-                        <span class="not-null">⚹</span>
-                    </div>
-                    <input class="input-box" v-model="delayDays" type="number"/>
+                <v-text-field density="compact" v-model="delayDays" type="number" variant="outlined" />
+                </v-col>
+            </v-row>
+            <!-- 상세 내용 -->
+            <v-row>
+                <v-col>
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">상세 내용</span>
+                    <span class="not-null">*</span>
                 </div>
-            </div>
-            <div>
-                <div class="title-area">
-                    <div class="content-title">상세 내용</div>
-                    <span class="not-null">⚹</span>
+                <v-textarea density="compact" v-model="content" auto-grow variant="outlined" :style="{ width: '500px' }" />
+                </v-col>
+            </v-row>
+            <!-- 조치 내용 -->
+            <v-row v-if="isDelay">
+                <v-col>
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">조치 내용</span>
+                    <span class="not-null">*</span>
                 </div>
-                <textarea  
-                class="input-box" 
-                v-model="content" 
-                style="width: 500px; overflow-y: auto; height: 50px;"
-                ></textarea>
-            </div>
-            <div v-if="isDelay">
-                <div class="title-area">
-                    <div class="content-title">조치 내용</div>
-                    <span class="not-null">⚹</span>
+                <v-textarea density="compact" v-model="actionDetail" auto-grow variant="outlined" :style="{ width: '500px' }" />
+                </v-col>
+            </v-row>
+            <!-- 첨부파일 -->
+            <v-row>
+                <v-col>
+                <div class="d-flex align-center mb-1">
+                    <span class="text-subtitle-2 font-weight-bold">첨부파일</span>
                 </div>
-                <textarea  
-                class="input-box" 
-                v-model="actionDetail" 
-                style="width: 500px; overflow-y: auto; height: 50px;"
-                ></textarea>
-            </div>
-            <div>
-                <div class="title-area">
-                    <div class="content-title">첨부 파일</div>
-                </div>
-                <input
-                    type="file"
-                    id="fileInput"
-                    class="input-box"
+                <v-file-input
+                    density="compact"
+                    v-model="selectedFiles"
+                    label="파일 선택"
                     multiple
-                    @change="handleFileChange"
-                    style="width: 500px;"
+                    show-size
+                    variant="outlined"
+                    :style="{ width: '500px' }"
                 />
-            </div>
+                </v-col>
+            </v-row>
         </div>
+        
         <div class="right-area">
             <div class="participant-box">
                 <div class="sub-area">
@@ -131,17 +131,28 @@
                         <div class="participant-title">결재자</div>
                         <span class="not-null">⚹</span>
                     </div>
-                    <button @click="openModal('approver')">조회</button>
+                    <v-btn @click="openModal('approver')" :disabled="selectedProjectId === null">조회</v-btn>
                 </div>
                 <div class="approval-participant">
                     {{ selectedApprover?.name || '선택 안됨' }}
+                </div>
+
+                <div class="approval-participant">
+                <template v-if="!selectedApprover || selectedApprover.length === 0">
+                    선택 안됨
+                </template>
+                <template v-else>
+                    <span v-for="(user, index) in selectedApprover" :key="user.id">
+                    {{ user.name }}<span v-if="index < selectedApprover.length - 1">, </span>
+                    </span>
+                </template>
                 </div>
             </div>
             <br>
             <div class="participant-box">
                 <div class="sub-area">
                     <div class="participant-title">참조자</div>
-                    <button @click="openModal('viewer')">조회</button>
+                    <v-btn @click="openModal('viewer')">조회</v-btn>
                 </div>
                 <div class="approval-participant" @click.stop="toggleViewerList">
                     {{ 
@@ -165,21 +176,21 @@
                 </div>
             </div>
         </div>
-    </div>
+    </v-container>
     <div style="display:flex; justify-content: end;">
-        <button 
+        <v-btn 
             class="create-btn" 
             @click="createApproval"
         >
             보내기
-        </button>
+        </v-btn>
     </div>
     <ParticipantSelectModal
         v-if="showModal"
         :type="modalType"
-        :user-list="filteredUserListForModal"
-        :selected-approver="selectedApprover"
-        :selected-viewers="selectedViewers"
+        :userList="filteredUserListForModal"
+        :selectedApprover="selectedApprover"
+        :selectedViewers="selectedViewers"
         @close="showModal = false"
         @select="handleUserSelect"
     />
@@ -202,10 +213,14 @@ const approvalTypeList = [ '일반', '산출물', '지연' ]
 const projectIds = ref([])
 // 참여자 리스트
 const participantList = ref([])
+
 const filteredParticipants = computed(() => {
-    if (!selectedProjectId.value) return []
-    return participantList.value[selectedProjectId.value] || null
+  if (!selectedProjectId.value) return []
+  console.log("프로젝트 선택함")
+  console.log(participantList.value[selectedProjectId.value])
+  return participantList.value[selectedProjectId.value] || []
 })
+
 const filteredUserListForModal = computed(() => {
     if (modalType.value === 'viewer' && selectedApprover.value) {
         console.log('filterUserList', filteredParticipants.value)
@@ -233,6 +248,7 @@ function openModal(type) {
 }
 
 function handleUserSelect(selectedUsers) {
+    console.log("선택됨", selectedUsers)
     if (modalType.value === 'approver') {
         selectedApprover.value = selectedUsers || null
     } else {
@@ -258,7 +274,7 @@ const approvalTypeMap = {
 const selectedDelayReasonId = ref(null)
 const content = ref('')
 
-// type이 DELAY일 경우에만 필수
+// type이 DELAY 일 경우에만 필수
 const delayDays = ref(null)
 const actionDetail = ref('')
 const selectedFiles = ref([])
@@ -307,6 +323,8 @@ onMounted(async() => {
         projectIds: projectIds.value
     })
     participantList.value = participantResponse.data.data
+    console.log('프로젝트별 참여자 목록', participantList.value)
+
     // Map<Long, User> 형태로 받을 것 프로젝트 ids로 참여자 조회해오기
 })
 
@@ -359,81 +377,18 @@ async function createApproval() {
 </script>
 
 <style scoped>
-    .content-box {
-        padding-left: 18px;
-        height: 90%;
-        display: flex;
-    }
-    .content-title {
-        font-weight: bold;
-        font-size: 14px;
-    }
-    .input-box {
-        border-radius: 6px;
-        border: 1px solid black;
-        padding: 0 6px;
-        font-size: 14px;
-        width: 240px;
-    }
-    .create-btn {
-        margin-top: 6px;
-        padding: 3px;
-        background-color: #9090ff;
-        color: white;
-        border-radius: 6px;
-        width: 100px;
-    }
-    .create-btn:hover {
-        background-color: black;
-    }
-    .two-space {
-        display: flex;
-        gap: 20px;
-    }
-    .left-area {
-        flex: 2;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-    }
-    .right-area {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: end;
-    }
-    .participant-box {
-        width: 80%;
-        padding-right: 20px;
-        padding-top: 10px;
-    }
-    .participant-title {
-        font-weight: bold;
-    }
-    .sub-area {
-        display: flex;
-        justify-content: space-between;
-    }
-    .approval-participant {
-        border: 1px solid black;
-        border-radius: 6px;
-        padding-left: 6px
-    }
-    
-    .viewer-list-dropdown {
-        z-index: 1000;
-        padding: 6px;
-    }
-    .viewer-list-dropdown ul {
-        list-style: none;
-    }
-    .title-area {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-    }
-    .not-null {
-        color: red;
-        font-weight: bold;
-    }
+.not-null {
+  color: red;
+  margin-left: 4px;
+}
+.approval-participant {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px;
+  min-height: 36px;
+  background-color: #f9f9f9;
+}
+.v-text-field text{
+    height: 30px;
+}
 </style>

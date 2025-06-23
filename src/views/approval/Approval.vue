@@ -46,11 +46,16 @@ watch (() => selectedApprovalId.value, (newId, oldId) => {
     <template #left>
       <div style="background: white; height: calc(100vh - 50px); padding: 50px; border-right: 1px solid black">
         <div style="height: 100%">  
-          <ApprovalHistory 
+          <h4>결재</h4>
+          <div style="display: flex; flex-direction: row;">
+            <v-btn>결재 작성</v-btn>
+            
+          </div>
+          <!-- <ApprovalHistory 
             :key="approvalHistoryRender" 
             @select-approval="handleSelectApproval" 
             @select-tab="handleSelectTab"
-          />
+          /> -->
         </div>
         <div style="display: flex; justify-content: right;">
           <button class="create-btn" @click="handelShowCreateApproval">결재 요청하기</button>
