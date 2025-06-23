@@ -11,7 +11,7 @@
             </div>
             <div class="options">
             <label><input type="checkbox" v-model="isNotice" /> 공지</label>
-            <v-btn class="submit-btn" @click="handleSubmit" variant="text" size="small">등록</v-btn>
+            <v-btn class="submit-btn" @click="handleSubmit" variant="text" size="small" :disabled="input ===''">등록</v-btn>
             </div>
         </div>
 
@@ -66,9 +66,12 @@
 <script setup>
 import { ref, watch, onMounted, nextTick } from 'vue'
 import axios from 'axios'
+import { useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/userStore'
 import api from '@/api'
 
+const route = useRoute()
+const taskId = route.params.taskId
 const userStore = useUserStore()
 console.log(userStore.profileImage)
 const fullName = `${userStore.deptName}_${userStore.name}`
@@ -77,10 +80,10 @@ const selectedFileName = ref(null);
 
 // props
 const props = defineProps({
-    taskId: {
-        type: [String, Number],
-        required: true
-    },
+    // taskId: {
+    //     type: [String, Number],
+    //     required: true
+    // },
     projectId: {
         type: [String, Number],
         required: true
@@ -92,6 +95,8 @@ const props = defineProps({
         default: null
     }
 })
+
+
 
 // 상태 변수
 const input = ref('')
@@ -135,7 +140,7 @@ try {
 const fetchDetailList = async (keyword) => {
 try {
     const res = await api.get(`/mention/detail`, {
-        params: { projectId: props.projectId, taskId: props.taskId, mentionTarget: keyword }
+        params: { projectId: props.projectId, taskId: taskId, mentionTarget: keyword }
     });
     const details = res.data.data || []
     allUsers.value = details.map((detail, idx) => ({
@@ -311,18 +316,14 @@ const handleSubmit = async () => {
     try {
         if (editingCommentId.value) {
         // ✏️ 수정 요청
-            await api.patch(`/comment/${editingCommentId.value}`, formData, {
+            await api.patch(`/api/comment/${editingCommentId.value}`, formData, {
                 headers: {
                 Authorization: `Bearer ${userStore.accessToken}`,
                 },
             })
         } else {
             // ✅ 등록 요청
-            await api.post(`/comment/write/${props.taskId}`, formData, {
-                headers: {
-                Authorization: `Bearer ${userStore.accessToken}`,
-                },
-            })
+            await api.post(`/api/comment/write/${taskId}`, formData)
     }
 
         // 초기화

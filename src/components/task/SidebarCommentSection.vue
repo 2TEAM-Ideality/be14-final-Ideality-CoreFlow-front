@@ -32,11 +32,11 @@
         @set-reply="handleSetReply"
         @comment-updated="refreshKey++"
       />
+        <!-- :taskId="taskId" -->
 
       <NoticeTab
         v-if="selectedTab === 'notice'"
         :key="`notice-${refreshKey}`"
-        :taskId="taskId"
         @edit-comment="handleEditComment"
         @set-reply="handleSetReply"
         @comment-updated="refreshKey++"
@@ -45,8 +45,9 @@
 
     <!-- 하단: 댓글 입력창 (고정) -->
     <div class="comment-input">
+        <!-- :taskId="taskId" -->
+
       <TaskCommentInput
-        :taskId="taskId"
         :replyTargetId="replyTargetId"
         :replyTargetUser="replyTargetUser"
         :editData="editData"

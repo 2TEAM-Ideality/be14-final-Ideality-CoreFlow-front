@@ -24,13 +24,16 @@
           <span class="comment-content">{{ comment.content }}</span>
 
           <div class="comment-icons">
-            <button
+            <v-btn
               v-if="comment.userId === userStore.id"
               @click="toggleDropdown(`comment-${comment.commentId}`)"
               class="icon-button"
+              icon
+              size="xsmall"
+              variant="text"
             >
-              <img src="@/assets/icons/ellipsis-horizontal.svg" alt="more" class="icon" />
-            </button>
+              <v-icon size="xsmall">mdi-dots-vertical</v-icon>
+            </v-btn>
           </div>
 
           <div v-if="dropdownIndex === `comment-${comment.commentId}`" class="comment-dropdown">
@@ -66,6 +69,8 @@ import api from '@/api';
 const route = useRoute();
 const userStore = useUserStore();
 
+const taskId = route.params.taskId
+
 const isDeleteModalOpen = ref(false);
 const deleteTargetId = ref(null);
 const dropdownIndex = ref(null);
@@ -76,12 +81,11 @@ const props = defineProps({
   taskId: { type: [String, Number], required: true }
 })
 
-const taskId = props.taskId;
 
 // 댓글 fetch + 정렬 적용
 const fetchComments = async (id) => {
   try {
-    const res = await api.get(`/comment/task/${id}/notice`);
+    const res = await api.get(`/api/comment/task/${id}/notice`);
     comments.value = convertToTree(res.data.data);
     sortComments();
   } catch (error) {
@@ -177,14 +181,20 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .comment-tab {
-height: 100%;
-max-height: calc(100vh - 100px); /* 필요시 적절히 조절 */
-display: flex;
-flex-direction: column;
-gap: 40px;
-padding-left: 40px;
-padding-right: 12px;
-overflow: hidden; /* 중요: 내부 스크롤을 위해 */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-left: 8%;
+  padding-top: 3%;
+  height: 100%;
+  max-height: calc(100vh - 100px); /* 필요시 적절히 조절 */
+  flex-direction: column;
+  gap: 2%;
+  overflow: hidden; /* 중요: 내부 스크롤을 위해 */
+  /* background-color: yellowgreen; */
+  /* background-color: yellow; */
+  background-color: white;
+  /* background-color: rgba(242, 242, 255, 0.73); */
 }
 
 .comment-filter {
@@ -209,10 +219,11 @@ overflow: hidden; /* 중요: 내부 스크롤을 위해 */
 
 
 .comment-list {
-min-height: 400px;         /* 댓글이 없어도 공간 확보 */
-max-height: 400px;         /* 댓글이 많을 경우 최대 높이까지만 */
-overflow-y: auto;          /* 스크롤 가능하게 */
-padding-right: 12px;
+  flex: 1;
+  overflow-y: auto;
+  /* padding-right: 12px; */
+  padding-right: 10%;
+  padding-bottom: 15px;
 }
 
 .comment-item {
@@ -221,15 +232,16 @@ flex-direction: column;
 gap: 6px;
 flex-shrink: 0;
 min-height: fit-content;
+margin-bottom : 15px;
 }
 
 .comment-box {
 position: relative;
 display: block;
 width: 100%;
-padding: 12px 16px;
-background: #fff;
-border: 1px solid #aaa;
+padding: 5%;
+background-color: #f5f5f5;
+/* border: 1px solid #aaa; */
 border-radius: 8px;
 overflow: visible;
 box-sizing: border-box;
@@ -442,5 +454,6 @@ cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  font-weight: bold;
 }
 </style>

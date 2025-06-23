@@ -1,10 +1,14 @@
 <template>
     <div class="comment-tab">
         <div class="comment-filter">
-            <label># 세부일정</label>
-            <select class="select_box">
-                <option>Value</option>
-            </select>
+              <label style="font-weight: bold; font-size:15px;"># 세부일정</label>
+                <!-- label="세부일정 선택" -->
+
+              <select v-model="selectedValue" class="select-box">
+                <option v-for="option in selectOptions" :key="option" :value="option">
+                  {{ option }}
+                </option>
+              </select>
         </div>
 
         <div class="comment-list" ref="commentListRef">
@@ -31,17 +35,26 @@
 
                 <!-- 아이콘들 공통 스타일 icon 적용 -->
                 <div class="comment-icons">
-                  <button @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)">
-                    <img src="@/assets/icons/message.svg" alt="message" class="icon" />
-                  </button>
+                  <v-btn
+                    @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)"
+                    icon
+                    size="x-small"
+                    density="compact"
+                    variant="text"
+                  >
+                    <v-icon size="16">mdi-message-outline</v-icon>
+                  </v-btn>
                   <!-- 댓글 드롭다운 열기 -->
-                  <button
+                  <v-btn
                     v-if="comment.userId === userStore.id"
                     @click="toggleDropdown(`comment-${comment.commentId}`)"
                     class="icon-button"
+                    icon
+                    size="xsmall"
+                    variant="text"
                   >
-                    <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" class="icon" />
-                  </button>
+                    <v-icon size="xsmall">mdi-dots-vertical</v-icon>
+                  </v-btn>
                 </div>
                 
                   <!-- 댓글 드롭다운 -->
@@ -53,6 +66,7 @@
                   </div>
                 </div>
 
+                <!-- 대댓글 -->
                 <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
                     <div class="reply-header">
                       <div class="writer-with-modify">
@@ -61,20 +75,29 @@
                       </div>
                     </div>
 
-                      <div class="comment-box">
+                      <div class="reply-comment-box">
                         <span class="comment-content">{{ reply.content }}</span>
                         <div class="comment-icons">
-                          <button @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)">
-                            <img src="@/assets/icons/message.svg" alt="message" class="icon" />
-                          </button>
+                          <v-btn
+                            @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)"
+                            icon
+                            size="x-small"
+                            density="compact"
+                            variant="text"
+                          >
+                            <v-icon size="16">mdi-message-outline</v-icon>
+                          </v-btn>
                           <!-- 대댓글 드롭다운 열기 -->
-                          <button
+                          <v-btn
                             v-if="reply.userId === userStore.id"
                             @click="toggleDropdown(`reply-${reply.commentId}`)"
                             class="icon-button"
+                            icon
+                            size="xsmall"
+                            variant="text"
                           >
-                            <img src="@/assets/icons/ellipsis-vertical.svg" alt="more" class="icon" />
-                          </button>
+                            <v-icon size="xsmall">mdi-dots-vertical</v-icon>
+                          </v-btn>
                       </div>
                         <!-- 대댓글 드롭다운 -->
                         <!-- 대댓글에 대한 부모처리는 내일 가서 물어볼 것-->
@@ -114,12 +137,17 @@ import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
+
+const taskId = route.params.taskId
+
 // 댓글 삭제 구현
 const isDeleteModalOpen = ref(false);
 const deleteTargetId = ref(null);
 
 const comments = ref([]);
+const selectOptions = [1, 2, 3, 4, 5]
 
+const selectedValue = ref(null)
 
 
 // 코멘트 생성 시, 스크롤 맨 아래로 이동
@@ -135,8 +163,11 @@ const scrollToBottom = () => {
 
 const fetchComments = async (id)=> {
   try {
-    const res = await api.get(`/comment/task/${id}`);
+    console.log("댓글 가져오기 요청")
+
+    const res = await api.get(`/api/comment/task/${id}`);
     comments.value = convertToTree(res.data.data);
+    console.log("댓글 가져오기 성공")
     nextTick(() => scrollToBottom())
     
   } catch (error) {
@@ -206,7 +237,7 @@ const closeDeleteModal = () => {
 
 const deleteComment = async () => {
   try {
-    await api.patch(`/comment/${deleteTargetId.value}/delete`)
+    await api.patch(`/api/comment/${deleteTargetId.value}/delete`)
     closeDeleteModal()
     fetchComments(taskId)
     emit('comment-updated')
@@ -229,8 +260,9 @@ const deleteComment = async () => {
 }
 
 const updateNoticeComment = async (id) => {
+  console.log("공지로 등록한 댓글", id)
   try {
-    const res = await api.patch(`/comment/${id}/notice`)
+    const res = await api.patch(`/api/comment/${id}/notice`)
     alert(res.data?.message);
     fetchComments(taskId)
     emit('comment-updated')
@@ -244,8 +276,8 @@ const updateNoticeComment = async (id) => {
 onMounted(() => {
   window.addEventListener('click', handleClickOutside)
 
-  if (taskId.value) {
-    fetchComments(taskId.value)
+  if (taskId) {
+    fetchComments(taskId)
   }
 })
 
@@ -266,7 +298,7 @@ const props = defineProps({
   }
 });
 
-const taskId = computed(() => props.task?.taskId)
+// const taskId = computed(() => props.task?.taskId)
 
 const onEditComment = (comment) => {
   emit('edit-comment', {
@@ -282,7 +314,7 @@ const emitSetReply = (commentId, name) => {
 
 
 // key 혹은 taskId 변화를 감지해서 재조회
-watch(() => props.taskId, (newId) => {
+watch(() => taskId, (newId) => {
   if (newId) fetchComments(newId)
 })
 
@@ -293,7 +325,7 @@ watch(() => props.taskId, (newId) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-left: 5%;
+  padding-left: 8%;
   padding-top: 3%;
   height: 100%;
   max-height: calc(100vh - 100px); /* 필요시 적절히 조절 */
@@ -302,13 +334,15 @@ watch(() => props.taskId, (newId) => {
   overflow: hidden; /* 중요: 내부 스크롤을 위해 */
   /* background-color: yellowgreen; */
   /* background-color: yellow; */
-  background-color: rgba(242, 242, 255, 0.73);
+  background-color: white;
+  /* background-color: rgba(242, 242, 255, 0.73); */
 }
 
 .comment-filter {
   display: flex;
   flex-direction: row;
   gap: 10px;
+  align-items: center;
   /* width: 100%; */
   /* border-bottom: 1px solid black;; */
   /* flex: 0 0 auto; */
@@ -316,10 +350,10 @@ watch(() => props.taskId, (newId) => {
 }
 
 /* 세부일정 선택 input */
-.select_box {
+.select-box {
   width: 100%;
   max-width: 300px;
-  padding: 6px 12px;
+  padding: 6px 40px;
   font-size: 12px;
   border: 1px solid #818181;
   border-radius: 6px;
@@ -335,7 +369,7 @@ watch(() => props.taskId, (newId) => {
   flex: 1;
   overflow-y: auto;
   /* padding-right: 12px; */
-  padding-right: 5%;
+  padding-right: 10%;
   padding-bottom: 15px;
 }
 /* comment list 스크롤 */
@@ -365,9 +399,20 @@ watch(() => props.taskId, (newId) => {
   position: relative;
   display: block;
   width: 100%;
-  padding: 12px 16px;
-  background: #fff;
-  border: 1px solid #aaa;
+  padding: 5%;
+  background-color: #EEEFFA;
+  /* border: 1px solid #aaa; */
+  border-radius: 8px;
+  overflow: visible;
+  box-sizing: border-box;
+}
+.reply-comment-box{
+    position: relative;
+  display: block;
+  width: 100%;
+  padding: 5%;
+  background-color: #DBDCFE;
+  /* border: 1px solid #aaa; */
   border-radius: 8px;
   overflow: visible;
   box-sizing: border-box;
@@ -379,6 +424,7 @@ watch(() => props.taskId, (newId) => {
   word-wrap: break-word;
   white-space: pre-wrap;
   font-size: 13px;
+  text-align: left;
 }
 
 .profile-img {
@@ -395,7 +441,7 @@ watch(() => props.taskId, (newId) => {
   display: flex;
   gap: 4px;
   align-items: flex-start; /* 🔥 수직 기준 꼭대기 */
-  padding: 8px;   /* 아이콘 간 여백 확보 */
+  padding: 3%;   /* 아이콘 간 여백 확보 */
   z-index: 2;
 }
 
@@ -460,7 +506,7 @@ watch(() => props.taskId, (newId) => {
 
 /* 대댓글 */
 .reply-item {
-  padding-left: 16px;
+  padding-left: 10%;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -500,6 +546,7 @@ watch(() => props.taskId, (newId) => {
   }
 
   .comment-icons {
+    color:rgb(60, 60, 60);
     top: 10px;
     right: 10px;
   }
