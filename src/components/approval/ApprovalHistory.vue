@@ -1,46 +1,54 @@
 <template>
-    <div class="container" @click="clearSelection">
-        <h2>결재 내역</h2>
+    <v-container class="py-4" @click="clearSelection">
+        <h3 class="mb-5">결재 내역</h3>
+        <v-tabs v-model="currentTab" background-color="transparent" class="approval-tab">
+            <v-tab value="received"  @click="selectTab('received')">수신</v-tab>
+            <v-tab value="sent"  @click="selectTab('sent')">발신</v-tab>
+        </v-tabs>
+        <input type="text" placeholder="검색 🔍" class="approval-search" v-model="searchApproval"/>
+        <v-table>
+        <thead style="background-color: #F8F8F8; height: 20px; ">
+            <tr>
+            <th class="text-left">{{ currentTab === 'received' ? '보낸 사람' : '받는 사람' }}</th>
+            <th class="text-left">제목</th>
+            <th class="text-left">상태</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr
+            style="cursor:pointer;"
+            v-for="item in paginatedApprovals"
+            :key="item.id"
+            @click.stop="selectApproval(item.id)"
+            >
+            <td>{{ currentTab === 'received' ? item.requesterName : item.approverName }}</td>
+            <td>{{ item.title }}</td>
+            <td class="status-cell">
+                <v-chip
+                :color="chipColor(item.approvalStatus)"
+                :text-color="chipTextColor(item.approvalStatus)"
+                variant="elevated"
+                size="small"
+                style="text-align: center;"
+                class="font-weight-medium approval-chip"
+                >
+                {{ koreanStatus(item.approvalStatus) }}
+                </v-chip>
+            </td>
+            </tr>
+        </tbody>
+        </v-table>
 
-        <div class="tabs">
-            <div>
-                <button :class="{active: currentTab === 'received' }" @click="selectTab('received')">수신</button>
-                <button :class="{active: currentTab === 'sent' }" @click="selectTab('sent')">발신</button>
-            </div>
-            <input type="text" placeholder="검색 🔍" class="approval-search" v-model="searchApproval"/>
-        </div>
-
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th style="width: 100px;">{{ currentTab === 'received' ? '보낸 사람' : '받는 사람' }}</th>
-                    <th style="width: 300px;">제목</th>
-                    <th style="width: 120px; text-align: center;">상태</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="item in displayedList" :key="item.id" @click.stop="selectApproval(item.id)">
-                    <td style="width: 100px; padding-left:20px">{{ currentTab === 'received' ? item.requesterName : item.approverName }}</td>
-                    <td style="width: 300px">{{ item.title }}</td>
-                    <td>
-                        <div 
-                            :class="['status', statusClass(item.approvalStatus)]"
-                            style="padding: 3px; width: 120px;"
-                        >
-                            {{ item.approvalStatus }}
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <div class="pagination">
-        <button class="pagination-btn" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">이전</button>
-        <input type="number" v-model="targetPage" style="width: 40px; border: 1px solid black; border-radius: 6px; text-align: end;"/>
-        <span>/ {{ totalPages }}</span>
-        <button class="pagination-btn" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">다음</button>
-        <button class="pagination-btn" @click="goToPage(targetPage)">이동</button>
-    </div>
+        <!-- Vuetify Pagination 적용 -->
+        <v-pagination
+        v-model="currentPage"
+        :length="totalPages"
+        total-visible="7"
+        class="mt-4"
+        @update:modelValue="goToPage"
+        />
+    </v-container>
+  
 </template>
 
 <script setup>
@@ -83,6 +91,7 @@ onMounted(() => {
     fetchApprovalData()
 })
 
+
 const displayedList = computed(() => {
     const list = currentTab.value === 'received'
     ? approvalData.value.receivedApproval ?? []
@@ -92,22 +101,46 @@ const displayedList = computed(() => {
         !searchApproval.value || item.title.includes(searchApproval.value)
     )
 })
-
-
-function statusClass(status) {
-    switch (status) {
-        case 'PENDING':
-            return 'status-pending'
-        case 'APPROVED':
-            return 'status-approved'
-        case 'REJECTED':
-            return 'status-rejected'
-        case 'CANCELLED':
-            return 'status-cancelled'
-        default:
-            return '';
-    }
+function chipColor(status) {
+  switch (status) {
+    case 'PENDING':
+      return '#cecece'   // 연회색
+    case 'APPROVED':
+      return '#9090ff'   // 파랑
+    case 'REJECTED':
+      return '#ff9090'   // 빨강
+    case 'CANCELLED':
+      return '#bdbdbd'   // 진회색
+    default:
+      return 'grey'
+  }
 }
+
+function chipTextColor(status) {
+  switch (status) {
+    case 'PENDING':
+      return '#020725'
+    case 'APPROVED':
+      return '#0207cc'
+    case 'REJECTED':
+      return '#cc0702'
+    case 'CANCELLED':
+      return '#444444'
+    default:
+      return 'white'
+  }
+}
+
+function koreanStatus(status) {
+  switch (status) {
+    case 'PENDING': return '대기'
+    case 'APPROVED': return '승인'
+    case 'REJECTED': return '반려'
+    case 'CANCELLED': return '취소'
+    default: return status
+  }
+}
+
 const currentPage = ref(1)
 const pageSize = 7
 const targetPage=ref(1)
@@ -168,9 +201,20 @@ watch(currentPage, (newVal) => {
   border-collapse: collapse;
   margin-top: 12px;
 }
+::v-deep thead {
+  height: 20px !important;
+}
 
+::v-deep thead th {
+    height: 20px;
+  font-size: 13px;
+}
+.th.text-left {
+    height: 20px;
+}
 .history-table th {
     text-align: left;
+    height: 20px;
     padding: 12px;
     border-bottom: 1px solid #ddd;
 }
@@ -231,5 +275,12 @@ watch(currentPage, (newVal) => {
         background-color: white;
         border-radius: 20px;
         border: 1px solid gray;
+    }
+.status-cell {
+  vertical-align: middle;
+}
+    .approval-chip {
+        text-align: center;
+        min-width: 70px;
     }
 </style>

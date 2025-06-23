@@ -1,48 +1,61 @@
 <template>
-    <div class="task-sidebar">
-        <div class="comment-tab-menu">
-        <button
-            v-for="tab in commentTabs"
-            :key="tab.name"
-            :class="{ active: selectedTab === tab.name }"
-            @click="selectedTab = tab.name"
-        >
-            {{ tab.label }}
-        </button>
-        </div>
+  <div class="task-sidebar">
+    <!-- 상단 탭 메뉴 (고정) -->
+    <!-- <div class="comment-tab-menu">
+      <button
+        v-for="tab in commentTabs"
+        :key="tab.name"
+        :class="{ active: selectedTab === tab.name }"
+        @click="selectedTab = tab.name"
+      >
+        {{ tab.label }}
+      </button>
+    </div> -->
+    <v-tabs v-model="selectedTab" color="black" align-tabs="start" class="comment-tab-menu">
+      <v-tab
+        v-for="tab in commentTabs"
+        :key="tab.name"
+        :value="tab.name"
+        style="width: 50px;"
+      >
+        {{ tab.label }}
+      </v-tab>
+    </v-tabs>
 
-        <div class="comment-panel">
-        <!-- comment / notice / input 에 모두 task 객체 전달 -->
-        <CommentTab
-          v-if="selectedTab === 'comment'"
-          :key="`comment-${refreshKey}`"
-          :task="task"
-          @edit-comment="handleEditComment"
-          @set-reply="handleSetReply"
-          @comment-updated="refreshKey++" 
-        />
+    <!-- 중간: 탭 내용 영역 (스크롤 가능) -->
+    <div class="comment-panel">
+      <CommentTab
+        v-if="selectedTab === 'comment'"
+        :key="`comment-${refreshKey}`"
+        :taskId="taskId"
+        @edit-comment="handleEditComment"
+        @set-reply="handleSetReply"
+        @comment-updated="refreshKey++"
+      />
+        <!-- :taskId="taskId" -->
 
-        <NoticeTab
-          v-if="selectedTab === 'notice'"
-          :key="`notice-${refreshKey}`" 
-          :task="task"
-          @edit-comment="handleEditComment"
-          @set-reply="handleSetReply"
-          @comment-updated="refreshKey++"
-        />
-        </div>
-
-        <TaskCommentInput
-          :taskId="task.taskId"
-          :projectId="task.projectId"
-          :replyTargetId="replyTargetId"
-          :replyTargetUser="replyTargetUser"
-          :editData="editData"
-          @reset-reply="resetReply"
-          @comment-updated="refreshKey++"
-        />
-
+      <NoticeTab
+        v-if="selectedTab === 'notice'"
+        :key="`notice-${refreshKey}`"
+        @edit-comment="handleEditComment"
+        @set-reply="handleSetReply"
+        @comment-updated="refreshKey++"
+      />
     </div>
+
+    <!-- 하단: 댓글 입력창 (고정) -->
+    <div class="comment-input">
+        <!-- :taskId="taskId" -->
+
+      <TaskCommentInput
+        :replyTargetId="replyTargetId"
+        :replyTargetUser="replyTargetUser"
+        :editData="editData"
+        @reset-reply="resetReply"
+        @comment-updated="refreshKey++"
+      />
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -58,10 +71,8 @@ const props = defineProps({
   }
 })
 
-// 예시: task.taskId, task.projectId 등에서 꺼내서 사용 가능
-
-const editData = ref(null);
-const replyTargetId = ref(null);
+const editData = ref(null)
+const replyTargetId = ref(null)
 const replyTargetUser = ref('')
 const refreshKey = ref(0)
 
@@ -89,38 +100,41 @@ const commentTabs = [
 
 <style scoped>
 .task-sidebar {
-display: flex;
-flex-direction: column;
-gap: 32px;
-}
-
-.comment-tab-menu {
-display: flex;
-gap: 50px;
-border-bottom: 1px solid #ddd;
-padding-bottom: 0px;
-}
-
-.comment-tab-menu button {
-background: none;
-border: none;
-font-size: 14px;
-color: #666;
-cursor: pointer;
-padding-bottom: 4px;
-border-bottom: 2px solid transparent;
-transition: all 0.2s ease;
+  height: 100%;           
+  min-height: 0;          
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
 }
 
 .comment-tab-menu button.active {
-font-weight: bold;
-color: #000;
-border-color: #000;
+  font-weight: bold;
+  color: #000;
+  border-color: #000;
 }
 
+/* 중간 패널: 스크롤 가능 */
 .comment-panel {
-display: flex;
-flex-direction: column;
-gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
+  min-height: 0;   
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 입력창 하단 고정 */
+.comment-input {
+  flex-shrink: 0;
+  background-color: rgb(255, 255, 255);
+}
+/* 스크롤바 숨기기 */
+.comment-panel::-webkit-scrollbar {
+  display: none;
+}
+.comment-panel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 </style>

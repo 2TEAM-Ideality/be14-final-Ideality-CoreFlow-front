@@ -206,6 +206,6 @@
     }
 
     .btn:hover {
-        background-color: #9090ff;
+        background-color: #7578ee;
     }
 </style>

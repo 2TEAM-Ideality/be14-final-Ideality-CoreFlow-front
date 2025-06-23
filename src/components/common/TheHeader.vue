@@ -3,6 +3,7 @@
     <div class="logo">
       <router-link to="/">
         <img src="@/assets/black-logo.png" alt="Coreflow Logo" />
+        <!-- <img src="/logo-favicon.png" alt="Coreflow Logo" /> -->
       </router-link>
     </div>
 
@@ -202,7 +203,7 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 24px;
+  padding: 4px 24px;
   border-bottom: 1px solid #dbdbdb;
   background-color: #fff;
   z-index: 100;
@@ -216,9 +217,8 @@ onBeforeUnmount(() => {
 }
 
 .nav {
-  font-size: 15px;
   display: flex;
-  gap: 20px;
+  gap: 25px;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
@@ -230,12 +230,12 @@ onBeforeUnmount(() => {
 .nav a {
   text-decoration: none;
   color: #444;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .nav a.router-link-active {
   font-weight: bold;
-  color: #2b6cb0;
+  color: #7578ee;
 }
 
 .user {
@@ -308,7 +308,7 @@ onBeforeUnmount(() => {
 }
 
 .dropdown-item:hover {
-  background-color: #9090ff;
+  background-color: #7578ee;
   color: white;
 }
 

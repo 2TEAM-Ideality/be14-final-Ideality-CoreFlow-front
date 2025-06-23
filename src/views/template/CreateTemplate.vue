@@ -44,7 +44,6 @@ const duration = ref(0)
 const taskCount = ref(0)
 
 
-
 const completedProjectList = ref([])
 const selectedProject = ref(null)
 const loadProject = ref(false)
@@ -285,6 +284,8 @@ watch(loadProject, (newVal) => {
     flowEdges.value = []
   }
 })
+
+
 </script>
 
 <template>
@@ -379,6 +380,7 @@ watch(loadProject, (newVal) => {
           </v-btn>
         </div>
       </div>
+      
       <!-- 전체 보기 모달 -->
       <v-dialog v-model="showFullScreen" fullscreen persistent transition="dialog-bottom-transition">
         <v-card class="pa-4">
@@ -403,33 +405,6 @@ watch(loadProject, (newVal) => {
           />
         </v-card>
       </v-dialog>
-
-      <!-- <v-dialog v-model="showFullScreen" fullscreen persistent transition="dialog-bottom-transition">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center mb-4">
-            <h3 class="text-h6">프로세스 전체 보기</h3>
-            <div class="d-flex align-center gap-2">
-              <v-btn icon @click="fitToView">
-                <v-icon>mdi-sort</v-icon>
-              </v-btn>
-              <v-btn icon @click="showFullScreen = false">
-                <v-icon>mdi-close</v-icon>
-              </v-btn>
-            </div>
-          </div>
-          <VueFlow
-            :nodes="flowNodes"
-            :edges="flowEdges"
-            :node-types="nodeTypes"
-            class="fullscreen-flow"
-            fit-view
-            ref="fullScreenFlowRef"
-          >
-            <Background />
-            <Controls />
-          </VueFlow>
-        </v-card>
-      </v-dialog> -->
 
     </template>
 
@@ -557,7 +532,7 @@ watch(loadProject, (newVal) => {
   background-color: white;
 }
 .color-button {
-  background-color: #25BEAD;
+  background-color: #7578ee;
   color: white;
   font-weight: 600;
   font-size: 12px;

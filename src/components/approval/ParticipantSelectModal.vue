@@ -1,176 +1,281 @@
-<template>
-    <div class="modal-overlay">
-        <div class="modal">
-            <div class="modal-content">
-                <input v-model="search" placeholder="이름 검색" class="input-box" />
-
-
-                <div v-for="user in paginatedUsers" :key="user.id">
-                    <label>
-                        <input
-                            v-if="props.type === 'viewer'"
-                            type="checkbox"
-                            v-model="selectedUsers"
-                            :value="user"
-                        />
-                        <input
-                            v-else
-                            type="radio"
-                            name="approver"
-                            v-model="selectedUser"
-                            :value="user"
-                        />
-                        {{ user.deptName}}_{{ user.name }}
-                    </label>
-                </div>
-
-                <!-- 페이지네이션 UI -->
-                <div class="pagination">
-                    <button class="pagination-btn" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">이전</button>
-                    <input type="number" v-model="targetPage" style="width: 40px; border: 1px solid black; border-radius: 6px; text-align: end;"/>
-                    <span>/ {{ totalPages }}</span>
-                    <button class="pagination-btn" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">다음</button>
-                    <button class="pagination-btn" @click="goToPage(targetPage)">이동</button>
-                </div>
-
-                <div class="btn-group">
-                    <button class="btn close-btn" @click="$emit('close')">취소</button>
-                    <button class="btn confirm-btn" @click="confirmSelection">확인</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
-    type: String,
-    userList: Array,
-    selectedApprover: Object,
-    selectedViewers: Array
+  type: String, // 'approver' | 'viewer'
+  userList: Array,
+  selectedApprover: Array,
+  selectedViewers: Array
 })
+
 const emit = defineEmits(['close', 'select'])
 
+const dialog = ref(true)
 const search = ref('')
-const selectedUser = ref(null)
-const selectedUsers = ref([])
+const selectedUserId = ref(null)
+const selectedUserIds = ref([])
+const openedPanels = ref([])
+
+const isApprover = computed(() => props.type === 'approver')
 
 onMounted(() => {
-    if (props.type === 'approver') {
-        selectedUser.value = props.selectedApprover || null
-    } else {
-        selectedUsers.value = [...props.selectedViewers]
-    }
+  if (isApprover.value) {
+    selectedUserId.value = (props.selectedApprover?.[0]?.id) ?? null
+  } else {
+    selectedUserIds.value = (props.selectedViewers || []).map(v => v.id)
+  }
 })
 
-const filteredUsers = computed(() => {
-    if (!search.value) return props.userList
-    return props.userList.filter(user => user.name.toLowerCase().includes(search.value.toLocaleLowerCase()))
+const groupedUsers = computed(() => {
+  const groups = {}
+  props.userList.forEach(user => {
+    const dept = user.deptName || '기타'
+    if (!groups[dept]) groups[dept] = []
+    groups[dept].push(user)
+  })
+
+  const filtered = {}
+  for (const dept in groups) {
+    filtered[dept] = groups[dept].filter(user =>
+      user.name.toLowerCase().includes(search.value.toLowerCase())
+    )
+  }
+  return filtered
 })
+
+const selectedUsers = computed(() => {
+  return isApprover.value
+    ? props.userList.filter(user => user.id === selectedUserId.value)
+    : props.userList.filter(user => selectedUserIds.value.includes(user.id))
+})
+
+function removeUser(id) {
+  if (isApprover.value) {
+    selectedUserId.value = null
+  } else {
+    selectedUserIds.value = selectedUserIds.value.filter(uid => uid !== id)
+  }
+}
+
+function isAllSelected(dept) {
+  const users = groupedUsers.value[dept]
+  return users.length > 0 && users.every(user =>
+    selectedUserIds.value.includes(user.id)
+  )
+}
+
+function isIndeterminate(dept) {
+  const users = groupedUsers.value[dept]
+  const selected = users.filter(user =>
+    selectedUserIds.value.includes(user.id)
+  )
+  return selected.length > 0 && selected.length < users.length
+}
+
+function toggleGroup(dept) {
+  const users = groupedUsers.value[dept]
+  const userIds = users.map(u => u.id)
+  if (isAllSelected(dept)) {
+    selectedUserIds.value = selectedUserIds.value.filter(id => !userIds.includes(id))
+  } else {
+    const toAdd = userIds.filter(id => !selectedUserIds.value.includes(id))
+    selectedUserIds.value.push(...toAdd)
+  }
+}
 
 function confirmSelection() {
-    if (props.type === 'approver') {
-        console.log('자식 approver선택', selectedUser.value)
-        emit('select', selectedUser.value)
-    } else {
-        console.log('자식 viewer 선택', selectedUsers.value)
-        emit('select', selectedUsers.value)
-    }
-    emit('close')
+  const selected = isApprover.value
+    ? props.userList.filter(u => u.id === selectedUserId.value)
+    : props.userList.filter(u => selectedUserIds.value.includes(u.id))
+
+  emit('select', selected)
+  dialog.value = false
+  emit('close')
+}
+// 결재자 토글
+function toggleRadio(userId) {
+  selectedUserId.value = selectedUserId.value === userId ? null : userId
 }
 
-const currentPage = ref(1)
-const pageSize = 8
-const targetPage=ref(1)
-
-const paginatedUsers = computed(() => {
-    const start = (currentPage.value - 1) * pageSize
-    return filteredUsers.value.slice(start, start + pageSize)
-})
-
-const totalPages = computed(() => Math.ceil(filteredUsers.value.length / pageSize))
-
-function goToPage(page) {
-    if (page >= 1 && page <= totalPages.value) {
-        currentPage.value = page
-    } else {
-        alert('요청하신 페이지 값이 올바르지 않습니다.')
-    }
-}
-
-watch(currentPage, (newVal) => {
-    targetPage.value = newVal
+watch(groupedUsers, (val) => {
+  const panelList = Object.entries(val)
+    .map(([dept, users], index) => (users.length > 0 ? index : null))
+    .filter(index => index !== null)
+  openedPanels.value = panelList
 })
 </script>
 
+<template>
+  <v-dialog v-model="dialog" persistent width="900px" height="750px">
+    <v-card class="participant-card">
+      <v-card-title class="text-h6 header-title">
+        <div v-if="props.type === 'approver'">결재자 선택</div>
+        <div v-else>참조자 선택</div>
+    </v-card-title>
+
+      <v-card-text class="main-area">
+        <!-- 왼쪽 영역 -->
+        <div style="width: 450px;">
+          <v-text-field
+            v-model="search"
+            label="이름 검색"
+            variant="outlined"
+            density="compact"
+            append-inner-icon="mdi-magnify"
+            class="mb-4"
+          />
+
+          <div class="group-scroll">
+            <v-expansion-panels multiple v-model="openedPanels">
+              <v-expansion-panel
+                v-for="(users, dept, index) in groupedUsers"
+                :key="dept"
+                :value="index"
+              >
+                <v-expansion-panel-title class="expansion-title">
+                  <v-checkbox
+                    v-if="!isApprover"
+                    :indeterminate="isIndeterminate(dept)"
+                    :model-value="isAllSelected(dept)"
+                    @update:modelValue="toggleGroup(dept)"
+                    density="compact"
+                    hide-details
+                    style="padding: 2%;"
+                  />
+                  <span>{{ dept }}</span>
+                </v-expansion-panel-title>
+                <v-expansion-panel-text>
+                  <v-row>
+                    <v-col cols="12" v-for="user in users" :key="user.id">
+                      <v-radio
+                        v-if="isApprover"
+                        :model-value="selectedUserId"
+                        :value="user.id"
+                        density="compact"
+                        hide-details
+                        @click="toggleRadio(user.id)"
+                        >
+                        <template #label>
+                            <div style="margin-left: 8px;">{{ user.name }} {{ user.jobRoleName }}</div>
+                        </template>
+                        </v-radio>
+
+                      <v-checkbox
+                        v-else
+                        v-model="selectedUserIds"
+                        :value="user.id"
+                        density="compact"
+                        hide-details
+                      >
+                        <template #label>
+                          <div style="margin-left: 8px;">{{ user.name }} {{ user.jobRoleName }}</div>
+                        </template>
+                      </v-checkbox>
+                    </v-col>
+                  </v-row>
+                </v-expansion-panel-text>
+              </v-expansion-panel>
+            </v-expansion-panels>
+          </div>
+        </div>
+
+        <!-- 오른쪽 영역 -->
+        <div class="right-area">
+          <div v-if="selectedUsers.length === 0" class="empty-msg">
+            선택된 사용자가 없습니다.
+          </div>
+          <div v-else class="chip-container">
+            <v-chip
+              v-for="user in selectedUsers"
+              :key="user.id"
+              closable
+              variant="flat"
+              class="selected-chip"
+              @click:close="removeUser(user.id)"
+            >
+              <span style="margin-right: 10px;"><strong>{{ user.deptName }}</strong></span>
+              {{ user.name }} {{ user.jobRoleName }}
+            </v-chip>
+          </div>
+        </div>
+      </v-card-text>
+
+      <v-card-actions class="justify-end">
+        <v-btn color="gray" variant="tonal" @click="$emit('close')">취소</v-btn>
+        <v-btn color="purple" @click="confirmSelection">확인</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
 <style scoped>
-    .input-box {
-        border: 1px solid black;
-        border-radius: 6px;
-        padding-left: 6px;
-        margin-bottom: 12px;
-        width: 100%;
-    }
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-    .modal {
-        position: relative;
-        width: 300px;
-        border-radius: 20px;
-        background-color: white;
-        display: flex;
-        padding: 20px;
-    }
-    .modal-content {
-        width: 100%;
-    }
-    .btn-group {
-        margin-top: 10px;
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-    }
-    .btn {
-        border-radius: 6px;
-        width: 100%;
-        color: white
-    }
-    .btn:hover {
-        background-color: black;
-    }
-    .close-btn {
-        background-color: #ff9090;
-        border: 1px solid #720000;
-    }
-    .confirm-btn {
-        background-color: #9090ff;
-        border: 1px solid #000072;
-    }
-    .pagination {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-top: 12px;
-    }
-    .pagination-btn {
-        border-radius: 6px;
-        border: 1px solid black;
-        padding: 0 6px;
-    }
-    .pagination-btn:hover {
-        background-color: black;
-        color: white
-    }
+.main-area {
+  display: flex;
+  gap: 20px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.right-area {
+  background-color: rgb(241, 241, 241);
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  overflow-y: auto;
+  padding: 2% 5%;
+}
+
+.empty-msg {
+  color: gray;
+  font-size: 12px;
+  text-align: left;
+  width: 100%;
+  padding-top: 5%;
+}
+
+.chip-container {
+  width: 100%;
+}
+
+.selected-chip {
+  width: 100%;
+  height: 35px;
+  border-radius: 5px;
+  padding: 5% 10%;
+  background-color: rgba(255, 255, 255, 0.6);
+  color: black;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.participant-card {
+  padding: 20px;
+}
+
+.header-title {
+  height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+.expansion-title {
+  background-color: #EEEFFA;
+  min-height: 35px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+}
+
+.group-scroll {
+  flex: 1;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
 </style>

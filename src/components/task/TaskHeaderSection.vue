@@ -3,12 +3,15 @@
         <p class="breadcrumb">프로젝트 > {{ task.projectName }} > TASK {{ task.taskId }} : {{ task.taskName }}</p>
 
         <div class="task-header-box">
-            <span :class="['status-badge', statusClass]">
+            <!-- <span :class="['status-badge', statusClass]">
                 {{ statusText }}
-            </span>
+            </span> -->
         <h1 class="task-title">
             <v-icon :color="statusMeta.color" size="32" class="mr-1">{{ statusMeta.icon }}</v-icon>
             TASK {{ task.taskId }} : {{ task.taskName }}
+            <span :class="['status-badge', statusClass]">
+                {{ statusText }}
+            </span>
         </h1>
         </div>
     </div>
@@ -26,16 +29,18 @@ const props = defineProps({
     }
 })
 
+console.log(props.task)
+
 const statusTextMap = {
     PENDING: '시작전',
     PROGRESS: '진행중',
-    COMPLETE: '완료'
+    COMPLETED: '완료'
 }
 
 const statusClassMap = {
     PENDING: 'badge-pending',
     PROGRESS: 'badge-progress',
-    COMPLETE: 'badge-complete'
+    COMPLETED: 'badge-complete'
 }
 
 const statusText = computed(() => statusTextMap[props.task.status] || '알 수 없음')
@@ -65,6 +70,7 @@ const statusMeta = computed(() => {
 display: flex;
 flex-direction: column;
 gap: 24px;
+margin-bottom: 30px;
 }
 
 .breadcrumb {
@@ -81,17 +87,23 @@ gap: 4px;
 }
 
 .status-badge {
-font-size: 13px;
-padding: 6px 10px;
-border-radius: 6px;
-line-height: 1;
-margin-left: 40px;
+  display: inline-block; 
+  font-size: 13px;
+  padding: 3px ;
+  border-radius: 15px;
+  min-width: 60px;
+  text-align: center;
+  margin-left: 10px;
 }
 
 .task-title {
-font-size: 22px;
-font-weight: 700;
-margin: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    align-items: center;
 }
 
 /* 상태별 스타일 */

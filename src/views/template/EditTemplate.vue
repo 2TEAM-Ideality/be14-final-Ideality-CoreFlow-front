@@ -315,7 +315,7 @@ const cancelEdit = () => {
   line-height: 1.6;
 }
 .color-button {
-  background-color: #25BEAD;
+  background-color: #7578ee;
   color: white;
   font-weight: 600;
   font-size: 12px;
