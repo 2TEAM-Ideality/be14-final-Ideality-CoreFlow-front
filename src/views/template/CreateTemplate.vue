@@ -433,7 +433,7 @@ watch(loadProject, (newVal) => {
 
     </template>
 
-    <!-- 오른쪽 영역 -->
+    <!-- 오른쪽 영역  -->
     <template #sidebar>
       <div class="sidebar-section">
         <InfoField label="작성자" icon="mdi-account" :value="createdBy" />
