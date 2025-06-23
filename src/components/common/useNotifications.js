@@ -50,7 +50,7 @@ export function useNotifications() {
       setTimeout(() => {
         console.info('SSE 재연결 시도...');
         connectToSSE(token);
-      }, 5000);  // 재연결 지연 시간 (5초)
+      }, 6000);  // 재연결 지연 시간 (6초)
     };
   };
   
