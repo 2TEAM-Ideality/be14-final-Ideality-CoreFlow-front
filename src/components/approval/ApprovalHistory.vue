@@ -1,9 +1,13 @@
 <template>
     <div class="container" @click="clearSelection">
         <h2>결재 내역</h2>
+
         <div class="tabs">
-            <button :class="{active: currentTab === 'received' }" @click="selectTab('received')">수신</button>
-            <button :class="{active: currentTab === 'sent' }" @click="selectTab('sent')">발신</button>
+            <div>
+                <button :class="{active: currentTab === 'received' }" @click="selectTab('received')">수신</button>
+                <button :class="{active: currentTab === 'sent' }" @click="selectTab('sent')">발신</button>
+            </div>
+            <input type="text" placeholder="검색 🔍" class="approval-search" v-model="searchApproval"/>
         </div>
 
         <table class="history-table">
@@ -57,6 +61,7 @@ function selectTab(type) {
     currentTab.value = type
 }
 
+const searchApproval = ref('')
 const currentTab = ref('received')
 
 const approvalData = ref([])
@@ -79,11 +84,15 @@ onMounted(() => {
 })
 
 const displayedList = computed(() => {
-    console.log('displayed', displayedList.value)
-    return currentTab.value === 'received'
-    ? approvalData.value.receivedApproval
-    : approvalData.value.sentApproval
+    const list = currentTab.value === 'received'
+    ? approvalData.value.receivedApproval ?? []
+    : approvalData.value.sentApproval ?? []
+
+    return list.filter(item =>
+        !searchApproval.value || item.title.includes(searchApproval.value)
+    )
 })
+
 
 function statusClass(status) {
     switch (status) {
@@ -124,6 +133,7 @@ function goToPage(page) {
 
 watch(currentPage, (newVal) => {
     targetPage.value = newVal
+    searchApproval.value = ''
 })
 </script>
 
@@ -137,6 +147,7 @@ watch(currentPage, (newVal) => {
   margin-bottom: 16px;
   margin-top: 12px;
   border-bottom: 1px solid #ccc;
+  justify-content: space-between;
 }
 
 .tabs button {
@@ -210,5 +221,15 @@ watch(currentPage, (newVal) => {
     .pagination-btn:hover {
         background-color: black;
         color: white
+    }
+
+    
+    .approval-search {
+        width: 200px;
+        padding: 3px;
+        padding-left: 12px;
+        background-color: white;
+        border-radius: 20px;
+        border: 1px solid gray;
     }
 </style>
