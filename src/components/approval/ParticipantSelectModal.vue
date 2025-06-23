@@ -134,13 +134,13 @@ watch(groupedUsers, (val) => {
               >
                 <v-expansion-panel-title class="expansion-title">
                   <v-checkbox
+                  class="panel-checkbox"
                     v-if="!isApprover"
                     :indeterminate="isIndeterminate(dept)"
                     :model-value="isAllSelected(dept)"
                     @update:modelValue="toggleGroup(dept)"
                     density="compact"
                     hide-details
-                    style="padding: 2%;"
                   />
                   <span>{{ dept }}</span>
                 </v-expansion-panel-title>
@@ -277,5 +277,22 @@ watch(groupedUsers, (val) => {
   max-height: 400px;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+.expansion-title {
+  background-color: #EEEFFA;
+  min-height: 35px; /* ← 여기 */
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+}
+.panel-checkbox {
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  height: 20px !important;
+  --v-input-control-height: 20px; /* Vuetify 3 커스텀 높이 */
 }
 </style>
