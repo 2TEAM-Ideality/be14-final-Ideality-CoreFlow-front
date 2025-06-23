@@ -1,5 +1,6 @@
 // stores/taskStore.js
 import { defineStore } from 'pinia';
+import { useUserStore } from "@/stores/userStore";
 
 export const useTaskStore = defineStore('taskStore', {
   state: () => ({
@@ -8,12 +9,70 @@ export const useTaskStore = defineStore('taskStore', {
   }),
 
   actions: {
-        updateItemStatus(updatedItem) {
+            // 항목 상태 업데이트
+    updateItemStatus(updatedItem) {
       const index = this.items.findIndex(item => item.workId === updatedItem.workId);
       if (index !== -1) {
-        this.items[index] = updatedItem; // 상태 변경
+        this.items[index] = updatedItem;
       }
     },
+
+    // 시작 API 호출 (fetch 사용)
+    async startTask(workId) {
+      try {
+        const userStore = useUserStore();  // userStore에서 토큰 가져오기
+        const token = userStore.accessToken;  // Bearer Token
+
+        const response = await fetch(`http://localhost:5000/api/detail/${workId}/start`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,  // Authorization 헤더에 Bearer Token 추가
+            'Content-Type': 'application/json',  // JSON 데이터 전송
+          },
+        });
+
+        if (response.ok) {
+          const updatedItem = this.items.find(item => item.workId === workId);
+          if (updatedItem) {
+            updatedItem.status = 'PROGRESS'; // 상태를 '진행중'으로 변경
+            this.updateItemStatus(updatedItem); // 상태 업데이트
+          }
+        } else {
+          console.error('Failed to start task');
+        }
+      } catch (error) {
+        console.error('Error starting task:', error);
+      }
+    },
+
+    // 완료 API 호출 (fetch 사용)
+    async completeTask(workId) {
+      try {
+        const userStore = useUserStore();  // userStore에서 토큰 가져오기
+        const token = userStore.accessToken;  // Bearer Token
+
+        const response = await fetch(`http://localhost:5000/api/detail/${workId}/complete`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,  // Authorization 헤더에 Bearer Token 추가
+            'Content-Type': 'application/json',  // JSON 데이터 전송
+          },
+        });
+
+        if (response.ok) {
+          const updatedItem = this.items.find(item => item.workId === workId);
+          if (updatedItem) {
+            updatedItem.status = 'COMPLETED'; // 상태를 '완료'로 변경
+            this.updateItemStatus(updatedItem); // 상태 업데이트
+          }
+        } else {
+          console.error('Failed to complete task');
+        }
+      } catch (error) {
+        console.error('Error completing task:', error);
+      }
+    },
+
     async fetchItems(parentTaskId, token) {
       try {
         const response = await fetch(`http://localhost:5000/api/work/detailList?parentTaskId=${parentTaskId}`, {

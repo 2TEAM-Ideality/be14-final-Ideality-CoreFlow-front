@@ -300,7 +300,7 @@ validateForm() {
           console.log("validateForm 호출")
     return;
   }
-            this.localEditMode = false; // 저장 후 수정모드 종료
+      this.localEditMode = false; // 저장 후 수정모드 종료
       const userStore = useUserStore();
       const token = userStore.accessToken;
       const taskStore = useTaskStore();

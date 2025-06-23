@@ -132,36 +132,51 @@ export default {
     }
   },
   methods: {
-    // 대화상자를 표시하고 상태 변경을 확인받는 함수
+      // 상태 변경 전 확인 대화상자
     confirmAndUpdateStatus(item, newStatus) {
-      if (newStatus === 'COMPLETED' && item.status === 'COMPLETED') {
-        // 완료 상태에서는 더 이상 상태를 변경할 수 없음
-        return;
+      if (newStatus === "COMPLETED" && item.status === "COMPLETED") {
+          this.dialogMessage = "진척률이 100%가 아닙니다!";
+          this.showDialog = true; // 경고창 표시
+          return; // 진행 중인 상태로 유지
       }
-      
-      if (newStatus === 'PENDING' || newStatus === 'PROGRESS') {
-        this.dialogMessage = `해당 일정을 ${newStatus === 'PROGRESS' ? '시작' : '완료'}하시겠습니까?`;
-      } else if (newStatus === 'COMPLETED') {
-        this.dialogMessage = `해당 일정을 완료하시겠습니까?`;
-      }
-      
+
+      this.dialogMessage = `해당 일정을 ${newStatus === "PROGRESS" ? "시작" : "완료"}하시겠습니까?`;
       this.itemToUpdate = item;
       this.newStatus = newStatus;
       this.showDialog = true;
     },
-    
-    // 대화상자에서 확인 후 상태 변경
-    confirmStatusChange() {
+
+    // 확인 후 상태 변경
+    async confirmStatusChange() {
       const taskStore = useTaskStore();
-      this.itemToUpdate.status = this.newStatus;
-      taskStore.updateItemStatus(this.itemToUpdate); // 상태 변경
+      if (this.newStatus === "PROGRESS") {
+        await taskStore.startTask(this.itemToUpdate.workId); // 시작 API 호출
+      } else if (this.newStatus === "COMPLETED") {
+        await taskStore.completeTask(this.itemToUpdate.workId); // 완료 API 호출
+      }
       this.showDialog = false; // 대화상자 닫기
     },
 
-    // 대화상자 닫기
+    // 대화상자 취소
     cancelStatusChange() {
       this.showDialog = false;
     },
+
+     async updateTaskInList(updatedTask) {
+    const index = this.items.findIndex(item => item.workId === updatedTask.workId);
+    if (index !== -1) {
+      // 수정된 항목을 배열에서 업데이트
+      this.items.splice(index, 1, updatedTask);
+    }
+          // 수정 후 totalProgress 갱신
+      const route = useRoute();
+      const parentTaskId = route.params.taskId;
+      const userStore = useUserStore();
+      const token = userStore.accessToken;
+      const taskStore = useTaskStore();
+      await taskStore.fetchTotalProgress(parentTaskId, token); // 수정 후 totalProgress 갱신
+  },
+
 
     openModal(workId) {
       this.selectedWorkId = workId; // 클릭한 세부일정의 workId 저장
