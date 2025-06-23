@@ -33,14 +33,14 @@
     <div class="d-flex align-center mb-1">
       <span class="text-subtitle-2 font-weight-bold">결재자</span>
       <span class="not-null">*</span>
-       <v-btn  v-if="selectedApprover === null" @click="openModal('approver')" :disabled="selectedProjectId === null" size="small" variant="tonal" color="gray" style="margin-right:10px;">
+       <v-btn  v-if="selectedApprover === null" @click="openModal('approver')" :disabled="selectedProjectId === null" size="small" color="white" style="margin-right:10px;">
         <span>조회</span>
       </v-btn>
       <div v-if="selectedProjectId === null" class="text-grey text-body-2">프로젝트를 선택해주세요.</div>
       
     </div>
     <v-chip
-      style=" width: fit-content;"
+            style=" width: fit-content;"
             v-if="selectedApprover"
             closable
             class="participant-chip"
@@ -55,7 +55,11 @@
     <div class="d-flex align-center mb-1 mt-4">
       <span class="text-subtitle-2 font-weight-bold">참조자</span>
       <span class="not-null">*</span>
-      <v-btn @click="openModal('viewer')" size="small" variant="tonal" color="gray">조회</v-btn>
+      <v-btn @click="openModal('viewer')" :disabled="selectedProjectId === null"  size="small" color="white" style="margin-right:10px;">
+        <span v-if="selectedViewers === null">조회</span>
+        <span v-else>편집</span>
+      </v-btn>
+       <div v-if="selectedProjectId === null" class="text-grey text-body-2">프로젝트를 선택해주세요.</div>
     </div>
     <div class="d-flex flex-row gap-3 flex-wrap">
     <v-chip-group>
@@ -338,6 +342,7 @@ async function createApproval() {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    background-color: white;
 }
 .not-null {
   color: red;
