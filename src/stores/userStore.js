@@ -46,11 +46,29 @@ export const useUserStore = defineStore('user', () => {
     }
 
     async function login(responseLogin) {
-        accessToken.value = responseLogin.accessToken
+        accessToken.value = responseLogin.accessToken;
 
-        setUserData(responseLogin)
+        // plain object만 추려서 넣기
+        const plainUser = {
+            id: responseLogin.id,
+            employeeNum: responseLogin.employeeNum,
+            name: responseLogin.name,
+            email: responseLogin.email,
+            birth: responseLogin.birth,
+            hireDate: responseLogin.hireDate,
+            isResign: responseLogin.isResign,
+            resignDate: responseLogin.resignDate,
+            profileImage: responseLogin.profileImage,
+            deptName: responseLogin.deptName,
+            jobRankName: responseLogin.jobRankName,
+            jobRoleName: responseLogin.jobRoleName,
+            roles: [...(responseLogin.roles || [])], // 배열도 복사본 사용
+            temp: responseLogin.temp,
+            schemaName: responseLogin.schemaName
+        }
 
-        schemaName.value = responseLogin.schemaName
+        setUserData(plainUser);
+        schemaName.value = plainUser.schemaName;
 
         localStorage.setItem('user', JSON.stringify({
             id: id.value,
@@ -65,7 +83,7 @@ export const useUserStore = defineStore('user', () => {
             deptName: deptName.value,
             jobRankName: jobRankName.value,
             jobRoleName: jobRoleName.value,
-            roles: roles.value
+            roles: [...roles.value]  // 배열은 복사본
         }))
         localStorage.setItem('schemaName', schemaName.value)
         sessionStorage.setItem('accessToken', accessToken.value)
