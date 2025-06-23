@@ -226,7 +226,7 @@ export const useUserStore = defineStore('user', () => {
             schemaName.value = savedSchemaName
             accessToken.value = savedAccessToken
         } else {
-            forceLogout()
+            clearState()
         }
     }
 
