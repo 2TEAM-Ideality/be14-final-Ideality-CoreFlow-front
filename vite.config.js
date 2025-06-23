@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd()) // ✅ 환경 변수 불러오기
 
   return {
-    base: './',
+    base: '/',
     plugins: [vue(), vueDevTools()],
     resolve: {
       alias: {
