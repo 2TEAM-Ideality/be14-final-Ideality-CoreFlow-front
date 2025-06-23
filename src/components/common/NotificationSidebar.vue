@@ -67,7 +67,8 @@ const deleteNotification = async (notificationId, isAutoDelete) => {
     });
 
     // 서버에서 반환된 데이터를 파싱
-    const data = await response.json();
+    // const data = await response.json();
+    const data = response.data;
 
     // 응답의 status가 success인 경우 처리
     if (data.status === "success") {
