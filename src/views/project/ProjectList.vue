@@ -165,7 +165,7 @@ const applyFilter = ()=> {
   gap: 16px;
 }
 .create-btn {
-  background-color: #00c6a7;
+  background-color: #25BEAD;
   color: white;
   border-radius: 4px;
   padding: 6px 12px;

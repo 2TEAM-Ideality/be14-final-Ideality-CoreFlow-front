@@ -183,7 +183,7 @@ th, td {
   border: none;
 }
 .confirm-btn {
-  background: #25bead;
+  background: #25BEAD;
   color: white;
   border: none;
 }

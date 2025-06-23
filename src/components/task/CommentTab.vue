@@ -334,7 +334,7 @@ watch(() => taskId, (newId) => {
   overflow: hidden; /* 중요: 내부 스크롤을 위해 */
   /* background-color: yellowgreen; */
   /* background-color: yellow; */
-  background-color: white;
+  background-color: rgb(250, 250, 250);
   /* background-color: rgba(242, 242, 255, 0.73); */
 }
 

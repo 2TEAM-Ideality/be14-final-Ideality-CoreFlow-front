@@ -470,8 +470,8 @@ watch(selectedDeptName, (newDept) => {
 }
 
 .custom-select:focus {
-  /* border-color: #25bead; */
-  /* box-shadow: 0 0 2px #25bead; */
+  /* border-color: #25BEAD; */
+  /* box-shadow: 0 0 2px #25BEAD; */
 }
 </style>
 
