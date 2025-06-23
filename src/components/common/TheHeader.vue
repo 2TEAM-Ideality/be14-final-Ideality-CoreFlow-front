@@ -136,7 +136,7 @@ const fetchNotifications = async () => {
 
   try {
     const response = await api.get('/api/notifications');
-    const data = await response.json()
+    const data = response.data
     if (data && data.data) {
       data.data.filter(notice => !notice.isAutoDelete).forEach(notification => {
         store.addNotification(notification)
