@@ -70,8 +70,6 @@ const props = defineProps({
   }
 })
 
-// 예시: task.taskId, task.projectId 등에서 꺼내서 사용 가능
-
 const editData = ref(null)
 const replyTargetId = ref(null)
 const replyTargetUser = ref('')

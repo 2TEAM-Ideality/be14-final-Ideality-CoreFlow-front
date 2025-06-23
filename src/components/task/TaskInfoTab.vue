@@ -117,22 +117,28 @@
 
     <div class="data-wraper">
       <div class="data-item">
-      <div>경과율</div>
+      <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+        <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
+        경과율</div>
       <div class="data">{{ task.selectTask.progressRate }}%</div>
       </div>
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
-          <div style="width:12px; height: 12px;  background-color: #56D193;"></div>
+          <div style="width:12px; height: 12px;  background-color: #4D91FF;"></div>
           태스크 진척률
         </div>
         <div class="data">{{ task.selectTask.passedRate }}%</div>
       </div>
       <div class="data-item">
-        <div>전체 세부일정</div>
+        <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+        <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
+        전체 세부일정</div>
         <div class="data">{{ detailList.length }}</div>
       </div>
       <div class="data-item">
-        <div>지연 임박</div>
+        <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+        <div style="width:12px; height: 12px;  background-color: #FFCC00;"></div>
+        지연 임박</div>
         <div class="data">1</div>
       </div>
       <div class="data-item">
@@ -603,6 +609,7 @@ const completionRate = computed(() => {
   font-size: 23px;
 }
 .data-item{
+  text-align: left;
   width: 100%;
   padding:18px 22px;
   border-radius: 10px;

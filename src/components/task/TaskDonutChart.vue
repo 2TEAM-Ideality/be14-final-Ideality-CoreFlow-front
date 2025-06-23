@@ -1,7 +1,11 @@
 <template>
   <div class="donut-wrapper">
     <canvas ref="chartRef"></canvas>
-    <div class="center-text">
+    <div v-if="props.taskInfo.selectTask.progressRate > 0.0" class="center-text">
+      <strong>{{ props.taskInfo.selectTask.progressRate }}%</strong>
+      <div>완료</div>
+    </div>
+    <div v-else class="zero-progress">
       <strong>{{ props.taskInfo.selectTask.progressRate }}%</strong>
       <div>완료</div>
     </div>
@@ -9,7 +13,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch, ref, computed } from 'vue'
+import { onMounted, onUnmounted, watch, ref, computed, nextTick } from 'vue'
 import {
   Chart,
   ArcElement,
@@ -26,28 +30,56 @@ const props = defineProps({
   detailList: { type: Array, default: () => [] }
 })
 
+// ✅ 완료 여부 체크
+const isCompleted = computed(() => props.taskInfo?.selectTask?.progressRate >= 100)
+
 const chartRef = ref(null)
 let chartInstance = null
 
+// ✅ 상태별 카운트 계산
 const statusCounts = computed(() => {
-  const todo = props.detailList.filter(d => d.status === 'PENDING').length
-  const delay = props.taskInfo.selectTask?.delayDays || 0
-  const doing = props.detailList.filter(d => d.status === 'PROGRESS').length
-  const done = props.detailList.filter(d => d.status === 'COMPLETED').length
-  return [todo, delay, doing, done]
+  const pending = props.detailList.filter(d => d.status === 'PENDING').length
+  const delay = props.detailList.filter(d => d.delayDays > 0).length
+  const progress = props.detailList.filter(d => d.status === 'PROGRESS').length
+  const completed = props.detailList.filter(d => d.status === 'COMPLETED').length
+  return [pending, delay, progress, completed]
 })
 
+// ✅ 차트 그리기
 const renderChart = () => {
+  if (!chartRef.value) return
+
   if (chartInstance) {
     chartInstance.destroy()
   }
 
+  const rawData = statusCounts.value
+  const allZero = rawData.every(v => v === 0)
+
+  const baseData = isCompleted.value
+    ? [1]
+    : allZero
+      ? [1]
+      : rawData
+
+  const baseColors = isCompleted.value
+    ? ['#56D193']
+    : allZero
+      ? ['#DADADA']
+      : ['#DADADA', '#FF914D', '#4D91FF', '#56D193']
+
+  const labels = isCompleted.value
+    ? ['완료됨']
+    : allZero
+      ? ['진행 없음']
+      : ['해야 할 일', '지연 발생', '진행 중', '완료']
+
   const data = {
-    labels: ['해야 할 일', '지연 발생', '진행 중', '완료'],
+    labels,
     datasets: [
       {
-        data: [1, 1, 1, 1],
-        backgroundColor: ['#DADADA', '#FF914D', '#4D91FF', '#56D193'],
+        data: baseData,
+        backgroundColor: baseColors,
         borderWidth: 0
       }
     ]
@@ -69,16 +101,26 @@ const renderChart = () => {
   })
 }
 
-onMounted(renderChart)
-onUnmounted(() => chartInstance?.destroy())
-watch(statusCounts, renderChart)
+// ✅ 마운트 및 감시
+onMounted(async () => {
+  await nextTick()
+  renderChart()
+})
+
+watch(statusCounts, () => {
+  renderChart()
+})
+
+onUnmounted(() => {
+  chartInstance?.destroy()
+})
 </script>
 
 <style scoped>
 .donut-wrapper {
   position: relative;
   width: 200px;
-  aspect-ratio: 1 / 1; /* ✅ 정사각형 유지 */
+  aspect-ratio: 1 / 1;
   text-align: center;
 }
 canvas {
@@ -98,4 +140,17 @@ canvas {
   font-size: 24px;
   color: #3cb371;
 }
+.zero-progress {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-size: 18px;
+  color: #DADADA;
+}
+.zero-progress strong {
+  font-size: 24px;
+}
+
 </style>

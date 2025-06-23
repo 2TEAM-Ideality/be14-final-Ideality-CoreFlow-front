@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUpdated, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, computed, onUpdated, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
@@ -243,7 +243,10 @@ const updateNoticeComment = async (id) => {
 
 onMounted(() => {
   window.addEventListener('click', handleClickOutside)
-  fetchComments(taskId);
+
+  if (taskId.value) {
+    fetchComments(taskId.value)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -263,7 +266,7 @@ const props = defineProps({
   }
 });
 
-const taskId = props.task.taskId;
+const taskId = computed(() => props.task?.taskId)
 
 const onEditComment = (comment) => {
   emit('edit-comment', {
