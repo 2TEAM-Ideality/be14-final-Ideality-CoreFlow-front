@@ -10,9 +10,9 @@
       </div>
 
       <div class="notification-list">
-        <div v-for="(notice, index) in notifications" :key="index" class="notification-item">
+        <div v-for="(notice, index) in notifications" :key="index" class="notification-item" :class="{ 'read': notice.status === 'READ', 'sent': notice.status === 'SENT' }"  @click="handleNotificationClick(notice)">
           <div class="message">
-            <span v-if="notice.status === 'SENT'" class="new-icon"></span> 
+            <span  class="new-icon"></span> 
             {{ notice.content }}
           </div>
           <div class="date">{{ notice.date }} <!-- 삭제 버튼 추가 -->
@@ -25,13 +25,15 @@
 </template>
 
 <script setup>
-import { defineProps,defineEmits,watch } from 'vue'
+import { defineProps,defineEmits } from 'vue'
+import { useRouter } from 'vue-router'; // vue-router 사용
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationStore } from '@/stores/notificationStore';
 import api from '@/api';
 
   const userStore = useUserStore()
   const notificationStore = useNotificationStore()
+  const router = useRouter(); // router 사용
   const token = userStore.accessToken;
 
 const props = defineProps({
@@ -52,6 +54,68 @@ const emit = defineEmits(['closeSidebar'])
 const closeSidebar = () => {
   emit('closeSidebar')  // 부모 컴포넌트에 closeSidebar 이벤트를 전달
 }
+
+
+// 알림 클릭 시 라우팅과 읽기 처리 함수
+const handleNotificationClick = async (notice) => {
+  // 알림을 읽음 처리
+  const response = await markNotificationAsRead(notice.id);
+  
+  // 읽기 성공시 라우팅
+  if (response.status === 'success') {
+    let targetUrl = '';
+
+    switch (notice.targetType) {
+      case 'TASK':
+        targetUrl = `/task/${notice.targetId}`;
+        break;
+      case 'PROJECT':
+        targetUrl = `/project/${notice.targetId}/overview`;
+        break;
+      case 'APPROVAL':
+        targetUrl = '/approval';
+        break;
+      default:
+        console.error('알 수 없는 targetType:', notice.targetType);
+        return;
+    }
+
+    // 라우팅 처리
+    router.push(targetUrl);
+  } else {
+    console.error("알림 읽기 실패:", response.message || "알 수 없는 오류");
+  }
+}
+
+// 알림을 읽음 처리 API 호출
+const markNotificationAsRead = async (notificationId) => {
+  if (!token) {
+    console.error("토큰이 없습니다. 로그인 상태를 확인해주세요.");
+    return { status: 'fail', message: '로그인 상태가 아닙니다.' };
+  }
+
+  try {
+    const response = await api.patch(`/api/notifications/${notificationId}/read`);
+    
+    if (response.data.status === "success") {
+      // store에서 notifications를 가져와서 상태 업데이트
+      const updatedNotification = notificationStore.notifications.find(notice => notice.id === notificationId);
+      if (updatedNotification) {
+        updatedNotification.status = 'READ'; // 상태 업데이트
+      }
+      console.log("알림이 읽음 상태로 변경되었습니다.");
+      return { status: 'success', message: '알림이 읽음 상태로 변경되었습니다.' };
+    } else {
+      console.error("알림 읽기 실패:", response.data.message || "알 수 없는 오류");
+      return { status: 'fail', message: response.data.message };
+    }
+  } catch (error) {
+    console.error('알림 읽기 오류:', error);
+    return { status: 'error', message: '알림 읽기 처리 중 오류 발생' };
+  }
+}
+
+
 
 // 알림 삭제 함수
 const deleteNotification = async (notificationId, isAutoDelete) => {
@@ -131,6 +195,7 @@ const deleteNotification = async (notificationId, isAutoDelete) => {
   font-size: 14px;
   color: #333;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    cursor: pointer; /* 클릭 가능한 모양으로 변경 */
 }
 
 .notification-item .message {
@@ -144,12 +209,14 @@ const deleteNotification = async (notificationId, isAutoDelete) => {
 .notification-item.sent {
   background-color: #e0f7fa; /* 파란색 계열 강조 색 */
   font-weight: bold;
+  border: 1px solid gray; /* 얇은 검정색 테두리 추가 */
 }
 
 /* READ 상태일 경우 기본 흰색 배경 */
 .notification-item.read {
   background-color: white;
   color: #555;
+  border: 1px solid gray; /* 얇은 검정색 테두리 추가 */
 }
 
 .notification-item .error-icon {
