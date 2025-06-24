@@ -40,10 +40,6 @@
         :detailList="props.detailList"/>
       </div>
      
-      <!-- <CustomDonut  
-      :taskInfo="props.taskData" 
-      :detailList="props.detailList" /> -->
-      <!-- 담당부서 -->
       <div style="display: flex; flex-direction: column; width: 100%;">
         <div class="form-row">
           <label class="form-label">담당 부서 :</label>
@@ -117,24 +113,56 @@
     
 
     <div class="data-wraper">
+      <!-- 경과율 -->
       <div class="data-item">
-      <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
-        <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
-        경과율</div>
-      <div class="data">{{ task.selectTask.progressRate }}%</div>
+        <div class="data-label">
+          <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
+          경과율
+        </div>
+        <div class="data">
+          <template v-if="isEdit">
+            <input
+              type="number"
+              min="0"
+              max="150"
+              class="input"
+              v-model.number="task.selectTask.passedRate"
+              style="width: 80px;"
+            /> %
+          </template>
+          <template v-else>
+            {{ task.selectTask.passedRate }}%
+          </template>
+        </div>
       </div>
+
+      <!-- 진척률 -->
       <div class="data-item">
-        <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+        <div class="data-label">
           <div style="width:12px; height: 12px;  background-color: #4D91FF;"></div>
           태스크 진척률
         </div>
-        <div class="data">{{ task.selectTask.progressRate }}%</div>
+        <div class="data">
+          <template v-if="isEdit">
+            <input
+              type="number"
+              min="0"
+              max="100"
+              class="input"
+              v-model.number="task.selectTask.progressRate"
+              style="width: 80px;"
+            /> %
+          </template>
+          <template v-else>
+            {{ task.selectTask.progressRate }}%
+          </template>
+        </div>
       </div>
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
         <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
         전체 세부일정</div>
-        <div class="data">{{ detailList.length }}</div>
+        <div class="data">{{ activeDetailList.length }}</div>
       </div>
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
@@ -234,8 +262,13 @@ const nextTaskNames = computed(() =>
 const selectedDeptName = computed(() =>
   task.value.deptNames.length > 0 ? task.value.deptNames.join(', ') : ''
 );
+// 유효한 세부 일정 
+const activeDetailList = computed(() => {
+  return props.detailList.filter(d => d.status !== 'DELETED')
+})
 
 onMounted(() => {
+  console.log(props.taskData)
   window.addEventListener('click', handleClickOutside);
 });
 
