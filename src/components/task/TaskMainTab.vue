@@ -10,128 +10,124 @@
           {{ tab.label }}
         </button>
       </div>
-      <button class="schedule-button" @click="openModal">+ 세부일정 생성</button>
+      <v-btn
+        color="#7578ee"
+        variant="flat"
+        prepend-icon="mdi-plus"
+        class="schedule-button"
+        @click="openModal"
+      >
+        세부일정 생성
+      </v-btn>
     </div>
 
-    <!-- 선택된 탭에 맞는 컴포넌트를 표시 -->
     <component
       :is="selectedComponent"
       v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
       :task-id="taskData.selectTask.taskId"
     />
 
-    <!-- 모달이 열릴 때만 표시 -->
-    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-      <div class="modal-content">
-        <h2>세부 일정 생성</h2>
-        <span class="close-btn" @click="closeModal">X</span>
-        <hr />
-        <form @submit.prevent="submitForm">
-          <div>
-            <label for="title">세부 일정 제목:</label>
-            <input type="text" id="title" v-model="form.title" required />
-          </div>
+    <v-dialog v-model="showModal" max-width="700">
+      <v-card>
+        <v-card-title class="d-flex justify-space-between align-center">
+          <span>세부 일정 생성</span>
+          <v-btn icon @click="closeModal">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
 
-          <div>
-            <label for="description">세부 일정 설명:</label>
-            <textarea id="description" v-model="form.description" required></textarea>
-          </div>
+        <v-divider></v-divider>
 
-          <div class="inline-fields-baseline">
-            <label for="start-date">시작 베이스라인:</label>
-            <div class="baseline-group">
-              <input type="date" id="start-date" v-model="form.startDate" required />
+        <v-card-text>
+          <v-form @submit.prevent="submitForm">
+            <v-text-field label="세부 일정 제목" v-model="form.title" required></v-text-field>
+            <v-textarea label="세부 일정 설명" v-model="form.description" required></v-textarea>
+
+            <div class="inline-fields-baseline">
+              <v-text-field
+                label="시작 베이스라인"
+                v-model="form.startDate"
+                type="date"
+                required
+              />
+              <v-text-field
+                label="마감 베이스라인"
+                v-model="form.endDate"
+                type="date"
+                required
+              />
             </div>
-
-            <label for="end-date">마감 베이스라인:</label>
-            <div class="baseline-group">
-              <input type="date" id="end-date" v-model="form.endDate" required />
-            </div>
-          </div>
-
-          <div>
-            <label for="department">담당 부서:</label>
-            <select id="department" v-model="form.department" @change="fetchUsersForDepartment">
-              <option value="" disabled selected>부서명을 선택해주세요</option>
-              <option v-for="department in departments" :key="department.deptId" :value="department.deptId">
-                {{ department.deptName }}
-              </option>
-            </select>
-          </div>
-
-          <div class="inline-fields">
-            <div class="field-container">
-              <div class="label-container">
-                <label for="preceding-task">선행 일정:</label>
-                <button type="button" class="add-btn" @click="addPrecedingTask">+</button>
+            <div class="inline-fields">
+              <div class="field-container">
+                <div class="label-container">
+                  <span>선행 일정</span>
+                  <v-btn icon @click="addPrecedingTask"><v-icon>mdi-plus</v-icon></v-btn>
+                </div>
+                <v-select
+                  v-for="(task, i) in form.precedingTasks"
+                  :key="i"
+                  v-model="form.precedingTasks[i]"
+                  :items="tasks"
+                  item-title="name"
+                  item-value="id"
+                  label="선행 일정 선택"
+                />
               </div>
-              <div v-for="(preceding, index) in form.precedingTasks" :key="'preceding-' + index" class="field-group">
-                <select v-model="form.precedingTasks[index]">
-                  <option value="" disabled selected>선행일정을 선택해주세요</option>
-                  <option v-for="task in tasks" :key="task.id" :value="task.id">{{ task.name }}</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field-container">
-              <div class="label-container">
-                <label for="following-task">후행 일정:</label>
-                <button type="button" class="add-btn" @click="addFollowingTask">+</button>
-              </div>
-              <div v-for="(following, index) in form.followingTasks" :key="'following-' + index" class="field-group">
-                <select v-model="form.followingTasks[index]">
-                  <option value="" disabled selected>후행일정을 선택해주세요</option>
-                  <option v-for="task in tasks" :key="task.id" :value="task.id">{{ task.name }}</option>
-                </select>
+              <div class="field-container">
+                <div class="label-container">
+                  <span>후행 일정</span>
+                  <v-btn icon @click="addFollowingTask"><v-icon>mdi-plus</v-icon></v-btn>
+                </div>
+                <v-select
+                  v-for="(task, i) in form.followingTasks"
+                  :key="i"
+                  v-model="form.followingTasks[i]"
+                  :items="tasks"
+                  item-title="name"
+                  item-value="id"
+                  label="후행 일정 선택"
+                />
               </div>
             </div>
-          </div>
+            <!-- 담당 부서 & 책임자 & 참여자 -->
+            <v-select
+              label="담당 부서"
+              v-model="form.department"
+              :items="departments"
+              item-title="deptName"
+              item-value="deptId"
+              return-object
+              @update:modelValue="fetchUsersForDepartment"
+              required
+            />
 
-<!-- 책임자 -->
-<div>
-  <label for="responsible">책임자:</label>
-  <select id="responsible" v-model="form.responsible">
-    <option value="" disabled selected>책임자를 선택해주세요</option>
-    <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
-  </select>
-</div>
+            <v-select
+              label="책임자"
+              v-model="form.responsible"
+              :items="users"
+              item-title="name"
+              item-value="id"
+              required
+            />
 
-<!-- 참여자 -->
-<!-- 참여자 체크박스 -->
-<div>
-  <label for="participants">참여자:</label>
-  <table>
-    <thead>
-      <tr>
-        <th>선택</th>
-        <th>참여자 이름</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="user in users" :key="user.id">
-        <td>
-          <input 
-            type="checkbox" 
-            :id="'participant-' + user.id" 
-            :value="user.id" 
-            v-model="form.participants" 
-          />
-        </td>
-        <td>
-          <label :for="'participant-' + user.id">{{ user.name }}</label>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+            <v-label class="mt-4">참여자:</v-label>
+            <v-checkbox
+              v-for="user in users"
+              :key="user.id"
+              v-model="form.participants"
+              :label="user.name"
+              :value="user.id"
+              density="compact"
+            />
 
-
-          <button type="submit" class="submit-btn" @click="submitForm" :disabled="isSubmitting.value">추가</button>
-        </form>
-      </div>
-    </div>
+            <v-btn type="submit" class="mt-4" color="primary" :loading="isSubmitting">추가</v-btn>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
+
 
 <script setup>
 import { useRoute } from "vue-router";
@@ -139,6 +135,7 @@ import { ref, computed,onMounted } from 'vue'
 import TaskInfoTab from '@/components/task/TaskInfoTab.vue'
 import TaskApprovalTab from '@/components/task/TaskApprovalTab.vue'
 import TaskAttachmentTab from '@/components/task/TaskAttachmentTab.vue'
+import TaskParticipantTab from '@/components/task/TaskParticipantTab.vue'
 import DetailTab from './DetailTab.vue'
 import { defineEmits } from 'vue'
 import { useUserStore } from '@/stores/userStore'
@@ -264,7 +261,8 @@ const tabs = [
   { name: 'info', label: '태스크 정보', component: TaskInfoTab },
   { name: 'detail', label: '세부 일정', component: DetailTab },
   { name: 'approval', label: '결재 내역', component: TaskApprovalTab },
-  { name: 'attachments', label: '자료 검색', component: TaskAttachmentTab }
+  { name: 'attachments', label: '자료 검색', component: TaskAttachmentTab },
+  { name: 'participants', label: '태스크 참여자', component: TaskParticipantTab }
 ]
 
 const selectedTab = ref('info')
@@ -327,27 +325,21 @@ const fetchDepartments = async () => {
 const users = ref([]) // task 목록을 저장할 배열
 
 const fetchUsersForDepartment = async () => {
-  const deptId = form.value.department; // 선택된 부서 ID
+  const selectedDept = form.value.department; // 이미 객체임
+  if (!selectedDept || !selectedDept.deptName) return;
+
+  const deptName = selectedDept.deptName;
   const userStore = useUserStore();
   const token = userStore.accessToken;
 
-  if (!token) {
-    console.error("토큰이 없습니다.");
-    return;
-  }
-
   try {
-    // 부서 ID로 부서명 찾기
-    const selectedDept = departments.value.find(dept => dept.deptId === deptId);
-    const deptName = selectedDept ? selectedDept.deptName : ''; // deptName을 가져오기
-
-    console.log("Fetching users for dept:", deptName); // 부서명 확인
     const response = await api.get(`/api/users/dept`, {
       params: { deptName }
-    })
+    });
 
     if (response.status === 200) {
-      users.value = response.data.data; // 부서에 해당하는 사용자 목록을 users 배열에 저장
+      users.value = response.data.data;
+      console.log("📁부서별 회원 목록 조회 성공", users.value)
     } else {
       console.error("사용자 데이터를 가져오는 데 실패했습니다:", response.status);
     }
@@ -355,7 +347,6 @@ const fetchUsersForDepartment = async () => {
     console.error("사용자 데이터를 불러오는 데 실패했습니다:", error);
   }
 };
-
 
 
 // 컴포넌트가 마운트된 후 API 호출

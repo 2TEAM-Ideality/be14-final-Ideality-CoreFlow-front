@@ -26,6 +26,8 @@
                 class="profile-img"
                 />
                 <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
+                <span v-if="comment.userId === userStore.id">⭐</span>
+                <span v-else>💬</span>
                 <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
               </div>
               <span class="comment-create">{{ comment.createdAt.split('T')[0] }}  {{ comment.createdAt.split('T')[1].split(':')[0] }}:{{ comment.createdAt.split('T')[1].split(':')[1] }}</span>
@@ -113,21 +115,21 @@
                 </div>
             </div>
         </div>
-    </div>
 
-  <!-- 모달 창 -->
-  <template v-if="isDeleteModalOpen">
-    <div class="modal-overlay">
-      <div class="modal-box">
-        <h2 class="modal-title">댓글 삭제</h2>
-        <p class="modal-message">댓글을 정말로 삭제하시겠습니까?</p>
-        <div class="modal-buttons">
-          <button class="modal-cancel" @click="closeDeleteModal">취소</button>
-          <button class="modal-confirm" @click="deleteComment">확인</button>
-        </div>
-      </div>
+        <!-- 모달 창 -->
+        <template v-if="isDeleteModalOpen">
+          <div class="modal-overlay">
+            <div class="modal-box">
+              <h2 class="modal-title">댓글 삭제</h2>
+              <p class="modal-message">댓글을 정말로 삭제하시겠습니까?</p>
+              <div class="modal-buttons">
+                <button class="modal-cancel" @click="closeDeleteModal">취소</button>
+                <button class="modal-confirm" @click="deleteComment">확인</button>
+              </div>
+            </div>
+          </div>
+        </template>
     </div>
-  </template>
 </template>
 
 <script setup>
@@ -137,6 +139,16 @@ import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
 import api from '@/api';
 
+
+const props = defineProps({
+  task: {
+    type: Object,
+    required: true
+  }
+});
+
+
+console.log(props.task)
 const route = useRoute();
 const userStore = useUserStore();
 
@@ -169,7 +181,7 @@ const fetchComments = async (id)=> {
 
     const res = await api.get(`/api/comment/task/${id}`);
     comments.value = convertToTree(res.data.data);
-    console.log("댓글 가져오기 성공")
+    console.log("📁 댓글 가져오기 성공", comments.value)
     nextTick(() => scrollToBottom())
     
   } catch (error) {
@@ -293,12 +305,6 @@ onUpdated(() => {
 // 댓글 수정 emit
 const emit = defineEmits(['edit-comment', 'set-reply']);
 
-const props = defineProps({
-  task: {
-    type: Object,
-    required: true
-  }
-});
 
 // const taskId = computed(() => props.task?.taskId)
 

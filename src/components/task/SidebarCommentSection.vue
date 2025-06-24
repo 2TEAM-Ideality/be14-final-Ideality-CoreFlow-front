@@ -26,8 +26,8 @@
     <div class="comment-panel">
       <CommentTab
         v-if="selectedTab === 'comment'"
+        :task="props.task"
         :key="`comment-${refreshKey}`"
-        :taskId="taskId"
         @edit-comment="handleEditComment"
         @set-reply="handleSetReply"
         @comment-updated="refreshKey++"

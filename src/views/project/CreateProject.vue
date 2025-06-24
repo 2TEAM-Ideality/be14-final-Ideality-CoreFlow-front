@@ -415,11 +415,15 @@ const usedDeptList = computed(() => {
 
 //  초대 가능한 유저 목록 가져오기
 const fetchUserList = async () => {
-  const res = await api.get(`/api/users/find-all`)
-  console.log("초대 가능 유저 확인", res.data.data)
-  return res.data.data;
-}
+  const res = await api.get(`/api/users/find-all`);
+  const allUsers = res.data.data;
 
+  // 'admin' 팀은 제외
+  const filteredUsers = allUsers.filter(user => user.deptName?.toLowerCase() !== 'admin');
+
+  console.log("초대 가능 유저 (admin 제외):", filteredUsers);
+  return filteredUsers;
+}
 
 // 템플릿 리스트 가져오기 
 const fetchTemplates = async () => {
@@ -605,6 +609,8 @@ const convertToFlowData = () => {
   }))
 }
 
+
+
 // 프로젝트 생성
 const saveProject = async () => {
    
@@ -614,7 +620,7 @@ const saveProject = async () => {
     description: projectDescription.value,
     startBase: startDate.value,
     endBase: endDate.value,
-    leaderIds: [1, 3],        // 임시값 (미구현)
+    leaderIds: selectedLeaders.value.map(user => user.id),   
     directorId: user.id       // 현재 로그인 사용자
   };
 
