@@ -16,7 +16,7 @@
           @click="goToProject(project.id)"
         >
         
-          <v-card-title class="text-subtitle-2 font-weight-bold" style="height: 60%; color: #5E5E5E;">
+          <v-card-title class="text-subtitle-2 font-weight-bold" style="height: 45%; color: #5E5E5E;">
             <!-- <v-chip
             :color="statusColor(project.status)"
             class="ma-1"
@@ -27,11 +27,15 @@
             </v-chip> -->
             {{ project.name }}
           </v-card-title>
-          <v-card-text class="text-caption">
-            {{ project.director.deptName }}
-            {{ project.director.jobRoleName }}
-            {{ project.director.name }}
+          <v-card-text class="text-caption d-flex align-center" style="gap: 6px;">
+            <img
+              :src="project.director.profileImage || defaultProfile"
+              alt="프로필 이미지"
+              style="width: 18px; height: 18px; border-radius: 50%; object-fit: cover;"
+            />
+            {{ project.director.deptName }} {{ project.director.jobRoleName }} {{ project.director.name }}
           </v-card-text>
+
           <v-divider></v-divider>
           <v-card-actions 
             :style="{
@@ -51,6 +55,7 @@
 </template>
 
 <script setup>
+import defaultProfile from '@/assets/profileDummy.png'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({
@@ -147,6 +152,9 @@ function goToProject(id) {
   background-color: #f9f9f9; /* 보기 편한 색으로 변경 */
 }
 
+.text-caption{
+  color: #73726E;
+}
 .v-slide-group__content {
   display: flex;
   flex-wrap: nowrap;  /* 줄바꿈 방지 */
@@ -160,7 +168,7 @@ function goToProject(id) {
   font-size: 12px;
 }
 .v-card-actions  {
-  min-height : 35px;
+  min-height : 25px;
   padding-left: 20px;
   padding-right: 20px;
   height: fit-content !important;

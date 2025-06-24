@@ -16,47 +16,38 @@
 .template-layout {
   display: grid;
   grid-template-columns: 7fr 3fr;
-  padding: 32px 80px;
-  gap : 32px;
+  height: calc(100vh - 65px); /* 전체 고정 높이 */
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden; /* 바깥쪽 스크롤 방지 */
 }
 
 .template-main {
-  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  /* padding: 32px 0; */
+  box-sizing: border-box;
 }
 
 .template-sidebar {
-  padding: 0 2%;
+  height: calc(100vh - 65px);/* ✅ 여기 고정! */
+  overflow-y: auto;
+  /* padding: 32px 2%; */
   border-left: 1px solid rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  background-color: white;
 }
 
-/* 추가된 스타일 */
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 24px;
+/* 스크롤바 숨김 - Chrome, Edge, Safari */
+.template-main::-webkit-scrollbar,
+.template-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
-.tab-menu {
-  display: flex;
-  gap: 24px;
-  border-bottom: 1px solid #ddd;
-  margin-bottom: 24px;
-}
-
-.tab-button {
-  background: none;
-  border: none;
-  font-size: 15px;
-  padding-bottom: 8px;
-  cursor: pointer;
-  color: #444;
-  text-decoration: none;
-}
-
-.tab-button.active {
-  font-weight: bold;
-  color: #000;
-  border-bottom: 2px solid #000;
+/* 스크롤바 숨김 - Firefox 등 */
+.template-main,
+.template-sidebar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 </style>
-  

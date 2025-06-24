@@ -2,17 +2,26 @@
   <div class="task-info-box">
     <!-- 수정 아이콘 / 완료 버튼 -->
     <div class="edit-toggle">
-      <img
-        v-if="!isEdit"
-        src="@/assets/icons/pentool.svg"
-        class="edit-icon"
-        alt="edit"
-        @click="isEdit = true"
-      />
-      <button v-else class="complete-button" @click="handleCompleteClick">완료</button>
+       <img
+          v-if="!isEdit"
+          src="@/assets/icons/pentool.svg"
+          class="edit-icon"
+          alt="edit"
+          @click="isEdit = true"
+        />
+        <v-btn
+          v-else
+          class="complete-button"
+          @click="handleCompleteClick"
+          color="primary"
+          variant="elevated"
+          height="36"
+          min-width="72"
+        >
+          완료
+        </v-btn>
 
-        <!-- 확인 모달 -->
-        <ConfirmModal
+         <ConfirmModal
           v-if="showConfirmModal"
           :visible="showConfirmModal"
           title="수정 확인"
@@ -22,45 +31,131 @@
         />
     </div>
 
-    <!-- 담당부서 -->
-    <div class="form-row">
-      <label class="form-label">담당부서:</label>
-        <div
-          ref="deptDropdownRef"
-          class="department-input-box small-width readonly-box" 
-          :class="{ editable: isEdit }"
-          @click="isEdit && handleDeptDropdown()"
-        >
-          <span>{{ selectedDeptName }}</span>
-          <i
-            class="mdi mdi-chevron-down icon-right"
-            :style="{ visibility: isEdit ? 'visible' : 'hidden' }"
-          />
 
-          <ul v-if="showDeptDropdown" class="dropdown">
-            <li
-              v-for="(dept, idx) in deptList"
-              :key="idx"
-              @click.stop="selectDept(dept)"
-              class="dropdown-item"
-            >
-              <input type="checkbox" :checked="task.deptNames.includes(dept)" readonly />
-              {{ dept }}
-            </li>
-          </ul>
-        </div>
+    
+    <div style="display: flex; flex-direction: row; gap: 50px;">
+      <div style="width: 250px; height: 250px;">
+        <TaskDonutChart :taskInfo="props.taskData" 
+        :detailList="props.detailList"/>
+      </div>
+     
+      <!-- <CustomDonut  
+      :taskInfo="props.taskData" 
+      :detailList="props.detailList" /> -->
+      <!-- 담당부서 -->
+      <div style="display: flex; flex-direction: column; width: 100%;">
+        <div class="form-row">
+          <label class="form-label">담당 부서 :</label>
+          <div
+            ref="deptDropdownRef"
+            class="department-input-box small-width readonly-box"
+            :class="{ editable: isEdit }"
+            @click="isEdit && handleDeptDropdown()"
+          >
+            <span>{{ selectedDeptName }}</span>
+            <v-icon
+              class="icon-right"
+              :style="{ visibility: isEdit ? 'visible' : 'hidden' }"
+            >mdi-chevron-down</v-icon>
+
+            <ul v-if="showDeptDropdown" class="dropdown">
+              <li
+                v-for="(dept, idx) in deptList"
+                :key="idx"
+                @click.stop="selectDept(dept)"
+                class="dropdown-item"
+              >
+                <input type="checkbox" :checked="task.deptNames.includes(dept)" readonly />
+                {{ dept }}
+              </li>
+            </ul>
+          </div>
+          </div>
+          <!-- Task 설명 -->
+          <div class="form-row">
+            <label class="form-label">태스크 설명 :</label>
+            <div class="description-box">
+              <textarea class="task-textarea" :readonly="!isEdit" v-model="task.selectTask.description"></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" >베이스라인 :</label>
+            <div style="flex:1">
+              <div style="display: flex; flex-direction: row; gap: 15px;">
+                <div class="input readonly-text"> 시작 - {{ task.selectTask.startBaseLine }}</div>
+                <div class="input readonly-text">종료 -{{ task.selectTask.endBaseLine }}</div>            
+              </div>
+              
+            </div>
+          </div>
+           <div class="form-row">
+            <label class="form-label" >예상 시작/종료 :</label>
+            <div style="flex:1">
+              <div style="display: flex; flex-direction: row; gap: 15px;">
+                <input
+                  type="date"
+                  class="input"
+                  :disabled="!isEdit"
+                  v-model="task.selectTask.expectStartDate"
+                />
+                <input
+                type="date"
+                class="input"
+                :disabled="!isEdit"
+                v-model="task.selectTask.expectEndDate"
+              />      
+              </div>
+              
+            </div>
+          </div>
+
+      </div>
+      
     </div>
+    
 
-    <!-- Task 설명 -->
-    <div class="form-row">
-      <label class="form-label">Task 설명:</label>
-      <div class="description-box">
-        <textarea class="task-textarea" :readonly="!isEdit" v-model="task.selectTask.description"></textarea>
+    <div class="data-wraper">
+      <div class="data-item">
+      <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+        <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
+        경과율</div>
+      <div class="data">{{ task.selectTask.progressRate }}%</div>
+      </div>
+      <div class="data-item">
+        <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+          <div style="width:12px; height: 12px;  background-color: #4D91FF;"></div>
+          태스크 진척률
+        </div>
+        <div class="data">{{ task.selectTask.passedRate }}%</div>
+      </div>
+      <div class="data-item">
+        <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+        <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
+        전체 세부일정</div>
+        <div class="data">{{ detailList.length }}</div>
+      </div>
+      <div class="data-item">
+        <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+        <div style="width:12px; height: 12px;  background-color: #FFCC00;"></div>
+        지연 임박</div>
+        <div class="data">1</div>
+      </div>
+      <div class="data-item">
+         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+            <div style="width:12px; height: 12px;  background-color: #FF914D;"></div>
+            지연일
+          </div>
+        <div class="data">{{ task.selectTask.delayDay === 0 ? '0일' : `+ ${task.selectTask.delayDay}일` }}</div>
       </div>
     </div>
+    
+    
+
+    
 
     <!-- 경과율 / 진척률 / 지연일수 -->
-    <div class="summary-row">
+    <!-- <div class="summary-row">
       <div class="summary-item">
         <div class="summary-label">경과율</div>
         <div class="summary-box">
@@ -84,106 +179,10 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- 일정 입력 (2줄 구성) -->
-    <div class="schedule-2line">
-      <div class="line">
-        <div class="field-inline">
-          <label>이전 태스크 :</label>
-          <div
-            ref="prevDropdownRef"
-            class="input readonly-box"
-            :class="{ editable: isEdit }"
-            @click="isEdit && handlePrevTaskDropdown()"
-          >
-            <span>{{ prevTaskNames }}</span>
-            <i
-              class="mdi mdi-chevron-down icon-right"
-              :style="{ visibility: isEdit ? 'visible' : 'hidden' }"
-            />
-
-            <ul v-if="showPrevDropdown" class="dropdown">
-              <li
-                v-for="prev in filteredPrevTasks"
-                :key="prev.id"
-                class="dropdown-item"
-                @click.stop="selectPrevTask(prev)"
-              >
-              <!-- 이전 태스크 드롭다운 체크 수정 -->
-              <input
-                type="checkbox"
-                :checked="task.prevTasks?.some(p => p.prevWorkId === prev.id)"
-                readonly
-              />
-                {{ prev.label }}
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="field-inline">
-          <label>시작 베이스라인</label>
-          <div class="input readonly-text">{{ task.selectTask.startBaseLine }}</div>
-        </div>
-        <div class="field-inline">
-          <label>종료 베이스라인</label>
-          <div class="input readonly-text">{{ task.selectTask.endBaseLine }}</div>
-        </div>
-      </div>
-
-      <div class="line">
-        <div class="field-inline">
-          <label>이후 태스크 :</label>
-          <div
-            ref="nextDropdownRef"
-            class="input readonly-box"
-            :class="{ editable: isEdit }"
-            @click="isEdit && handleNextTaskDropdown()"
-          >
-            <span>{{ nextTaskNames }}</span>
-            <i
-              class="mdi mdi-chevron-down icon-right"
-              :style="{ visibility: isEdit ? 'visible' : 'hidden' }"
-            />
-
-            <ul v-if="showNextDropdown" class="dropdown">
-              <li
-                v-for="next in filteredNextTasks"
-                :key="next.id"
-                class="dropdown-item"
-                @click.stop="selectNextTask(next)"
-              >
-              <!-- 이후 태스크 드롭다운 체크 수정 -->
-              <input
-                type="checkbox"
-                :checked="task.nextTasks?.some(n => n.nextWorkId === next.id)"
-                readonly
-              />
-                {{ next.label }}
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="field-inline">
-          <label>예상 시작일</label>
-          <input
-            type="date"
-            class="input"
-            :disabled="!isEdit"
-            v-model="task.selectTask.expectStartDate"
-          />
-        </div>
-        <div class="field-inline">
-          <label>예상 종료일</label>
-          <input
-            type="date"
-            class="input"
-            :disabled="!isEdit"
-            v-model="task.selectTask.expectEndDate"
-          />
-        </div>
-      </div>
-    </div>
+    
   </div>
 </template>
 
@@ -192,6 +191,7 @@ import { ref, watch, onMounted, computed, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
+import TaskDonutChart from '@/components/task/TaskDonutChart.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 
 const route = useRoute();
@@ -203,10 +203,14 @@ const task = ref({
     deptNames: []
 });
 
+
 const props = defineProps({
   taskData: Object,
-  visible : Boolean
+  visible : Boolean,
+  detailList: Array,
 })
+
+console.log(props.taskData)
 const isEdit = ref(false);
 
 // 태스크 수정 ? 을 위한 깊은 복사
@@ -380,6 +384,8 @@ watch(() => props.taskData, (newData) => {
       nextTasks: newData.nextTasks || [],
       deptNames: newData.deptNames || []
     };
+
+    
     // 깊은 복사로 초기값 저장
     originalTask.value = JSON.parse(JSON.stringify(task.value));
     console.log(originalTask.value);
@@ -448,19 +454,38 @@ const cancelEdit = () => {
   // 수정 전 상태로 되돌리기
   task.value = JSON.parse(JSON.stringify(originalTask.value));
 };
+
+
+// 도넛 차트에 전달할 정보
+const donutData = computed(() => {
+  // 실제 데이터 구조에 따라 수정
+  const todo = props.detailList.filter(d => d.status === 'PENDING').length
+  const delay = props.detailList.filter(d => d.status === 'WARNING').length
+  const doing = props.detailList.filter(d => d.status === 'PROGRESS').length
+  const done = props.detailList.filter(d => d.status === 'COMPLETED').length
+
+  return [todo, delay, doing, done]
+})
+
+const completionRate = computed(() => {
+  const total = props.detailList.length
+  const done = props.detailList.filter(d => d.status === 'DONE').length
+  if (total === 0) return '0%'
+  return Math.round((done / total) * 100) + '%'
+})
 </script>
 
 <style scoped>
 
 .task-info-box {
+  width: 100%;
   position: relative;
-  border: 1px solid #818181;
+  background-color: #ffffff;
   border-radius: 6px;
-  padding: 24px 48px 24px 24px;
+  padding: 5% 2% 5% 2%;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  margin-top: 32px;
 }
 
 .edit-toggle {
@@ -478,7 +503,7 @@ const cancelEdit = () => {
 .complete-button {
   width: 72px; 
   height: 36px;
-  background-color: #00cfc1;
+  background-color: #7578ee;
   color: white;
   border: none;
   border-radius: 6px;
@@ -499,9 +524,12 @@ const cancelEdit = () => {
 }
 
 .form-label {
-  min-width: 100px;
+  width: 100px;
+  text-align: left;
+  /* min-width: 100px; */
+  color: rgb(115, 115, 115);
   font-weight: bold;
-  font-size: 20px;
+  font-size: 14px;
   padding-top: 6px;
 }
 
@@ -527,8 +555,10 @@ const cancelEdit = () => {
 }
 
 .task-textarea {
-  height: 100px;
+  max-height: 80px;
+  height: 40px;
   resize: vertical;
+  overflow-y: auto;
 }
 
 .readonly-box,
@@ -565,6 +595,26 @@ const cancelEdit = () => {
   margin-top: -4px;
 }
 
+/* 데이터 */
+.data-wraper {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 5px;
+  justify-content: space-around;
+}
+.data {
+  font-weight: bold;
+  font-size: 23px;
+}
+.data-item{
+  text-align: left;
+  width: 100%;
+  padding:18px 22px;
+  border-radius: 10px;
+  background-color: rgb(241, 241, 241);
+}
 .summary-item {
   display: flex;
   flex-direction: column;

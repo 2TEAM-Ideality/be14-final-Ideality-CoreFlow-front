@@ -5,7 +5,7 @@
                 {{ formattedDate }}
             </p>
             <p class="text">{{ props.message }}</p>
-            <l-bouncy size="60" speed="1.75" color="#9090FF" />
+            <l-bouncy size="60" speed="1.75" color="#7578ee" />
         </div>
     </div>
 </template>
@@ -65,13 +65,13 @@
         font-weight: bold;
         font-size: 18px;
         margin-bottom: 8px;
-        color: #9090ff;
+        color: #7578ee;
     }
 
     .text {
         font-weight: 900;
         margin: 8px 0;
         font-size: 30px;
-        color: #9090ff;
+        color: #7578ee;
     }
 </style>

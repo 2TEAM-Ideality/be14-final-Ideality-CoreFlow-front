@@ -79,6 +79,7 @@ async function fetchMonthlySchedule(year, month) {
         title: item.name,
         content: item.content,
         start: format(start),
+        leftDate: item.leftDateTime,
         end: format(end),
         class: 'event-personal',
         attributes: {
@@ -592,15 +593,24 @@ watch(selectedEvent, (event) => {
         </div>
         
         <div v-else>
-          <h4 style="color: #818181; display: flex; align-items: center; gap: 6px;">
+          <h4 style="color: #818181; display: flex; align-items: center; gap: 6px; margin-bottom: 15px;">
             <v-icon size="18" icon="mdi-calendar" />
             예정된 이벤트
           </h4>
-          <h4 style="color: #FF4545;">{{ todayFormatted }}</h4>
+          <h4 style="color: #FF4545; margin-bottom: 7px;">{{ todayFormatted }}</h4>
           <div v-if="todayList.length && !selectedEvent" class="mb-4"> 
-            <ul style="list-style: none; padding-left: 0;">
-              <li v-for="event in todayList" :key="event.title" style="font-size: 12px;">
-                {{ event.title }} - {{ event.content }}
+            <ul style="list-style: none; padding-left: 0; ">
+              <li v-for="event in todayList" :key="event.title" style="font-size: 12px; padding: 10px; background-color: #F8F8F7; border-radius: 5px; margin-bottom: 5px; cursor:pointer;">
+                <span style="margin-bottom:20px;">
+                  <strong >{{ event.title }} </strong>
+                </span>
+                <span v-if="event.leftDateTime > 0" style="font-size:  5px; color: #B2B2B2;">
+                  {{ Math.floor(event.leftDateTime / 60) }}시간 {{ event.leftDateTime % 60 }}분 후 시작
+                </span>
+                <span v-else  style="margin-left: 3px; font-size:  10px; color: #B2B2B2;">
+                  진행중
+                </span>
+                <div>{{ event.content }}</div>
               </li>
             </ul>
           </div>
@@ -856,5 +866,9 @@ watch(selectedEvent, (event) => {
   background-color: #f0f0f0; /* 연회색 배경 */
   border-radius: 4px;        /* 모서리 둥글게 (선택사항) */
   cursor: pointer;           /* 마우스 커서 포인터 */
+}
+li:hover {
+  background-color: #e0e0e0;
+  transition: background-color 0.2s;
 }
 </style>

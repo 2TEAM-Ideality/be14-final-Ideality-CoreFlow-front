@@ -311,6 +311,15 @@ const handleStyle = {
 
         <!-- DOT more 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
         <v-btn
+        v-if=" showFullscreenView === true"
+        size="small"
+        variant="text"
+        icon
+        @click.stop="emit('edit', props.id)"
+        ><v-icon style="color: gray;">mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn
+        v-if="showFullscreenView === false"
           @click="goToTask"
           icon
           size="small"
@@ -456,10 +465,18 @@ const handleStyle = {
 }
 .node-toolbar {
   width: 220px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 6px;
 }
 .toolbar-list {
-  padding: 0;
-  width: 100%;
+  border: none;
+  font-size: 13px !important;
+  text-align: left;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: #333;
 }
 .add-btn {
   position: absolute;
