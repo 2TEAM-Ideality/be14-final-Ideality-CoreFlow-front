@@ -70,7 +70,7 @@
             @select="handleSelectTemplate"
          />
 
-      <!-- 템플릿 적용 / 팀장 초대 등 다른 요소는 여기에 추가 -->
+      <!-- 템플릿 적용 -->
         <div class="section-label" style="margin-top: 40px;">템플릿 적용</div>
         <div class="template-select-row">
             <!-- 템플릿 드롭다운 -->
@@ -139,6 +139,13 @@
         <Controls />
         </VueFlow>
     
+
+        <!-- 팀장 초대 -->
+        <div class="section-label">프로젝트 팀장 초대</div>
+        <v-btn @click="openLeaderModal('project')">구성원 조회</v-btn>
+
+        
+        <!-- 생성/취소 버튼 -->
         <div class="button-section">
             <!-- @click="cancelCreate" -->
           <v-btn variant="outlined" color="grey-darken-2" size="small" class="basic-button" @click="cancelCreate">
@@ -150,6 +157,7 @@
             프로젝트 생성
           </v-btn>
         </div>
+
     
         <!-- 전체 보기 모달 -->
         <v-dialog v-model="showFullScreen" fullscreen persistent transition="dialog-bottom-transition">
@@ -176,6 +184,14 @@
             </v-card>
         </v-dialog>
         <!-- 팀장 초대 -->
+        <ParticipantSelectModal
+          v-if="showLeaderModal"
+          :type="modalType"
+          :userList=""
+          :selectedLeaders="selectedLeaders"
+          @close="showLeaderModal = false"
+          @select="handleLeaderSelect"
+        />
         
             
     
@@ -223,6 +239,7 @@ import '@vue-flow/core/dist/theme-default.css'
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 import SelectedTemplateModal from '@/components/project/SelectTemplateModal.vue'
 import InfoField from '@/components/common/SideInfoField.vue'
+import ParticipantSelectModal from '@/components/approval/ParticipantSelectModal.vue'
 
 import PipePage from '@/views/test/PipePage.vue'
 import { useRouter } from 'vue-router'
@@ -284,6 +301,12 @@ const flowEdges = ref([])
 const showModal = ref(false);
 const showFullScreen = ref(false)   // 플로우 차트 전체 화면으로 보기 
 
+// 팀장 초대
+const showLeaderModal = ref(false)
+const modalType = ref('') // 'project'
+const selectedLeaders = ref([])
+
+
 
 // 참여 부서
 const usedDeptList = computed(() => {
@@ -303,6 +326,11 @@ const usedDeptList = computed(() => {
   return Array.from(uniqueMap.values())
 })
 
+//  초대 가능한 유저 목록 가져오기
+const fetchParticipantList = async () => {
+  const res = await api.get(`/api/users/find-all`)
+  console.log("초대 가능 유저 확인", res.data.data)
+}
 
 
 // 템플릿 리스트 가져오기 
@@ -312,10 +340,17 @@ const fetchTemplates = async () => {
   return res.data.data;
 };
 
+// 팀장 초대 모달 열기
+function openLeaderModal(type) {
+    modalType.value = type
+    showLeaderModal.value = type
+}
+
+
 // 
 onMounted(async () => {
   try {
-    const data = await fetchTemplates();   // ✅ await 사용
+    const data = await fetchTemplates();   
     templateList.value = data;
   } catch (err) {
     console.error("템플릿 목록 불러오기 실패", err);
@@ -338,7 +373,7 @@ const editTemplate = () => {
   showFullScreen.value = true
 }
 
-
+// 템플릿 선택 모달
 const openModal = () => {
   if (!startDate.value || !endDate.value) {
     alert("시작일과 마감일을 먼저 입력해주세요.");
@@ -349,6 +384,7 @@ const openModal = () => {
 const closeModal = () => {
   showModal.value = false
 }
+
 const editTemplateTask = () => {
   console.log('편집 모드')
   showFullScreen.value = true

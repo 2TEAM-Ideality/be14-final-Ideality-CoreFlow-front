@@ -2,10 +2,11 @@
 import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
-  type: String, // 'approver' | 'viewer'
+  type: String, // 'approver' | 'viewer | project'
   userList: Array,
   selectedApprover: Array,
-  selectedViewers: Array
+  selectedViewers: Array,
+  selectedLeaders: Array
 })
 
 const emit = defineEmits(['close', 'select'])
@@ -17,12 +18,13 @@ const selectedUserIds = ref([])
 const openedPanels = ref([])
 
 const isApprover = computed(() => props.type === 'approver')
+const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project')
 
 onMounted(() => {
   if (isApprover.value) {
     selectedUserId.value = (props.selectedApprover?.[0]?.id) ?? null
   } else {
-    selectedUserIds.value = (props.selectedViewers || []).map(v => v.id)
+    selectedUserIds.value = (props.selectedViewers || props.selectedLeaders || []).map(v => v.id)
   }
 })
 
@@ -135,7 +137,7 @@ watch(groupedUsers, (val) => {
                 <v-expansion-panel-title class="expansion-title">
                   <v-checkbox
                   class="panel-checkbox"
-                    v-if="!isApprover"
+                     v-if="isMultiSelect"
                     :indeterminate="isIndeterminate(dept)"
                     :model-value="isAllSelected(dept)"
                     @update:modelValue="toggleGroup(dept)"

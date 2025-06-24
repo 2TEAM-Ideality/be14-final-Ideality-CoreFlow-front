@@ -193,7 +193,7 @@ th, td {
   cursor: not-allowed;
 }
 tr.selected {
-  background-color: #d1f3ef;
+  background-color: #EEEFFA;
   transition: background-color 0.2s;
 }
 

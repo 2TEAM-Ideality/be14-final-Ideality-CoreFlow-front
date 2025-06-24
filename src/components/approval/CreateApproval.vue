@@ -186,6 +186,7 @@ const filteredUserListForModal = computed(() => {
     }
     return filteredParticipants.value
 })
+
 // 테스트용
 const showModal = ref(false)
 const modalType = ref('') // 'approver','viewer'
@@ -193,9 +194,6 @@ const modalType = ref('') // 'approver','viewer'
 // 결재자, 참조자
 const selectedApprover = ref(null)
 const selectedViewers = ref([])
-
-console.log(selectedApprover.value)
-
 
 watch(selectedApprover, (newApprover) => {
     if (!newApprover) return
