@@ -8,7 +8,7 @@
         </v-btn>
         <div class="issue-data">
           <div class="issue-title">마감 임박 태스크</div>
-          <div class="issue-desc">{{ props.delayCount || 0 }} 건</div>
+          <div class="issue-desc">{{ props.warningDeadline?.taskCount + props.warningDeadline?.detailCounts || 0 }} 건</div>
         </div>
       </div>
       <v-btn icon variant="plain" class="link-icon" size="small" @click="goToDelayAlert">
@@ -82,10 +82,17 @@ const props = defineProps({
   deptInfo : {
     type: String,
     required: true
+  },
+  warningDeadline : {
+    type: Object,
+    required: true
   }
 })
 
-console.log(props.todayCount)
+    // int taskCount;
+    // int detailCount;
+    // private List<WorkSummaryDTO> tasks;
+    // private List<WorkSummaryDTO> subtasks;
 const router = useRouter()
 
 const goToApproval = () => {
@@ -130,6 +137,7 @@ const goToCalendar = () => {
     display: flex; 
     flex-direction: column;
     gap: 5px;
+    text-align: left;
 }
 .issue-title {
     color: #73726E ;

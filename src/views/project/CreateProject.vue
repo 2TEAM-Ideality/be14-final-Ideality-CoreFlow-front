@@ -70,7 +70,7 @@
             @select="handleSelectTemplate"
          />
 
-      <!-- 템플릿 적용 / 팀장 초대 등 다른 요소는 여기에 추가 -->
+      <!-- 템플릿 적용 -->
         <div class="section-label" style="margin-top: 40px;">템플릿 적용</div>
         <div class="template-select-row">
             <!-- 템플릿 드롭다운 -->
@@ -139,18 +139,101 @@
         <Controls />
         </VueFlow>
     
+
+        <!-- 팀장 초대 -->
+        <div class="section-label" style="margin-top: 40px;">프로젝트 팀장 초대</div>
+        <div style="justify-content: flex-start; width: 100%; display :flex; flex-direction: row; margin-bottom: 20px; align-items: center; gap: 15px;">
+        <v-btn @click="openLeaderModal('project')" size="small" style="width:fit-content; " variant="tonal" color="purple">구성원 조회</v-btn>
+        <span style="font-size: 13px; color: gray;">프로젝트에 참여할 팀장을 선택해주세요.</span>
+        </div>
+        
+        <div v-for="(users, dept) in groupedLeaders" :key="dept" class="mb-3" style="padding: 10px 20px; border: 1px solid #D9D9D9; border-radius: 5px; width :100%; height: fit-content;">
+          <div class="text-subtitle-2 font-weight-medium mb-1" style="text-align: left;">{{ dept }}</div>
+          <v-chip-group>
+            <v-chip
+              v-for="user in users"
+              :key="user.id"
+              closable
+              class="participant-chip"
+              @click:close="removeViewer(user.id)"
+            >
+              <v-icon size="20" class="mr-2">mdi-account-tie</v-icon>
+              {{ user.name }} {{ user.jobRankName }}
+            </v-chip>
+          </v-chip-group>
+        </div>
+        
+        <!-- 생성/취소 버튼 -->
         <div class="button-section">
             <!-- @click="cancelCreate" -->
           <v-btn variant="outlined" color="grey-darken-2" size="small" class="basic-button" @click="cancelCreate">
             <v-icon icon="mdi-delete-outline" class="mr-1" />
             생성 취소
           </v-btn>
-          <v-btn size="small" class="color-button" @click="saveProject" elevation="0" :disabled="selectedTemplate && durationDifference < 0">
+          <v-btn size="small" class="color-button"  elevation="0" @click="checkSaveProject" :disabled="selectedTemplate && durationDifference < 0">
             <v-icon icon="mdi-pencil-outline" class="mr-1" />
             프로젝트 생성
           </v-btn>
         </div>
-    
+        <!-- 프로젝트 생성 확인 모달 -->
+        <v-dialog v-model="showSaveCheck" max-width="600px" persistent>
+          <v-card style="padding: 5%;">
+            <v-card-title class="text-h6 font-weight-bold">프로젝트를 생성하시겠습니까?</v-card-title>
+            <v-card-text style="display :flex; flex-direction: column; gap: 15px;">
+              <div class="mb-3">
+                <div class="section-label">📌 프로젝트명</div>
+                <div class="check-item">{{ projectName }}</div>
+              </div>
+
+              <div class="mb-3">
+                <div class="section-label" >👤 생성자 / 생성일</div>
+                <div style="display :flex; flex-direction: row; gap: 10px; width :100%;">
+                  <div class="check-item" style="width: 50%;">{{ createdBy }} </div> 
+                  <div class="check-item" style="width: 50%;">{{ createdAt }}</div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="section-label">📅 시작 / 마감 베이스라인</div>
+                <div style="display :flex; flex-direction: row; gap: 10px; width :100%;">
+                  <div class="check-item" style="width: 50%;">{{ startDate }} </div> 
+                  <div class="check-item" style="width: 50%;">{{ endDate }}</div>
+                </div>
+                <!-- <div>{{ startDate }} ~ {{ endDate }}</div> -->
+              </div>
+
+              <div class="mb-3">
+                <div class="section-label">⏱️ 총 소요일 / 전체 태스크 수</div>
+                <div style="display :flex; flex-direction: row; gap: 10px; width :100%;">
+                  <div class="check-item" style="width: 50%;"> {{ duration || '-' }}일 </div> 
+                  <div class="check-item" style="width: 50%;">{{ selectedTemplate ? taskCount : '-' }}개</div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="section-label">🏢 참여 부서</div>
+                <div class="d-flex flex-wrap dept-chip-wrap mt-1">
+                  <v-chip
+                    v-for="dept in usedDeptList"
+                    :key="dept.id"
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                  >
+                    {{ dept.name }}
+                  </v-chip>
+                </div>
+              </div>
+            </v-card-text>
+
+            <v-card-actions class="d-flex justify-end">
+              <v-btn variant="text" @click="showSaveCheck = false">취소</v-btn>
+              <v-btn class="color-button" @click="saveProject">확인</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+
         <!-- 전체 보기 모달 -->
         <v-dialog v-model="showFullScreen" fullscreen persistent transition="dialog-bottom-transition">
             <v-card class="pa-4">
@@ -176,6 +259,14 @@
             </v-card>
         </v-dialog>
         <!-- 팀장 초대 -->
+        <ParticipantSelectModal
+          v-if="showLeaderModal"
+          :type="modalType"
+          :userList="userList"
+          :selectedLeaders="selectedLeaders"
+          @close="showLeaderModal = false"
+          @select="handleLeaderSelect"
+        />
         
             
     
@@ -223,6 +314,7 @@ import '@vue-flow/core/dist/theme-default.css'
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 import SelectedTemplateModal from '@/components/project/SelectTemplateModal.vue'
 import InfoField from '@/components/common/SideInfoField.vue'
+import ParticipantSelectModal from '@/components/approval/ParticipantSelectModal.vue'
 
 import PipePage from '@/views/test/PipePage.vue'
 import { useRouter } from 'vue-router'
@@ -255,9 +347,6 @@ const durationDifference = computed(() => {
   return baseLineDuration.value - duration.value;
 });
 
-
-
-
 const formatDate = (date) => {
   const pad = (n) => n.toString().padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
@@ -283,26 +372,53 @@ const flowEdges = ref([])
 
 const showModal = ref(false);
 const showFullScreen = ref(false)   // 플로우 차트 전체 화면으로 보기 
+const showSaveCheck = ref(false)    // 프로젝트 생성 확인 모달 
 
 
-// 참여 부서
+// 팀장 초대
+const showLeaderModal = ref(false)
+const modalType = ref('') // 'project'
+const selectedLeaders = ref([])
+const userList = ref([])    // 초대 가능 유저 
+
+
+
+// 참여 부서 (템플릿 + 팀장 초대)
 const usedDeptList = computed(() => {
-  const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : []
-  const all = nodes
-    .flatMap(node => node.data?.deptList || [])
-    .map(d => ({
-      id: d.id ?? d.deptId ?? d,
-      name: d.name ?? d.deptName ?? d
-    }))
+  const deptSet = new Map()
 
-  const uniqueMap = new Map()
-  all.forEach(d => {
-    if (!uniqueMap.has(d.id)) uniqueMap.set(d.id, d)
+  // 1. 템플릿 노드의 부서
+  const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : []
+  nodes
+    .flatMap(node => node.data?.deptList || [])
+    .forEach(d => {
+      const id = d.id ?? d.deptId ?? d
+      const name = d.name ?? d.deptName ?? d
+      if (id && !deptSet.has(id)) {
+        deptSet.set(id, { id, name })
+      }
+    })
+
+  // 2. 선택된 팀장의 부서
+  selectedLeaders.value.forEach(user => {
+    const dept = {
+      id: user.deptId ?? user.deptName, // deptId가 없다면 name로 fallback
+      name: user.deptName
+    }
+    if (dept.id && !deptSet.has(dept.id)) {
+      deptSet.set(dept.id, dept)
+    }
   })
 
-  return Array.from(uniqueMap.values())
+  return Array.from(deptSet.values())
 })
 
+//  초대 가능한 유저 목록 가져오기
+const fetchUserList = async () => {
+  const res = await api.get(`/api/users/find-all`)
+  console.log("초대 가능 유저 확인", res.data.data)
+  return res.data.data;
+}
 
 
 // 템플릿 리스트 가져오기 
@@ -312,11 +428,35 @@ const fetchTemplates = async () => {
   return res.data.data;
 };
 
+// 팀장 초대 모달 열기
+function openLeaderModal(type) {
+    modalType.value = type
+    showLeaderModal.value = type
+}
+
+// 팀장 선택 관리
+function handleLeaderSelect(selectedUsers) {
+  selectedLeaders.value = selectedUsers || []
+  showLeaderModal.value = false
+}
+
+// 선택한 팀장 그룹핑해서 보여주기 
+const groupedLeaders = computed(() => {
+  const groups = {}
+  selectedLeaders.value.forEach(user => {
+    const dept = user.deptName || '기타'
+    if (!groups[dept]) groups[dept] = []
+    groups[dept].push(user)
+  })
+  return groups
+})
+
 // 
 onMounted(async () => {
   try {
-    const data = await fetchTemplates();   // ✅ await 사용
-    templateList.value = data;
+    templateList.value  = await fetchTemplates();   
+    userList.value = await fetchUserList();
+
   } catch (err) {
     console.error("템플릿 목록 불러오기 실패", err);
   }
@@ -338,7 +478,7 @@ const editTemplate = () => {
   showFullScreen.value = true
 }
 
-
+// 템플릿 선택 모달
 const openModal = () => {
   if (!startDate.value || !endDate.value) {
     alert("시작일과 마감일을 먼저 입력해주세요.");
@@ -346,9 +486,27 @@ const openModal = () => {
   }
   showModal.value = true;
 };
+
+// 프로젝트 생성 확인 모달
+const checkSaveProject = () => {
+   // 🔸 공통 필수 입력값 검사
+    if (!projectName.value || !startDate.value || !endDate.value) {
+      alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
+      return;
+    }
+
+    // 🔸 템플릿을 사용하지 않는 경우, 팀장은 필수
+    if (!selectedTemplate.value && selectedLeaders.value.length === 0) {
+      alert('템플릿을 사용하지 않는 경우, 팀장 초대는 필수입니다.');
+      return;
+    }
+    showSaveCheck.value = true;
+}
+
 const closeModal = () => {
   showModal.value = false
 }
+
 const editTemplateTask = () => {
   console.log('편집 모드')
   showFullScreen.value = true
@@ -373,12 +531,12 @@ const handleSelectTemplate = async (template) => {
     const res = await api.get(`/api/template/${template.id}`)
     const data = res.data.data
 
-    selectedTemplate.value = templateList.value.find(t => t.id === template.id)
+    // selectedTemplate.value = templateList.value.find(t => t.id === template.id)
+    selectedTemplate.value = template 
 
     nodeList.value = data.templateData.nodeList
     edgeList.value = data.templateData.edgeList
 
-    // ✅ 여기에 계산 로직 삽입
     taskCount.value = nodeList.value.length;
     duration.value = nodeList.value.reduce((total, node) => {
       return total + (node.data?.duration || 0) + (node.data?.slackTime || 0);
@@ -449,11 +607,7 @@ const convertToFlowData = () => {
 
 // 프로젝트 생성
 const saveProject = async () => {
-    // ✅ 유효성 검사
-  if (!projectName.value || !startDate.value || !endDate.value) {
-    alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
-    return;
-  }
+   
 
   const payload = {
     name: projectName.value,
@@ -534,7 +688,7 @@ const editProjectTask = (payload) => {
 }
 
 .section-label {
-  font-weight: 500;
+  font-weight: bold;
   font-size: 15px;
   margin-bottom: 10px;
   text-align: left;
@@ -542,7 +696,7 @@ const editProjectTask = (payload) => {
 
 .baseline-label {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 4px;
 }
 
@@ -620,6 +774,11 @@ const editProjectTask = (payload) => {
 /* 부서 칩 */
 .dept-chip-wrap {
   gap: 8px; 
+}
+.check-item {
+  padding: 10px 20px;
+  background-color: #EEEFFA;
+  border-radius: 5px;
 }
 
 </style>

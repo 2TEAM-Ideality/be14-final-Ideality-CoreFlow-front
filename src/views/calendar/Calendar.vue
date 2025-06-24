@@ -145,10 +145,11 @@ watch(view, (val) => {
 // 부서 + 개인 일정 조합
 const mergedEvents = computed(() => {
   const events = []
-  if (showPersonal.value) events.push(...scheduleList.value)
+  if (showPersonal.value) events.push(...filteredScheduleList.value)
   if (showDepartment.value) events.push(...filteredDeptScheduleList.value)
   return events
 })
+
 
 // 부서별 참여 프로젝트 목록 조회
 async function fetchDeptProject () {
@@ -289,14 +290,19 @@ const toggleAllProjects = () => {
     selectedProjectIds.value = deptProjectList.value.map(p => p.id)
   }
 }
+
+const filteredScheduleList = computed(() =>
+  scheduleList.value.filter(item => item.status !== 'DELETED')
+)
+
+
 // 프로젝트 체크박스
 const filteredDeptScheduleList = computed(() => {
-  // 선택한 프로젝트 ID가 없으면 전체 부서 일정 표시
-  if (selectedProjectIds.value.length === 0) {
-    return []
-  }
+  if (selectedProjectIds.value.length === 0) return []
+
   return deptScheduleList.value.filter(event =>
-    selectedProjectIds.value.includes(event.projectId)
+    selectedProjectIds.value.includes(event.projectId) &&
+    event.status !== 'DELETED'
   )
 })
 
@@ -309,8 +315,21 @@ function toDateInputString(date) {
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}` // YYYY-MM-DD
 }
+//  localDateTime 형태로 수정
+function toLocalDateTimeString(date) {
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return null // 🚫 유효하지 않은 날짜일 경우 null 반환
+  const yyyy = d.getFullYear()
+  const MM = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  const ss = String(d.getSeconds()).padStart(2, '0')
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}:${ss}`
+}
 
-const submitNewSchedule = () => {
+
+const submitNewSchedule = async () => {
   if (!newScheduleTitle.value || !newScheduleStart.value) {
     alert('제목과 시작일은 필수입니다.')
     return
@@ -318,10 +337,13 @@ const submitNewSchedule = () => {
 
   // 이벤트 생성
   const newEvent = {
-    title: newScheduleTitle.value,
+    createdBy : userStore.id,
+    name: newScheduleTitle.value,
     content: newScheduleContent.value,
-    start: newScheduleStart.value,
-    end: newScheduleEnd.value || newScheduleStart.value,
+    startDate: toLocalDateTimeString(newScheduleStart.value),
+    endDate: toLocalDateTimeString(newScheduleEnd.value || newScheduleStart.value),    isRepeat: false,
+    frequencyInfo : null,
+    eventType : "PERSONAL",
     class: 'event-personal',
     attributes: {
       title: `${newScheduleTitle.value}\n${newScheduleContent.value}`
@@ -330,6 +352,17 @@ const submitNewSchedule = () => {
 
   // 예시: 로컬에 추가 (실제 앱에서는 API POST)
   scheduleList.value.push(newEvent)
+  try {
+    const res = await api.post( `/api/calendar/create`, newEvent)
+    console.log("✅개인 일정 생성 성공", res.data)
+    // 서버 기준 일정 다시 불러오기 (정합성 보장)
+    if (currentViewDate.value.year && currentViewDate.value.month) {
+      await fetchMonthlySchedule(currentViewDate.value.year, currentViewDate.value.month)
+    }
+  } catch (err) {
+    console.log('🚫 개인 일정 생성 실패', err)
+    
+  }
 
   // 초기화
   showAddPanel.value = false
@@ -535,12 +568,12 @@ watch(selectedEvent, (event) => {
             <div>
               <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
               <span class="mr-3"><strong>시작일</strong></span>
-              <input type="date" v-model="editableStart" readonly/> 
+              <input type="datetime-local" v-model="newScheduleStart" />
             </div>
             <div>
               <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
               <span class="mr-3"><strong>마감일</strong></span>
-              <input type="date" v-model="editableEnd" readonly/>
+              <input type="datetime-local" v-model="editableEnd" readonly/>
             </div>
           </div>
           <v-switch 

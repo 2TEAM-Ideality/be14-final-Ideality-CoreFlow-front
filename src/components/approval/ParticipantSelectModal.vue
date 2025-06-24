@@ -2,10 +2,11 @@
 import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
-  type: String, // 'approver' | 'viewer'
+  type: String, // 'approver' | 'viewer | project'
   userList: Array,
   selectedApprover: Array,
-  selectedViewers: Array
+  selectedViewers: Array,
+  selectedLeaders: Array
 })
 
 const emit = defineEmits(['close', 'select'])
@@ -17,12 +18,13 @@ const selectedUserIds = ref([])
 const openedPanels = ref([])
 
 const isApprover = computed(() => props.type === 'approver')
+const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project')
 
 onMounted(() => {
   if (isApprover.value) {
     selectedUserId.value = (props.selectedApprover?.[0]?.id) ?? null
   } else {
-    selectedUserIds.value = (props.selectedViewers || []).map(v => v.id)
+    selectedUserIds.value = (props.selectedViewers || props.selectedLeaders || []).map(v => v.id)
   }
 })
 
@@ -110,7 +112,8 @@ watch(groupedUsers, (val) => {
     <v-card class="participant-card">
       <v-card-title class="text-h6 header-title">
         <div v-if="props.type === 'approver'">결재자 선택</div>
-        <div v-else>참조자 선택</div>
+        <div v-if="props.type === 'viewers'">참조자 선택</div>
+        <div v-if="props.type === 'project'">팀장 초대</div>
     </v-card-title>
 
       <v-card-text class="main-area">
@@ -134,13 +137,13 @@ watch(groupedUsers, (val) => {
               >
                 <v-expansion-panel-title class="expansion-title">
                   <v-checkbox
-                    v-if="!isApprover"
+                  class="panel-checkbox"
+                     v-if="isMultiSelect"
                     :indeterminate="isIndeterminate(dept)"
                     :model-value="isAllSelected(dept)"
                     @update:modelValue="toggleGroup(dept)"
                     density="compact"
                     hide-details
-                    style="padding: 2%;"
                   />
                   <span>{{ dept }}</span>
                 </v-expansion-panel-title>
@@ -274,8 +277,27 @@ watch(groupedUsers, (val) => {
 
 .group-scroll {
   flex: 1;
-  max-height: 400px;
+  height :100%;
+  /* max-height: 400px; */
   overflow-y: auto;
   padding-right: 4px;
+  margin-bottom: 24px;
+}
+
+.expansion-title {
+  background-color: #EEEFFA;
+  min-height: 35px; /* ← 여기 */
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+}
+.panel-checkbox {
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  height: 20px !important;
+  --v-input-control-height: 20px; /* Vuetify 3 커스텀 높이 */
 }
 </style>

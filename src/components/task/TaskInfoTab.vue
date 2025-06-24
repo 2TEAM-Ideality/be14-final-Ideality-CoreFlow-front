@@ -35,14 +35,11 @@
     
     <div style="display: flex; flex-direction: row; gap: 50px;">
       <div style="width: 250px; height: 250px;">
-        <TaskDonutChart :taskInfo="props.taskData" 
+        <TaskDonutChart 
+        :taskInfo="props.taskData" 
         :detailList="props.detailList"/>
       </div>
      
-      <!-- <CustomDonut  
-      :taskInfo="props.taskData" 
-      :detailList="props.detailList" /> -->
-      <!-- 담당부서 -->
       <div style="display: flex; flex-direction: column; width: 100%;">
         <div class="form-row">
           <label class="form-label">담당 부서 :</label>
@@ -116,24 +113,56 @@
     
 
     <div class="data-wraper">
+      <!-- 경과율 -->
       <div class="data-item">
-      <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
-        <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
-        경과율</div>
-      <div class="data">{{ task.selectTask.progressRate }}%</div>
+        <div class="data-label">
+          <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
+          경과율
+        </div>
+        <div class="data">
+          <template v-if="isEdit">
+            <input
+              type="number"
+              min="0"
+              max="150"
+              class="input"
+              v-model.number="task.selectTask.passedRate"
+              style="width: 80px;"
+            /> %
+          </template>
+          <template v-else>
+            {{ task.selectTask.passedRate }}%
+          </template>
+        </div>
       </div>
+
+      <!-- 진척률 -->
       <div class="data-item">
-        <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
+        <div class="data-label">
           <div style="width:12px; height: 12px;  background-color: #4D91FF;"></div>
           태스크 진척률
         </div>
-        <div class="data">{{ task.selectTask.passedRate }}%</div>
+        <div class="data">
+          <template v-if="isEdit">
+            <input
+              type="number"
+              min="0"
+              max="100"
+              class="input"
+              v-model.number="task.selectTask.progressRate"
+              style="width: 80px;"
+            /> %
+          </template>
+          <template v-else>
+            {{ task.selectTask.progressRate }}%
+          </template>
+        </div>
       </div>
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
         <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
         전체 세부일정</div>
-        <div class="data">{{ detailList.length }}</div>
+        <div class="data">{{ activeDetailList.length }}</div>
       </div>
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
@@ -233,8 +262,13 @@ const nextTaskNames = computed(() =>
 const selectedDeptName = computed(() =>
   task.value.deptNames.length > 0 ? task.value.deptNames.join(', ') : ''
 );
+// 유효한 세부 일정 
+const activeDetailList = computed(() => {
+  return props.detailList.filter(d => d.status !== 'DELETED')
+})
 
 onMounted(() => {
+  console.log(props.taskData)
   window.addEventListener('click', handleClickOutside);
 });
 
@@ -407,7 +441,7 @@ const fetchModify = async () => {
       prevTaskList: task.value.prevTasks.map(t => t.prevWorkId),
       nextTaskList: task.value.nextTasks.map(t => t.nextWorkId),
       startExpect: task.value.selectTask.expectStartDate,
-      endExpect: task.value.selectTask.expectEndDate
+      endExpect: task.value.selectTask.expectEndDate,
     };
     await axios.patch(`http://localhost:5000/api/task/modify/${dto.taskId}`, dto, {
       headers: {
@@ -428,6 +462,46 @@ const fetchModify = async () => {
     }
   }     
 }
+
+// ✅ PATCH: 경과율
+const updatePassedRate = async () => {
+  try {
+    await axios.patch(
+      `http://localhost:5000/api/task/${task.value.selectTask.taskId}/passed-rate`,
+      { passedRate: task.value.selectTask.passedRate },
+      {
+        headers: {
+          Authorization: `Bearer ${userStore.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+  } catch (err) {
+    console.error("경과율 수정 실패:", err);
+    throw err;
+  }
+};
+
+// ✅ PATCH: 진척률
+const updateProgressRate = async () => {
+  try {
+    await axios.patch(
+      `http://localhost:5000/api/task/${task.value.selectTask.taskId}/progress-rate`,
+      { progressRate: task.value.selectTask.progressRate },
+      {
+        headers: {
+          Authorization: `Bearer ${userStore.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+  } catch (err) {
+    console.error("진척률 수정 실패:", err);
+    throw err;
+  }
+};
+
+
 // 완료 클릭 처리
 const handleCompleteClick = () => {
   if (hasChanges.value) {
@@ -438,13 +512,21 @@ const handleCompleteClick = () => {
 }
 
 // 모달 확인 => patch 전송
+// 수정 완료 제출
 const submitEdit = async () => {
-  showConfirmModal.value = false
-  isEdit.value = false
-  console.log('PATCH API 전송할 데이터:', task.value)
-  // 이후 API 연결
-  await fetchModify();
-}
+  showConfirmModal.value = false;
+  isEdit.value = false;
+  try {
+    await fetchModify();
+    await updatePassedRate();
+    await updateProgressRate();
+    alert("수정되었습니다.");
+  } catch (err) {
+    alert("일부 수정에 실패했습니다.");
+  }
+};
+
+
 
 // 모달 취소 => 수정 전 상태로 돌리기
 const cancelEdit = () => {

@@ -2,7 +2,7 @@
   <div v-if="show" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title">프로젝트 기반 템플릿 선택</h3>
+        <h3 class="modal-title">템플릿 선택</h3>
         <button class="close-button" @click="$emit('close')">×</button>
       </div>
 
@@ -89,7 +89,6 @@ const toggleSelection = (template) => {
     selected.value = template
   }
 }
-
 
 const confirmSelection = () => {
   if (selected.value) {
@@ -193,7 +192,7 @@ th, td {
   cursor: not-allowed;
 }
 tr.selected {
-  background-color: #d1f3ef;
+  background-color: #EEEFFA;
   transition: background-color 0.2s;
 }
 
