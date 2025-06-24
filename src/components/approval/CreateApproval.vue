@@ -322,16 +322,32 @@ async function createApproval() {
     }
 
     try {
-        const response = await api.post('/api/approval/request', formData)
-
-        alert(response.data.message)
-        emit('remount')
+      const response = await api.post('/api/approval/request', formData)
+      alert(response.data.message)
+      emit('remount')
+      resetForm() // 🔥 여기에 추가
     } catch (error) {
-        if (error.response) {
-            console.error('에러 응답:', error.response.data);
-            alert(error.response.data.message);
-        }
+      if (error.response) {
+        console.error('에러 응답:', error.response.data)
+        alert(error.response.data.message)
+      }
     }
+
+}
+
+// 입력창 모두 리셋
+function resetForm() {
+  title.value = ''
+  selectedProjectId.value = null
+  selectedTaskId.value = null
+  approvalType.value = ''
+  selectedDelayReasonId.value = null
+  content.value = ''
+  delayDays.value = null
+  actionDetail.value = ''
+  selectedApprover.value = null
+  selectedViewers.value = []
+  selectedFiles.value = []
 }
 </script>
 
