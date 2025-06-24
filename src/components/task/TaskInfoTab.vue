@@ -441,7 +441,7 @@ const fetchModify = async () => {
       prevTaskList: task.value.prevTasks.map(t => t.prevWorkId),
       nextTaskList: task.value.nextTasks.map(t => t.nextWorkId),
       startExpect: task.value.selectTask.expectStartDate,
-      endExpect: task.value.selectTask.expectEndDate
+      endExpect: task.value.selectTask.expectEndDate,
     };
     await axios.patch(`http://localhost:5000/api/task/modify/${dto.taskId}`, dto, {
       headers: {
@@ -462,6 +462,46 @@ const fetchModify = async () => {
     }
   }     
 }
+
+// ✅ PATCH: 경과율
+const updatePassedRate = async () => {
+  try {
+    await axios.patch(
+      `http://localhost:5000/api/task/${task.value.selectTask.taskId}/passed-rate`,
+      { passedRate: task.value.selectTask.passedRate },
+      {
+        headers: {
+          Authorization: `Bearer ${userStore.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+  } catch (err) {
+    console.error("경과율 수정 실패:", err);
+    throw err;
+  }
+};
+
+// ✅ PATCH: 진척률
+const updateProgressRate = async () => {
+  try {
+    await axios.patch(
+      `http://localhost:5000/api/task/${task.value.selectTask.taskId}/progress-rate`,
+      { progressRate: task.value.selectTask.progressRate },
+      {
+        headers: {
+          Authorization: `Bearer ${userStore.accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+  } catch (err) {
+    console.error("진척률 수정 실패:", err);
+    throw err;
+  }
+};
+
+
 // 완료 클릭 처리
 const handleCompleteClick = () => {
   if (hasChanges.value) {
@@ -472,13 +512,21 @@ const handleCompleteClick = () => {
 }
 
 // 모달 확인 => patch 전송
+// 수정 완료 제출
 const submitEdit = async () => {
-  showConfirmModal.value = false
-  isEdit.value = false
-  console.log('PATCH API 전송할 데이터:', task.value)
-  // 이후 API 연결
-  await fetchModify();
-}
+  showConfirmModal.value = false;
+  isEdit.value = false;
+  try {
+    await fetchModify();
+    await updatePassedRate();
+    await updateProgressRate();
+    alert("수정되었습니다.");
+  } catch (err) {
+    alert("일부 수정에 실패했습니다.");
+  }
+};
+
+
 
 // 모달 취소 => 수정 전 상태로 돌리기
 const cancelEdit = () => {

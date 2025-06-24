@@ -70,12 +70,12 @@ const statusIcon = computed(() => {
 <template>
   <v-menu v-model="menuOpen" offset-y>
     <template #activator="{ props }">
-      <v-btn icon v-bind="props" size="big" variant="text">
+      <v-btn icon v-bind="props" size="big" variant="text" :readOnly="props.isDirector === false">
           <v-icon :style="{ color: statusIcon.color }">{{ statusIcon.icon }}</v-icon>
       </v-btn>
     </template>
 
-    <v-list dense>
+    <v-list v-if="isDirector" dense>
       <!-- PENDING 상태일 때 -->
       <template v-if="status === 'PENDING'">
         <v-list-item @click="emit('start')">
