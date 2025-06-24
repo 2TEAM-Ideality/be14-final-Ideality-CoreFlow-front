@@ -66,7 +66,7 @@ const handleNotificationClick = async (notice) => {
     let targetUrl = '';
 
     switch (notice.targetType) {
-      case 'TASK':
+      case 'WORK':
         targetUrl = `/task/${notice.targetId}`;
         break;
       case 'PROJECT':
@@ -80,8 +80,8 @@ const handleNotificationClick = async (notice) => {
         return;
     }
 
-    // 라우팅 처리
-    router.push(targetUrl);
+    // 라우팅 처리 - key를 추가하여 강제로 리렌더링
+    router.push({ path: targetUrl, query: { key: Date.now() } }); // query 파라미터로 key 추가
   } else {
     console.error("알림 읽기 실패:", response.message || "알 수 없는 오류");
   }
@@ -207,7 +207,7 @@ const deleteNotification = async (notificationId, isAutoDelete) => {
 
 /* SENT 상태일 경우 강조 색 */
 .notification-item.sent {
-  background-color: #e0f7fa; /* 파란색 계열 강조 색 */
+  background-color: #feefef; /* 파란색 계열 강조 색 */
   font-weight: bold;
   border: 1px solid gray; /* 얇은 검정색 테두리 추가 */
 }
