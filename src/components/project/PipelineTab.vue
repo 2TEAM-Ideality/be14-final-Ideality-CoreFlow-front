@@ -341,70 +341,139 @@ async function handleUpdateTask(updatedData) {
 
 
 // 태스크 노드 생성
-function onAddNode(parentId = null) {
-  const newId = nanoid(6)
-  const newNode = {
-    id: newId,
-    type: 'task',
-    position: { x: 200, y: 200 + nodes.value.length * 100 },
-    data: {
-      label: `새 태스크`,
-      description: '',
-      deptList: [],
-      duration: null,
-      slackTime: null,
-      status: 'pending',
-      progressRate: 0,
-      passedRate: 0,
-      delayDays: 0,
-      toolbarVisible: false
+// 노드에서 (+) 버튼으로 바로 생성되도록 수정
+async function onAddNode(parentId = null) {
+  const tempId = nanoid(6)
+
+  const newNodeData = {
+    label: '새 태스크',
+    description: '',
+    deptList: [], // 생성 시 부서는 선택 안된 상태라면 기본값
+    startBase: new Date().toISOString().split('T')[0],
+    endBase: new Date().toISOString().split('T')[0],
+    status: 'pending',
+    progressRate: 0,
+    passedRate: 0,
+    delayDays: 0,
+    toolbarVisible: false
+  }
+
+  const parentIds = parentId ? [parentId] : []
+  const childIds = []
+
+  const body = {
+    label: newNodeData.label,
+    description: newNodeData.description,
+    startBaseLine: newNodeData.startBase,
+    endBaseLine: newNodeData.endBase,
+    projectId: Number(projectId),
+    deptList: [],
+    source: parentIds,
+    target: childIds
+  }
+
+  try {
+    const res = await api.post('/api/task', body)
+    const savedTask = res.data.data
+
+    const node = {
+      id: String(savedTask.id),
+      type: 'task',
+      position: { x: 200, y: 200 + nodes.value.length * 100 },
+      data: {
+        ...newNodeData,
+        ...savedTask,
+        toolbarVisible: false
+      }
     }
-  }
 
-  nodes.value.push(newNode)
-  newTasks.value.push(newNode) // 🔥 저장 대상에 추가
+    nodes.value.push(node)
 
-  if (parentId) {
-    edges.value.push({
-      id: `e-${parentId}-${newId}`,
-      source: parentId,
-      target: newId,
-      type: 'bezier',
-      animated: true,
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left
-    })
-  }
+    if (parentId) {
+      edges.value.push({
+        id: `e-${parentId}-${savedTask.id}`,
+        source: parentId,
+        target: String(savedTask.id),
+        type: 'bezier',
+        animated: true,
+        sourcePosition: Position.Right,
+        targetPosition: Position.Left
+      })
+    }
 
-  nextTick(() => {
+    await nextTick()
     layoutGraph('LR')
-  })
+  } catch (e) {
+    console.error('태스크 생성 실패:', e)
+    alert('태스크 생성 중 오류 발생')
+  }
 }
+
+// function onAddNode(parentId = null) {
+//   const newId = nanoid(6)
+//   const newNode = {
+//     id: newId,
+//     type: 'task',
+//     position: { x: 200, y: 200 + nodes.value.length * 100 },
+//     data: {
+//       label: `새 태스크`,
+//       description: '',
+//       deptList: [],
+//       duration: null,
+//       slackTime: null,
+//       status: 'pending',
+//       progressRate: 0,
+//       passedRate: 0,
+//       delayDays: 0,
+//       toolbarVisible: false
+//     }
+//   }
+
+//   nodes.value.push(newNode)
+//   newTasks.value.push(newNode) // 🔥 저장 대상에 추가
+
+//   if (parentId) {
+//     edges.value.push({
+//       id: `e-${parentId}-${newId}`,
+//       source: parentId,
+//       target: newId,
+//       type: 'bezier',
+//       animated: true,
+//       sourcePosition: Position.Right,
+//       targetPosition: Position.Left
+//     })
+//   }
+
+//   nextTick(() => {
+//     layoutGraph('LR')
+//   })
+// }
 
 
 // 태스크 전체 편집 완료 
 async function onSaveTasks() {
   try {
     showFullscreenView.value = false;
+    console.log("태스크 편집 완료");
+    console.log("새롭게 추가한 태스크 목록", newTasks.value);
 
-    console.log("태스크 편집 완료")
-    console.log("새롭게 추가한 태스크 목록", newTasks.value)
+    const idMap = new Map();
 
+    // 1. 새로운 태스크 각각 저장
     for (const node of newTasks.value) {
-      const { label, startBase, endBase, deptList } = node.data
-      console.log("태스크 단위로", node)
+      const { label, startBase, endBase, deptList } = node.data;
 
       if (!label || !label.trim()) {
-        alert(`태스크 이름이 비어있습니다: ${node.id}`)
-        continue
+        alert(`태스크 이름이 비어있습니다: ${node.id}`);
+        continue;
       }
       if (!startBase || !endBase) {
-        alert(`"${label}" 태스크의 베이스라인 시작/종료일이 누락되었습니다.`)
-        continue
+        alert(`"${label}" 태스크의 베이스라인 시작/종료일이 누락되었습니다.`);
+        continue;
       }
       if (!deptList || deptList.length === 0) {
-        alert(`"${label}" 태스크에 담당 부서가 없습니다.`)
-        continue
+        alert(`"${label}" 태스크에 담당 부서가 없습니다.`);
+        continue;
       }
 
       const body = {
@@ -414,24 +483,55 @@ async function onSaveTasks() {
         endBaseLine: endBase,
         projectId: Number(projectId),
         deptList: deptList.map(d => Number(typeof d === 'object' ? d.id : d)),
-        source: getParentIds(node.id),
-        target: getChildIds(node.id)
-      }
+        source: getParentIds(node.id).map(pid => idMap.get(pid) || pid),
+        target: getChildIds(node.id).map(cid => idMap.get(cid) || cid)
+      };
 
-      console.log(body)
+      console.log("전송할 데이터:", body);
 
-      await api.post('/api/task', body)
-      console.log("요청 보냄")
+      const res = await api.post('/api/task', body);
+      const realId = res.data.data.taskId;
+      idMap.set(node.id, realId);
     }
 
-    newTasks.value = [] // 저장 후 초기화
-    fetchPipeline()
+    // 2. 노드 ID를 실제 DB ID로 교체
+    nodes.value = nodes.value.map(n => {
+      const newId = idMap.get(n.id);
+      if (!newId) return n;
+      return {
+        ...n,
+        id: String(newId),
+        data: { ...n.data },
+      };
+    });
 
+    // 3. 엣지도 ID 교체
+    edges.value = edges.value.map(e => {
+      const newSource = idMap.get(e.source) || e.source;
+      const newTarget = idMap.get(e.target) || e.target;
+      return {
+        ...e,
+        id: `e-${newSource}-${newTarget}`,
+        source: String(newSource),
+        target: String(newTarget),
+      };
+    });
+
+    // 4. 상태 초기화
+    newTasks.value = [];
+
+    // 5. 레이아웃 갱신
+    await nextTick();
+    layoutGraph('LR');
+    fitView();
+
+    console.log('✅ 태스크 저장 및 ID 치환 완료');
   } catch (err) {
-    console.error('태스크 저장 실패:', err)
-    alert('태스크 저장 중 오류 발생')
+    console.error('태스크 저장 실패:', err);
+    alert('태스크 저장 중 오류 발생');
   }
 }
+
 
 
 watch(showFullscreenView, async (isOpen) => {

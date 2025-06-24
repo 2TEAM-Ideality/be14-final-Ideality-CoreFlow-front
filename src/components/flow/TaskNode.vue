@@ -18,9 +18,14 @@ const props = defineProps({
   showFullscreenView : Boolean
 })
 
-const emit = defineEmits(['addNode', 'click', 'openMenu'])
-
-
+const emit = defineEmits([
+  'addNode',
+  'click',
+  'openMenu',
+  'edit',
+  'delete',
+  'start'
+])
 
 const { viewport } = useVueFlow()
 const zoomLevel = computed(() => viewport.value.zoom)
