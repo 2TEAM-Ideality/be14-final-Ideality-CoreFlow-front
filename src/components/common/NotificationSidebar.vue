@@ -66,22 +66,18 @@ const deleteNotification = async (notificationId, isAutoDelete) => {
       isAutoDelete: isAutoDelete
     });
 
-    // 서버에서 반환된 데이터를 파싱
-    const data = await response.json();
-
     // 응답의 status가 success인 경우 처리
-    if (data.status === "success") {
+    if (response.data.status === "success") {
       // isAutoDelete 상태가 true로 변경되면, 배열에서 해당 알림 삭제
-      notificationStore.removeNotificationIfAutoDeleted(notificationId); 
+      notificationStore.removeNotificationIfAutoDeleted(notificationId);
     } else {
       // 실패한 경우 응답 내용 출력
-      console.error("알림 삭제 실패:", data.message || "알 수 없는 오류");
+      console.error("알림 삭제 실패:", response.data.message || "알 수 없는 오류");
     }
   } catch (error) {
     console.error('알림 삭제 오류:', error);
   }
 }
-
 </script>
 
 <style scoped>

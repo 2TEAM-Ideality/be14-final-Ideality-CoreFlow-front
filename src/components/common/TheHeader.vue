@@ -137,13 +137,12 @@ const fetchNotifications = async () => {
 
   try {
     const response = await api.get('/api/notifications');
-    const data = await response.json()
-    if (data && data.data) {
-      data.data.filter(notice => !notice.isAutoDelete).forEach(notification => {
+    if (response.data && response.data.data) {
+      response.data.data.filter(notice => !notice.isAutoDelete).forEach(notification => {
         store.addNotification(notification)
       })
 
-      const lastNotification = data.data[0]
+      const lastNotification = response.data.data[0]
       if (lastNotification) {
         store.setLastNotificationId(lastNotification.id)
       }
