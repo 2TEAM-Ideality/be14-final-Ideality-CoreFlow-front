@@ -41,6 +41,7 @@ const editingNode = ref(null)       // 수정 대상 태스크
 
 const newTasks = ref([])        // 생성할 태스크 목록 
 
+console.log(projectInfo.value)
 
 
 // 프로젝트 파이프라인 데이터 가져오기
@@ -542,8 +543,8 @@ watch(showFullscreenView, async (isOpen) => {
 
 <template>
   <div>
-  <FloatingInfo
-    v-if="projectInfo.statusCounts"
+    <FloatingInfo
+    v-if="projectInfo.statusCounts && !showFullscreenView"
     :passedRate="projectInfo.passedRate"
     :progressRate="projectInfo.progressRate"
     :delayDays="projectInfo.delayDays"
@@ -607,7 +608,7 @@ watch(showFullscreenView, async (isOpen) => {
               </div>
               <div style="display: flex; flex-direction: column; font-size: 14px;">
                 <div  style="color:#484848">전체 태스크</div>
-                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo.delayDays   }} 개</strong></span>
+                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo.nodeList.length   }} 개</strong></span>
             </div>
           </div>
           <v-btn icon @click="showFullscreenView = false" variant="plain">
