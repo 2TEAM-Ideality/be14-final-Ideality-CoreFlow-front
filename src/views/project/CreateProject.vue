@@ -30,11 +30,13 @@
             <div class="baseline-label">시작 베이스라인</div>
             <div class="sub-label">목표로 하는 프로젝트 시작일</div>
             <v-text-field
-                v-model="startDate"
-                type="date"
-                variant="outlined"
-                density="compact"
-                class="baseline-field"
+              v-model="startDate"
+              type="date"
+              variant="outlined"
+              density="compact"
+              class="baseline-field"
+              :error="isStartHoliday"
+              :error-messages="isStartHoliday ? ['휴일은 선택할 수 없습니다.'] : []"
             />
             </v-col>
 
@@ -42,13 +44,16 @@
             <div class="baseline-label">마감 베이스라인</div>
             <div class="sub-label">목표로 하는 프로젝트 마감일</div>
             <v-text-field
-                v-model="endDate"
-                type="date"
-                variant="outlined"
-                :min="startDate" 
-                density="compact"
-                class="baseline-field"
+              v-model="endDate"
+              type="date"
+              variant="outlined"
+              :min="startDate"
+              density="compact"
+              class="baseline-field"
+              :error="isEndHoliday"
+              :error-messages="isEndHoliday ? ['휴일은 선택할 수 없습니다.'] : []"
             />
+
             </v-col>
         </v-row>
         </v-container>
@@ -300,23 +305,22 @@
 
 <script setup >
 import BasicLayout from '@/components/layout/BasicLayout.vue';
-import { computed } from 'vue'
-import { ref , onMounted } from 'vue';
+import { computed, watch, ref , onMounted, markRaw  } from 'vue'
 import dagre from '@dagrejs/dagre'
-import api from '@/api.js'
 import { Position } from '@vue-flow/core'
 import { VueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
-import { markRaw } from 'vue'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 import SelectedTemplateModal from '@/components/project/SelectTemplateModal.vue'
 import InfoField from '@/components/common/SideInfoField.vue'
 import ParticipantSelectModal from '@/components/approval/ParticipantSelectModal.vue'
-
 import PipePage from '@/views/test/PipePage.vue'
+
+import api from '@/api.js'
+
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 
@@ -352,6 +356,10 @@ const formatDate = (date) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
+// 베이스라인 휴일 여부
+const holidaySet = ref(new Set());  // 전체 휴일 정보 
+const isStartHoliday = ref(false)
+const isEndHoliday = ref(false)
 
 // 자동 입력정보
 const createdBy = ref(user?.deptName +" "+ user?.name +" "+ user?.jobRankName)
@@ -424,6 +432,64 @@ const fetchUserList = async () => {
   console.log("초대 가능 유저 (admin 제외):", filteredUsers);
   return filteredUsers;
 }
+
+// 워크 데이 기반 -> 휴일 체크
+// 전체 휴일 정보 가져오기 
+const fetchAllHolidays = async () => {
+  const res = await api.get('/api/holidays');
+  const list = res.data?.data || [];
+  holidaySet.value = new Set(list.map(h => h.date)); // ['2025-05-05', ...]
+};
+
+const isNotHoliday = (date) => {
+  return !holidayList.value.has(date);
+};
+
+
+// 선택 날짜가 휴일인지 확인
+const checkIfHoliday = async (dateStr) => {
+  if (!dateStr) return false;
+  try {
+    const res = await api.get(`/api/holidays/check?date=${dateStr}`);
+    return res.data?.data?.isHoliday || false;
+  } catch (err) {
+    console.error('🚫 휴일 확인 실패:', err);
+    return false;
+  }
+};
+
+watch(startDate, async (newVal) => {
+  isStartHoliday.value = false;
+  if (!newVal) return;
+
+  const date = new Date(newVal);
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+  const isHoliday = holidaySet.value.has(newVal);
+
+  if (isWeekend || isHoliday) {
+    isStartHoliday.value = true;
+    startDate.value = '';
+    alert('주말 또는 공휴일은 선택할 수 없습니다.');
+  }
+});
+
+watch(endDate, async (newVal) => {
+  isEndHoliday.value = false;
+  if (!newVal) return;
+
+  const date = new Date(newVal);
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+  const isHoliday = holidaySet.value.has(newVal);
+
+  if (isWeekend || isHoliday) {
+    isEndHoliday.value = true;
+    endDate.value = '';
+    alert('주말 또는 공휴일은 선택할 수 없습니다.');
+  }
+});
+// -----------------------------------------------------------------
+
+
 
 // 템플릿 리스트 가져오기 
 const fetchTemplates = async () => {
