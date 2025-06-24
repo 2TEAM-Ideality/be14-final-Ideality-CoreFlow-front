@@ -186,8 +186,6 @@ function convertToTree(flatList) {
 
   return tree
 }
-
-
 const dropdownIndex = ref(null)
 
 const toggleDropdown = (id) => {
