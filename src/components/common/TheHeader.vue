@@ -18,6 +18,8 @@
       <!-- 알림 버튼 -->
       <v-btn icon variant="plain" class="ring-btn" @click="openNotificationSidebar">
         <v-icon>mdi-bell-outline</v-icon>
+                <!-- 알림 개수 표시 배지 -->
+        <span v-if="unreadNotificationsCount > 0" class="notification-badge">{{ unreadNotificationsCount }}</span>
       </v-btn>
 
       <!-- 프로필 + 이름 + 화살표 통합 -->
@@ -118,6 +120,11 @@ const handleFileChange = async (event) => {
   }
   reader.readAsDataURL(file)
 }
+
+// 안 읽은 알림 개수 계산
+const unreadNotificationsCount = computed(() => {
+  return notifications.filter(notice => notice.status === 'SENT').length
+})
 
 const openNotificationSidebar = () => {
   notificationSidebarOpen.value = true
@@ -325,5 +332,16 @@ onBeforeUnmount(() => {
   border: none;
   padding: 0;
   color: black;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 5px;
+  font-size: 12px;
 }
 </style>
