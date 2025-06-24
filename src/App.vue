@@ -90,7 +90,7 @@ provide('closeNotificationSidebar', closeNotificationSidebar)
     <TheHeader v-if="route.path !== '/login' && isRestored" />
     <NotificationSidebar />
     <VMain class="main-content">
-      <RouterView />
+      <RouterView  :key="$route.path" />
     </VMain>
   </VApp>
 </template>

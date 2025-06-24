@@ -18,6 +18,9 @@ export const useNotificationStore = defineStore('notification', () => {
     if (!exists) {
       notifications.value.unshift(notification); 
     }
+
+      // 최신순으로 정렬 (배열에 추가된 후 정렬)
+  notifications.value.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   };
 
     // 알림의 isAutoDelete가 true로 바뀌었을 때 배열에서 제거하는 함수
