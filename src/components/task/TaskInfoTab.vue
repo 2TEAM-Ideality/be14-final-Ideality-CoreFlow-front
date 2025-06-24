@@ -35,7 +35,8 @@
     
     <div style="display: flex; flex-direction: row; gap: 50px;">
       <div style="width: 250px; height: 250px;">
-        <TaskDonutChart :taskInfo="props.taskData" 
+        <TaskDonutChart 
+        :taskInfo="props.taskData" 
         :detailList="props.detailList"/>
       </div>
      
@@ -127,7 +128,7 @@
           <div style="width:12px; height: 12px;  background-color: #4D91FF;"></div>
           태스크 진척률
         </div>
-        <div class="data">{{ task.selectTask.passedRate }}%</div>
+        <div class="data">{{ task.selectTask.progressRate }}%</div>
       </div>
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >

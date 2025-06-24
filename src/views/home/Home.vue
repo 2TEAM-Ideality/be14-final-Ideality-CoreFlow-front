@@ -170,7 +170,7 @@ const fetchScheduleToday = async (year, month) => {
 
 const fetchWarningDeadline = async () => {
   try {
-    const res = await api.get(`/mainPage`)
+    const res = await api.get(`/api/projects/mainPage`)
     warningDeadline.value = res.data.data
     console.log('✅ 마감 임박 태스트 & 세부일정 개수 확인', warningDeadline.value)
   } catch(err) {

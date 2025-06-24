@@ -138,7 +138,7 @@
     </v-row>
 
     <div class="d-flex justify-end">
-      <v-btn class="create-btn" @click="createApproval" color="#7578ee">보내기</v-btn>
+      <v-btn class="create-btn" @click="checkCreateApproval" color="#7578ee">결재 요청</v-btn>
     </div>
   </v-container>
 
@@ -151,6 +151,38 @@
     @close="showModal = false"
     @select="handleUserSelect"
   />
+
+    <!-- 결재 요청 확인 모달 -->
+    <v-dialog v-model="showCreateCheck" max-width="600px" persistent>
+      <v-card style="padding: 5%;">
+        <v-card-title class="text-h6 font-weight-bold">결재 요청 정보를 확인해주세요.</v-card-title>
+        <v-card-text style="display :flex; flex-direction: column; gap: 15px;">
+          <div class="mb-3">
+            <div class="section-label">{{ title }}</div>
+            {{ title }}
+            제목: 업무 지연 보고
+            프로젝트: 화장품 브랜드 런칭
+            태스크: 샘플 테스트 완료
+            결재자: 기획팀 김민수 차장
+            참조자: 품질관리팀, 영업팀
+            구분: 지연
+            지연 사유: 외주사 테스트 지연
+            지연일: 2일
+            조치 내용: 일정 재조정 및 샘플 재요청
+
+          </div>
+
+
+
+        </v-card-text>
+
+          <v-card-actions class="d-flex justify-end">
+            <v-btn variant="text" @click="showCreateCheck = false">취소</v-btn>
+            <v-btn class="color-button" @click="createApproval">확인</v-btn>
+          </v-card-actions>
+      </v-card>
+
+    </v-dialog>
 </template>
 
 
@@ -160,6 +192,8 @@ import { ref, onMounted, computed, watch } from 'vue'
 import ParticipantSelectModal from './ParticipantSelectModal.vue';
 
 const emit = defineEmits(['remount'])
+
+const showCreateCheck = ref(false)  // 결재 요청 확인 모달
 
 const delayResons = ref([])
 const projectList = ref([])
@@ -287,11 +321,17 @@ onMounted(async() => {
     // Map<Long, User> 형태로 받을 것 프로젝트 ids로 참여자 조회해오기
 })
 
-async function createApproval() {
+// 결재 요청 확인
+const checkCreateApproval = () => {
     if (!isFormValid.value) {
         alert('입력하지 않은 영역이 있습니다.')
         return
     }
+    showCreateCheck.value = true;
+}
+
+async function createApproval() {
+    
     const formData = new FormData();
 
     formData.append('title', title.value)
