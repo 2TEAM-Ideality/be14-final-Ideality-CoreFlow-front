@@ -170,13 +170,70 @@
             <v-icon icon="mdi-delete-outline" class="mr-1" />
             생성 취소
           </v-btn>
-          <v-btn size="small" class="color-button" @click="saveProject" elevation="0" :disabled="selectedTemplate && durationDifference < 0">
+          <v-btn size="small" class="color-button"  elevation="0" @click="checkSaveProject" :disabled="selectedTemplate && durationDifference < 0">
             <v-icon icon="mdi-pencil-outline" class="mr-1" />
             프로젝트 생성
           </v-btn>
         </div>
+        <!-- 프로젝트 생성 확인 모달 -->
+        <v-dialog v-model="showSaveCheck" max-width="600px" persistent>
+          <v-card style="padding: 5%;">
+            <v-card-title class="text-h6 font-weight-bold">프로젝트를 생성하시겠습니까?</v-card-title>
+            <v-card-text style="display :flex; flex-direction: column; gap: 15px;">
+              <div class="mb-3">
+                <div class="section-label">📌 프로젝트명</div>
+                <div class="check-item">{{ projectName }}</div>
+              </div>
 
-    
+              <div class="mb-3">
+                <div class="section-label" >👤 생성자 / 생성일</div>
+                <div style="display :flex; flex-direction: row; gap: 10px; width :100%;">
+                  <div class="check-item" style="width: 50%;">{{ createdBy }} </div> 
+                  <div class="check-item" style="width: 50%;">{{ createdAt }}</div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="section-label">📅 시작 / 마감 베이스라인</div>
+                <div style="display :flex; flex-direction: row; gap: 10px; width :100%;">
+                  <div class="check-item" style="width: 50%;">{{ startDate }} </div> 
+                  <div class="check-item" style="width: 50%;">{{ endDate }}</div>
+                </div>
+                <!-- <div>{{ startDate }} ~ {{ endDate }}</div> -->
+              </div>
+
+              <div class="mb-3">
+                <div class="section-label">⏱️ 총 소요일 / 전체 태스크 수</div>
+                <div style="display :flex; flex-direction: row; gap: 10px; width :100%;">
+                  <div class="check-item" style="width: 50%;"> {{ duration || '-' }}일 </div> 
+                  <div class="check-item" style="width: 50%;">{{ selectedTemplate ? taskCount : '-' }}개</div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="section-label">🏢 참여 부서</div>
+                <div class="d-flex flex-wrap dept-chip-wrap mt-1">
+                  <v-chip
+                    v-for="dept in usedDeptList"
+                    :key="dept.id"
+                    size="small"
+                    color="primary"
+                    variant="tonal"
+                  >
+                    {{ dept.name }}
+                  </v-chip>
+                </div>
+              </div>
+            </v-card-text>
+
+            <v-card-actions class="d-flex justify-end">
+              <v-btn variant="text" @click="showSaveCheck = false">취소</v-btn>
+              <v-btn class="color-button" @click="saveProject">확인</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+
         <!-- 전체 보기 모달 -->
         <v-dialog v-model="showFullScreen" fullscreen persistent transition="dialog-bottom-transition">
             <v-card class="pa-4">
@@ -315,6 +372,8 @@ const flowEdges = ref([])
 
 const showModal = ref(false);
 const showFullScreen = ref(false)   // 플로우 차트 전체 화면으로 보기 
+const showSaveCheck = ref(false)    // 프로젝트 생성 확인 모달 
+
 
 // 팀장 초대
 const showLeaderModal = ref(false)
@@ -427,6 +486,23 @@ const openModal = () => {
   }
   showModal.value = true;
 };
+
+// 프로젝트 생성 확인 모달
+const checkSaveProject = () => {
+   // 🔸 공통 필수 입력값 검사
+    if (!projectName.value || !startDate.value || !endDate.value) {
+      alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
+      return;
+    }
+
+    // 🔸 템플릿을 사용하지 않는 경우, 팀장은 필수
+    if (!selectedTemplate.value && selectedLeaders.value.length === 0) {
+      alert('템플릿을 사용하지 않는 경우, 팀장 초대는 필수입니다.');
+      return;
+    }
+    showSaveCheck.value = true;
+}
+
 const closeModal = () => {
   showModal.value = false
 }
@@ -531,17 +607,7 @@ const convertToFlowData = () => {
 
 // 프로젝트 생성
 const saveProject = async () => {
-    // 🔸 공통 필수 입력값 검사
-    if (!projectName.value || !startDate.value || !endDate.value) {
-      alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
-      return;
-    }
-
-    // 🔸 템플릿을 사용하지 않는 경우, 팀장은 필수
-    if (!selectedTemplate.value && selectedLeaders.value.length === 0) {
-      alert('템플릿을 사용하지 않는 경우, 팀장 초대는 필수입니다.');
-      return;
-    }
+   
 
   const payload = {
     name: projectName.value,
@@ -708,6 +774,11 @@ const editProjectTask = (payload) => {
 /* 부서 칩 */
 .dept-chip-wrap {
   gap: 8px; 
+}
+.check-item {
+  padding: 10px 20px;
+  background-color: #EEEFFA;
+  border-radius: 5px;
 }
 
 </style>
