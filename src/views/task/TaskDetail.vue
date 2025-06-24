@@ -26,7 +26,9 @@
         </template>
 
         <template #sidebar>
-            <SidebarCommentSection :taskId="taskId" />
+            <SidebarCommentSection 
+              :task="originTaskValue.selectTask"
+            />
         </template>
     </TaskLayout>
 </template>

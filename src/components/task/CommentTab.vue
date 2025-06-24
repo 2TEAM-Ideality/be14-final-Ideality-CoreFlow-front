@@ -26,7 +26,8 @@
                 class="profile-img"
                 />
                 <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
-                <span v-if="comment.name">💬</span>
+                <span v-if="comment.userId === userStore.id">⭐</span>
+                <span v-else>💬</span>
                 <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
               </div>
               <span class="comment-create">{{ comment.createdAt.split('T')[0] }}  {{ comment.createdAt.split('T')[1].split(':')[0] }}:{{ comment.createdAt.split('T')[1].split(':')[1] }}</span>
@@ -147,7 +148,7 @@ const props = defineProps({
 });
 
 
-
+console.log(props.task)
 const route = useRoute();
 const userStore = useUserStore();
 

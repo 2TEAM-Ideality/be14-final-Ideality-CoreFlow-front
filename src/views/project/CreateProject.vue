@@ -415,11 +415,15 @@ const usedDeptList = computed(() => {
 
 //  초대 가능한 유저 목록 가져오기
 const fetchUserList = async () => {
-  const res = await api.get(`/api/users/find-all`)
-  console.log("초대 가능 유저 확인", res.data.data)
-  return res.data.data;
-}
+  const res = await api.get(`/api/users/find-all`);
+  const allUsers = res.data.data;
 
+  // 'admin' 팀은 제외
+  const filteredUsers = allUsers.filter(user => user.deptName?.toLowerCase() !== 'admin');
+
+  console.log("초대 가능 유저 (admin 제외):", filteredUsers);
+  return filteredUsers;
+}
 
 // 템플릿 리스트 가져오기 
 const fetchTemplates = async () => {
@@ -604,6 +608,8 @@ const convertToFlowData = () => {
     targetPosition: Position.Left
   }))
 }
+
+
 
 // 프로젝트 생성
 const saveProject = async () => {
