@@ -1,6 +1,6 @@
 <template>
   <transition name="slide">
-    <div v-if="isOpen" class="sidebar">
+    <div v-if="isOpen" class="sidebar" ref="sidebarRef">
       <div class="sidebar-header">
         <div class="title">
           <img class="icon" src="@/assets/icons/ring.png" alt="알림 아이콘" />
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { defineProps,defineEmits } from 'vue'
+import { defineProps,defineEmits, ref, onMounted, onUnmounted  } from 'vue'
 import { useRouter } from 'vue-router'; // vue-router 사용
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationStore } from '@/stores/notificationStore';
@@ -35,6 +35,8 @@ import api from '@/api';
   const notificationStore = useNotificationStore()
   const router = useRouter(); // router 사용
   const token = userStore.accessToken;
+
+  const sidebarRef = ref(null)
 
 const props = defineProps({
   notifications: {
@@ -55,6 +57,19 @@ const closeSidebar = () => {
   emit('closeSidebar')  // 부모 컴포넌트에 closeSidebar 이벤트를 전달
 }
 
+const handleClickOutside = (e) => {
+  if (sidebarRef.value && !sidebarRef.value.contains(e.target)) {
+    closeSidebar()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('mousedown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
 
 // 알림 클릭 시 라우팅과 읽기 처리 함수
 const handleNotificationClick = async (notice) => {
