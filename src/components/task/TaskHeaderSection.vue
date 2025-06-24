@@ -1,11 +1,8 @@
 <template>
     <div class="task-header">
-        <p class="breadcrumb">프로젝트 > {{ task.projectName }} > TASK {{ task.taskId }} : {{ task.taskName }}</p>
+        <!-- <p class="breadcrumb">프로젝트 > {{ task.projectName }} > TASK {{ task.taskId }} : {{ task.taskName }}</p> -->
 
         <div class="task-header-box">
-            <!-- <span :class="['status-badge', statusClass]">
-                {{ statusText }}
-            </span> -->
         <h1 class="task-title">
             <v-icon :color="statusMeta.color" size="32" class="mr-1">{{ statusMeta.icon }}</v-icon>
             TASK {{ task.taskId }} : {{ task.taskName }}

@@ -614,7 +614,7 @@ const saveProject = async () => {
     description: projectDescription.value,
     startBase: startDate.value,
     endBase: endDate.value,
-    leaderIds: [1, 3],        // 임시값 (미구현)
+    leaderIds: selectedLeaders.value.map(user => user.id),   
     directorId: user.id       // 현재 로그인 사용자
   };
 
