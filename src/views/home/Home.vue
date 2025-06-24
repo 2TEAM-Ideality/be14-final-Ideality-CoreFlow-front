@@ -23,6 +23,7 @@
           :deptInfo ="userStore.deptName"
           :todayDeptList="todayDeptList"
           :todayCount="todayCount"
+          :warningDeadline="warningDeadline"
         />
       </div>
 
@@ -37,6 +38,15 @@
         <RecentProjectList  :projectList = "myProject"/>
       </div>
 
+      <div class="content-item" >
+        <div class="d-flex align-center"   >
+          <v-icon @click="goToProject" class="me-2" color="#73726E">mdi-view-list</v-icon>
+          <span class="text-subtitle-1 font-weight-medium" style="color: #73726E;">
+            예정된 이벤트
+          </span>
+        </div>
+        <TodaySchedule />
+      </div>
     </div>
   </div>
   <ChangePwdModal v-if="showChangePwdModal" @close="showChangePwdModal = false"/>
@@ -55,6 +65,7 @@ import weekday from 'dayjs/plugin/weekday'
 import updateLocale from 'dayjs/plugin/updateLocale'
 import 'dayjs/locale/ko'
 import ChangePwdModal from '@/components/user/ChangePwdModal.vue'
+import TodaySchedule from '@/components/home/TodaySchedule.vue'
 
 dayjs.extend(weekday)
 dayjs.extend(updateLocale)
@@ -82,6 +93,8 @@ const todayDeptList = ref([])
 const todaySchedule = ref([])
 const filteredTodaySchedule = ref([])
 const myProject = ref([])
+
+const warningDeadline = ref(null)
 
 const todayStr = new Date().toISOString().split('T')[0]
 
@@ -153,11 +166,26 @@ const fetchScheduleToday = async (year, month) => {
   }
 }
 
+// ✅ 마감 임박 태스크 & 세부일정 수 조회
+
+const fetchWarningDeadline = async () => {
+  try {
+    const res = await api.get(`/mainPage`)
+    warningDeadline.value = res.data.data
+    console.log('✅ 마감 임박 태스트 & 세부일정 개수 확인', warningDeadline.value)
+  } catch(err) {
+    console.error('❌ 마감 임박 일정 조회 실패', err)
+  }
+}
+
+// /mainPage
+
 onMounted(() => {
   const today = new Date()
   fetchDeptToday()
   fetchScheduleToday(today.getFullYear(), today.getMonth() + 1)
   fetchMyProject()  
+  fetchWarningDeadline()
   if (userStore.temp) showChangePwdModal.value = true
 })
 
@@ -173,7 +201,7 @@ const goToProject = () => {
 .container {
   height: 100vh;
   background-color: #FFFFFF;
-  padding: 5% 15% 0 15%;
+  padding: 7% 15% 0 15%;
 }
 
 .profile-header {

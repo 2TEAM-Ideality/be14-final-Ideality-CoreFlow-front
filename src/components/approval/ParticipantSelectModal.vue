@@ -112,7 +112,8 @@ watch(groupedUsers, (val) => {
     <v-card class="participant-card">
       <v-card-title class="text-h6 header-title">
         <div v-if="props.type === 'approver'">결재자 선택</div>
-        <div v-else>참조자 선택</div>
+        <div v-if="props.type === 'viewers'">참조자 선택</div>
+        <div v-if="props.type === 'project'">팀장 초대</div>
     </v-card-title>
 
       <v-card-text class="main-area">
@@ -276,9 +277,11 @@ watch(groupedUsers, (val) => {
 
 .group-scroll {
   flex: 1;
-  max-height: 400px;
+  height :100%;
+  /* max-height: 400px; */
   overflow-y: auto;
   padding-right: 4px;
+  margin-bottom: 24px;
 }
 
 .expansion-title {

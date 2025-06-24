@@ -73,7 +73,7 @@
         <v-icon size="20" class="mr-2">mdi-account-search</v-icon>
         {{ user.deptName }} {{ user.name }} {{ user.jobRankName }}
       </v-chip>
-      </v-chip-group>
+    </v-chip-group>
     </div>
 
     <!-- 구분 -->

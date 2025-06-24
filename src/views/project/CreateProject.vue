@@ -141,9 +141,27 @@
     
 
         <!-- 팀장 초대 -->
-        <div class="section-label">프로젝트 팀장 초대</div>
-        <v-btn @click="openLeaderModal('project')">구성원 조회</v-btn>
-
+        <div class="section-label" style="margin-top: 40px;">프로젝트 팀장 초대</div>
+        <div style="justify-content: flex-start; width: 100%; display :flex; flex-direction: row; margin-bottom: 20px; align-items: center; gap: 15px;">
+        <v-btn @click="openLeaderModal('project')" size="small" style="width:fit-content; " variant="tonal" color="purple">구성원 조회</v-btn>
+        <span style="font-size: 13px; color: gray;">프로젝트에 참여할 팀장을 선택해주세요.</span>
+        </div>
+        
+        <div v-for="(users, dept) in groupedLeaders" :key="dept" class="mb-3" style="padding: 10px 20px; border: 1px solid #D9D9D9; border-radius: 5px; width :100%; height: fit-content;">
+          <div class="text-subtitle-2 font-weight-medium mb-1" style="text-align: left;">{{ dept }}</div>
+          <v-chip-group>
+            <v-chip
+              v-for="user in users"
+              :key="user.id"
+              closable
+              class="participant-chip"
+              @click:close="removeViewer(user.id)"
+            >
+              <v-icon size="20" class="mr-2">mdi-account-tie</v-icon>
+              {{ user.name }} {{ user.jobRankName }}
+            </v-chip>
+          </v-chip-group>
+        </div>
         
         <!-- 생성/취소 버튼 -->
         <div class="button-section">
@@ -187,7 +205,7 @@
         <ParticipantSelectModal
           v-if="showLeaderModal"
           :type="modalType"
-          :userList=""
+          :userList="userList"
           :selectedLeaders="selectedLeaders"
           @close="showLeaderModal = false"
           @select="handleLeaderSelect"
@@ -272,9 +290,6 @@ const durationDifference = computed(() => {
   return baseLineDuration.value - duration.value;
 });
 
-
-
-
 const formatDate = (date) => {
   const pad = (n) => n.toString().padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
@@ -305,31 +320,45 @@ const showFullScreen = ref(false)   // 플로우 차트 전체 화면으로 보�
 const showLeaderModal = ref(false)
 const modalType = ref('') // 'project'
 const selectedLeaders = ref([])
+const userList = ref([])    // 초대 가능 유저 
 
 
 
-// 참여 부서
+// 참여 부서 (템플릿 + 팀장 초대)
 const usedDeptList = computed(() => {
-  const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : []
-  const all = nodes
-    .flatMap(node => node.data?.deptList || [])
-    .map(d => ({
-      id: d.id ?? d.deptId ?? d,
-      name: d.name ?? d.deptName ?? d
-    }))
+  const deptSet = new Map()
 
-  const uniqueMap = new Map()
-  all.forEach(d => {
-    if (!uniqueMap.has(d.id)) uniqueMap.set(d.id, d)
+  // 1. 템플릿 노드의 부서
+  const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : []
+  nodes
+    .flatMap(node => node.data?.deptList || [])
+    .forEach(d => {
+      const id = d.id ?? d.deptId ?? d
+      const name = d.name ?? d.deptName ?? d
+      if (id && !deptSet.has(id)) {
+        deptSet.set(id, { id, name })
+      }
+    })
+
+  // 2. 선택된 팀장의 부서
+  selectedLeaders.value.forEach(user => {
+    const dept = {
+      id: user.deptId ?? user.deptName, // deptId가 없다면 name로 fallback
+      name: user.deptName
+    }
+    if (dept.id && !deptSet.has(dept.id)) {
+      deptSet.set(dept.id, dept)
+    }
   })
 
-  return Array.from(uniqueMap.values())
+  return Array.from(deptSet.values())
 })
 
 //  초대 가능한 유저 목록 가져오기
-const fetchParticipantList = async () => {
+const fetchUserList = async () => {
   const res = await api.get(`/api/users/find-all`)
   console.log("초대 가능 유저 확인", res.data.data)
+  return res.data.data;
 }
 
 
@@ -346,12 +375,29 @@ function openLeaderModal(type) {
     showLeaderModal.value = type
 }
 
+// 팀장 선택 관리
+function handleLeaderSelect(selectedUsers) {
+  selectedLeaders.value = selectedUsers || []
+  showLeaderModal.value = false
+}
+
+// 선택한 팀장 그룹핑해서 보여주기 
+const groupedLeaders = computed(() => {
+  const groups = {}
+  selectedLeaders.value.forEach(user => {
+    const dept = user.deptName || '기타'
+    if (!groups[dept]) groups[dept] = []
+    groups[dept].push(user)
+  })
+  return groups
+})
 
 // 
 onMounted(async () => {
   try {
-    const data = await fetchTemplates();   
-    templateList.value = data;
+    templateList.value  = await fetchTemplates();   
+    userList.value = await fetchUserList();
+
   } catch (err) {
     console.error("템플릿 목록 불러오기 실패", err);
   }
@@ -409,12 +455,12 @@ const handleSelectTemplate = async (template) => {
     const res = await api.get(`/api/template/${template.id}`)
     const data = res.data.data
 
-    selectedTemplate.value = templateList.value.find(t => t.id === template.id)
+    // selectedTemplate.value = templateList.value.find(t => t.id === template.id)
+    selectedTemplate.value = template 
 
     nodeList.value = data.templateData.nodeList
     edgeList.value = data.templateData.edgeList
 
-    // ✅ 여기에 계산 로직 삽입
     taskCount.value = nodeList.value.length;
     duration.value = nodeList.value.reduce((total, node) => {
       return total + (node.data?.duration || 0) + (node.data?.slackTime || 0);
@@ -485,11 +531,17 @@ const convertToFlowData = () => {
 
 // 프로젝트 생성
 const saveProject = async () => {
-    // ✅ 유효성 검사
-  if (!projectName.value || !startDate.value || !endDate.value) {
-    alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
-    return;
-  }
+    // 🔸 공통 필수 입력값 검사
+    if (!projectName.value || !startDate.value || !endDate.value) {
+      alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
+      return;
+    }
+
+    // 🔸 템플릿을 사용하지 않는 경우, 팀장은 필수
+    if (!selectedTemplate.value && selectedLeaders.value.length === 0) {
+      alert('템플릿을 사용하지 않는 경우, 팀장 초대는 필수입니다.');
+      return;
+    }
 
   const payload = {
     name: projectName.value,
@@ -570,7 +622,7 @@ const editProjectTask = (payload) => {
 }
 
 .section-label {
-  font-weight: 500;
+  font-weight: bold;
   font-size: 15px;
   margin-bottom: 10px;
   text-align: left;
@@ -578,7 +630,7 @@ const editProjectTask = (payload) => {
 
 .baseline-label {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 4px;
 }
 
