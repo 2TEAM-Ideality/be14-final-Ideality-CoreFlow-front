@@ -311,6 +311,7 @@ validateForm() {
     });
 
   console.log("최종 유효한 참여자 목록:", validParticipants);
+  console.log("최종 유효한 참여자 목록:",   this.taskDetails.assignees);
 
       const updatedData = {
         name: this.taskDetails.taskName,
