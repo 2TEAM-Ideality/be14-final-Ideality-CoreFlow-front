@@ -80,8 +80,8 @@ const handleNotificationClick = async (notice) => {
         return;
     }
 
-    // 라우팅 처리 - key를 추가하여 강제로 리렌더링
-    router.push({ path: targetUrl, query: { key: Date.now() } }); // query 파라미터로 key 추가
+   // 라우팅 처리
+  router.push(targetUrl);
   } else {
     console.error("알림 읽기 실패:", response.message || "알 수 없는 오류");
   }

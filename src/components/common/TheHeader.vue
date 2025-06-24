@@ -148,6 +148,8 @@ const fetchNotifications = async () => {
       response.data.data.filter(notice => !notice.isAutoDelete).forEach(notification => {
         store.addNotification(notification)
       })
+      // 최신순으로 알림 목록 정렬
+      store.notifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       const lastNotification = response.data.data[0]
       if (lastNotification) {
