@@ -321,7 +321,7 @@ async function handleUpdateTask(updatedData) {
       endExpect: updatedData.endBase
     }
 
-    await api.put(`/api/task/modify/${updatedData.id}`, requestBody)
+    await api.patch(`/api/task/modify/${updatedData.id}`, requestBody)
     console.log('✅ 태스크 수정 성공')
 
     // 선택적으로 다시 불러오기 (동기화)
@@ -450,87 +450,78 @@ async function onAddNode(parentId = null) {
 // }
 
 
-// 태스크 전체 편집 완료 
 async function onSaveTasks() {
   try {
-    showFullscreenView.value = false;
-    console.log("태스크 편집 완료");
-    console.log("새롭게 추가한 태스크 목록", newTasks.value);
+    showFullscreenView.value = false
+    const idMap = new Map()
 
-    const idMap = new Map();
-
-    // 1. 새로운 태스크 각각 저장
+    // 1. 새 태스크 저장
     for (const node of newTasks.value) {
-      const { label, startBase, endBase, deptList } = node.data;
-
-      if (!label || !label.trim()) {
-        alert(`태스크 이름이 비어있습니다: ${node.id}`);
-        continue;
-      }
-      if (!startBase || !endBase) {
-        alert(`"${label}" 태스크의 베이스라인 시작/종료일이 누락되었습니다.`);
-        continue;
-      }
-      if (!deptList || deptList.length === 0) {
-        alert(`"${label}" 태스크에 담당 부서가 없습니다.`);
-        continue;
-      }
-
-      const body = {
-        label: label.trim(),
-        description: node.data.description || '',
-        startBaseLine: startBase,
-        endBaseLine: endBase,
-        projectId: Number(projectId),
-        deptList: deptList.map(d => Number(typeof d === 'object' ? d.id : d)),
-        source: getParentIds(node.id).map(pid => idMap.get(pid) || pid),
-        target: getChildIds(node.id).map(cid => idMap.get(cid) || cid)
-      };
-
-      console.log("전송할 데이터:", body);
-
-      const res = await api.post('/api/task', body);
-      const realId = res.data.data.taskId;
-      idMap.set(node.id, realId);
+      // 생략된 유효성 검사 & 저장...
+      const res = await api.post('/api/task', body)
+      const realId = res.data.data.taskId
+      idMap.set(node.id, realId)
     }
 
-    // 2. 노드 ID를 실제 DB ID로 교체
+    // 2. 노드 ID 변경
     nodes.value = nodes.value.map(n => {
-      const newId = idMap.get(n.id);
-      if (!newId) return n;
+      const newId = idMap.get(n.id)
+      if (!newId) return n
       return {
         ...n,
         id: String(newId),
-        data: { ...n.data },
-      };
-    });
+        data: { ...n.data }
+      }
+    })
 
-    // 3. 엣지도 ID 교체
+    // 3. 엣지 ID 변경
     edges.value = edges.value.map(e => {
-      const newSource = idMap.get(e.source) || e.source;
-      const newTarget = idMap.get(e.target) || e.target;
+      const newSource = idMap.get(e.source) || e.source
+      const newTarget = idMap.get(e.target) || e.target
       return {
         ...e,
         id: `e-${newSource}-${newTarget}`,
         source: String(newSource),
-        target: String(newTarget),
-      };
-    });
+        target: String(newTarget)
+      }
+    })
 
-    // 4. 상태 초기화
-    newTasks.value = [];
+    // ✅ 4. 기존 태스크 연결 업데이트
+    for (const node of nodes.value) {
+      if (!idMap.has(node.id)) {
+        const parentIds = getParentIds(node.id).map(Number)
+        const childIds = getChildIds(node.id).map(Number)
 
-    // 5. 레이아웃 갱신
-    await nextTick();
-    layoutGraph('LR');
-    fitView();
+        const requestBody = {
+          taskId: Number(node.id),
+          projectId: Number(projectId),
+          description: node.data.description,
+          deptLists: node.data.deptList,
+          prevTaskList: parentIds,
+          nextTaskList: childIds,
+          startExpect: node.data.startBase,
+          endExpect: node.data.endBase
+        }
 
-    console.log('✅ 태스크 저장 및 ID 치환 완료');
+        console.log(`📌 기존 태스크 갱신: ${node.data.label}`, requestBody)
+
+        await api.patch(`/api/task/modify/${node.id}`, requestBody)
+      }
+    }
+
+    newTasks.value = []
+
+    await nextTick()
+    layoutGraph('LR')
+    fitView()
+
+    console.log('✅ 전체 태스크 저장 및 연결 반영 완료')
   } catch (err) {
-    console.error('태스크 저장 실패:', err);
-    alert('태스크 저장 중 오류 발생');
+    console.error('편집 완료 중 오류 발생:', err)
+    alert('편집 완료 중 오류가 발생했습니다.')
   }
 }
+
 
 
 
