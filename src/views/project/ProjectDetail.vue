@@ -44,12 +44,17 @@
       </div>
     </div>
 
-    
+    <ReportPreviewModals
+      v-model="showPdfModal"
+      :blob="pdfBlob"
+    />
+        
   </div>
 </template>
 
 
 <script setup>
+import ReportPreviewModals from '@/components/project/ReportPreviewModal.vue'
 import ProjectStatusButton from '@/components/project/ProjectStatusButton.vue'
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
@@ -201,28 +206,25 @@ const markAsRestore = async () => {
 
 
 // 프로젝트 분석 리포트 다운로드 
+const pdfBlob = ref(null)
+const showPdfModal = ref(false)
+
 const downloadReport = async () => {
   try {
     const response = await api.get(`/api/projects/report/${projectId}`, {
       responseType: 'blob',
       headers: {
-        Authorization: `Bearer ${userStore.accessToken}`  
+        Authorization: `Bearer ${userStore.accessToken}`
       }
-    });
+    })
 
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = '프로젝트_분석_리포트.pdf';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    pdfBlob.value = response.data
+    showPdfModal.value = true
   } catch (err) {
-    console.error('PDF 다운로드 실패:', err);
-    alert('PDF 생성에 실패했습니다.');
+    console.error('PDF 다운로드 실패:', err)
+    alert('PDF 생성에 실패했습니다.')
   }
-};
+}
 
 
 
