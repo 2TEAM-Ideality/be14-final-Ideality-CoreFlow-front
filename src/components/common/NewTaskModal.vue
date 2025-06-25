@@ -283,11 +283,11 @@ const getNodeLabel = (item) => {
         <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 10px;">
           <div class="input-group" style="width: 100%;">
             <label>시작 베이스라인</label>
-            <input v-model="localNode.startBase" type="date" @change="handleStartDateChange" />
+            <input v-model="localNode.startBase" type="date" @change="handleStartDateChange" value="localNode.startBase"/>
           </div>
           <div class="input-group" style="width: 100%;">
             <label>마감 베이스라인</label>
-            <input v-model="localNode.endBase" type="date" @change="handleEndDateChange" />
+            <input v-model="localNode.endBase" type="date" @change="handleEndDateChange" value="localNode.startBase"/>
           </div>
         </div>
 
@@ -295,13 +295,15 @@ const getNodeLabel = (item) => {
         <div
           v-if="totalDuration"
           style="align-self: flex-end; font-size: 12px; margin-top: -10px;"
-          :style="{ color: totalDuration === 'invalid' ? '#FF4545' : '#666' }"
+          :style="{ color: totalDuration === 'invalid' ? '#FF4545' : '#1976D2' }"
         >
           <template v-if="totalDuration === 'invalid'">
+            
             종료일은 시작일보다 이후여야 합니다
           </template>
           <template v-else>
-            총 소요일: {{ totalDuration }}일
+            <v-icon start>mdi-calendar-clock</v-icon>
+            워크데이 기반 총 소요일: <span><strong>  {{ totalDuration }}일</strong></span>
           </template>
         </div>
       </div>
