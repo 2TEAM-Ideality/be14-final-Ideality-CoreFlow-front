@@ -21,18 +21,12 @@
       </v-btn>
     </div>
 
-    <!-- <component
-      :is="selectedComponent"
-      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
-      :task-id="taskData.selectTask.taskId"
-    /> -->
     <component
       :is="selectedComponent"
-      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
+      v-bind="selectedTab === 'info' || selectedTab === 'detail' ? { taskData, detailList } : {}"
       :task-id="taskData.selectTask.taskId"
-      :work-id="openWorkId" 
-      @update:work-id="openWorkId = $event" 
     />
+
     <v-dialog v-model="showModal" max-width="700">
       <v-card>
         <v-card-title class="d-flex justify-space-between align-center">
@@ -161,8 +155,6 @@ const openModal = () => {
 const closeModal = () => {
   showModal.value = false // 모달을 닫기 위해 상태값을 false로 설정
 }
-
-const openWorkId = ref(null)
 
 const showModal = ref(false);
 const form = ref({
@@ -373,17 +365,10 @@ onMounted(() => {
     selectedTab.value = tabFromQuery
   }
 
-  
-  // onMounted 내부
-  if (route.query.tab === 'detail' && route.query.openModal === 'true' && route.query.workId) {
-    selectedTab.value = 'detail'
-    openWorkId.value = Number(route.query.workId)
-  }
-
   // 디테일 모달 열기 요청 처리
-  // if (route.query.tab === 'detail' && route.query.openModal === 'true' && route.query.workId) {
-  //   openWorkId.value = Number(route.query.workId)  // v-model 용으로 세팅
-  // }
+  if (route.query.tab === 'detail' && route.query.openModal === 'true' && route.query.workId) {
+    openWorkId.value = Number(route.query.workId)  // v-model 용으로 세팅
+  }
 
 })
 </script>
