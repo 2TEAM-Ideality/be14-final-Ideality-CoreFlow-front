@@ -21,12 +21,18 @@
       </v-btn>
     </div>
 
+    <!-- <component
+      :is="selectedComponent"
+      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
+      :task-id="taskData.selectTask.taskId"
+    /> -->
     <component
       :is="selectedComponent"
       v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
       :task-id="taskData.selectTask.taskId"
+      :work-id="openWorkId" 
+      @update:work-id="openWorkId = $event" 
     />
-
     <v-dialog v-model="showModal" max-width="700">
       <v-card>
         <v-card-title class="d-flex justify-space-between align-center">
@@ -131,7 +137,7 @@
 
 <script setup>
 import { useRoute } from "vue-router";
-import { ref, computed,onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import TaskInfoTab from '@/components/task/TaskInfoTab.vue'
 import TaskApprovalTab from '@/components/task/TaskApprovalTab.vue'
 import TaskAttachmentTab from '@/components/task/TaskAttachmentTab.vue'
@@ -141,6 +147,9 @@ import { defineEmits } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import api from '@/api';
+
+
+const route = useRoute()
 
 const emit = defineEmits()
 const openModal = () => {
@@ -152,6 +161,8 @@ const openModal = () => {
 const closeModal = () => {
   showModal.value = false // 모달을 닫기 위해 상태값을 false로 설정
 }
+
+const openWorkId = ref(null)
 
 const showModal = ref(false);
 const form = ref({
@@ -197,8 +208,8 @@ const submitForm = async () => {
   }
 
   console.log(form.value.precedingTasks);
-console.log(form.value.followingTasks);
-console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
+  console.log(form.value.followingTasks);
+  console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
   
   // 선행 일정과 후행 일정이 비어 있으면 null로 설정
   const precedingTasks = form.value.precedingTasks.length > 0 ? form.value.precedingTasks : null;
@@ -353,6 +364,27 @@ const fetchUsersForDepartment = async () => {
 onMounted(() => {
   fetchDepartments()
   fetchTasks()
+
+  // 👉 쿼리 파라미터로 전달된 tab과 openModal 처리
+  
+  // tab 전환
+  const tabFromQuery = route.query.tab
+  if (tabFromQuery && tabs.find(t => t.name === tabFromQuery)) {
+    selectedTab.value = tabFromQuery
+  }
+
+  
+  // onMounted 내부
+  if (route.query.tab === 'detail' && route.query.openModal === 'true' && route.query.workId) {
+    selectedTab.value = 'detail'
+    openWorkId.value = Number(route.query.workId)
+  }
+
+  // 디테일 모달 열기 요청 처리
+  // if (route.query.tab === 'detail' && route.query.openModal === 'true' && route.query.workId) {
+  //   openWorkId.value = Number(route.query.workId)  // v-model 용으로 세팅
+  // }
+
 })
 </script>
 
