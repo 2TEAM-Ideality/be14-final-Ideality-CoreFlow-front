@@ -90,7 +90,23 @@ import TaskModal from "@/components/task/DetailModal.vue"; // 모달 컴포넌�
 import { mdiPlayCircle, mdiPauseCircle, mdiCheckCircle } from '@mdi/js'; // MDI 아이콘 import
 import { ref } from 'vue'; // ref 추가 (경고창 처리)
 
+
+
 export default {
+  props: {
+    taskId: Number,
+    workId: Number
+  },
+
+  watch: {
+    workId(val) {
+      if (val) {
+        this.openModal(val)
+      }
+    }
+  },
+
+
   components: {
     TaskModal, // 모달 컴포넌트 등록
   },
@@ -123,12 +139,16 @@ export default {
     const userStore = useUserStore();
     const token = userStore.accessToken;
 
+    // 기존 로직
     if (parentTaskId && token) {
       const taskStore = useTaskStore();
-      await taskStore.fetchItems(parentTaskId, token); // 데이터를 불러옴
-      await taskStore.fetchTotalProgress(parentTaskId, token); // 총 진척률 가져오기
-    } else {
-      console.error("parentTaskId나 token이 없습니다.");
+      taskStore.fetchItems(parentTaskId, token);
+      taskStore.fetchTotalProgress(parentTaskId, token);
+    }
+
+    // ✅ props로 넘어온 workId가 존재하면 모달 열기
+    if (this.workId) {
+      this.openModal(this.workId);
     }
   },
   methods: {
@@ -205,6 +225,8 @@ confirmAndUpdateStatus(item, newStatus) {
     },
   },
 };
+
+
 </script>
 
 <style scoped>
