@@ -83,11 +83,9 @@
 </template>
 
 <script>
-import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import TaskModal from "@/components/task/DetailModal.vue"; // 모달 컴포넌트 import
-import { mdiPlayCircle, mdiPauseCircle, mdiCheckCircle } from '@mdi/js'; // MDI 아이콘 import
 import { ref } from 'vue'; // ref 추가 (경고창 처리)
 
 export default {
