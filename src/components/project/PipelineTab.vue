@@ -199,58 +199,76 @@ function getChildIds(nodeId) {
 }
 
 
-
-function handleCreateNewNode(newNodeData) {
-  console.log(newNodeData)
-  const newId = nanoid(6)
-
-  const node = {
-    id: newId,
-    type: 'task',
-    position: { x: 200, y: 200 + nodes.value.length * 100 },
-    data: {
-      ...newNodeData,
-      toolbarVisible: false,
-      status: 'pending',
-      progressRate: 0,
-      passedRate: 0,
-      delayDays: 0,
+async function handleCreateNewNode(nodeData) {
+  try {
+    const payload = {
+      label: nodeData.label,
+      description: nodeData.description,
+      startBaseLine: nodeData.startBase,
+      endBaseLine: nodeData.endBase,
+      projectId: Number(projectId),
+      deptList: nodeData.deptList,
+      source: nodeData.parentIds,
+      target: nodeData.childIds
     }
+
+    const res = await api.post('/api/task', payload)
+    const saved = res.data.data
+
+    console.log("✅ 태스크 생성 성공!", saved)
+
+    const node = {
+      id: String(saved.id),
+      type: 'task',
+      position: { x: 200, y: 200 + nodes.value.length * 100 },
+      data: {
+        label: nodeData.label,         // ✅ 태스크명 그대로 표시됨
+        description: nodeData.description,
+        startBase: nodeData.startBase,
+        endBase: nodeData.endBase,
+        deptList: nodeData.deptList,
+        toolbarVisible: false,
+        status: 'pending',
+        progressRate: 0,
+        passedRate: 0,
+        delayDays: 0
+      }
+    }
+
+    nodes.value.push(node)
+
+    // 연결 처리 (parent/child edges)
+    for (const parentId of nodeData.parentIds || []) {
+      edges.value.push({
+        id: `e-${parentId}-${node.id}`,
+        source: String(parentId),
+        target: node.id,
+        type: 'bezier',
+        animated: true,
+        sourcePosition: Position.Right,
+        targetPosition: Position.Left
+      })
+    }
+
+    for (const childId of nodeData.childIds || []) {
+      edges.value.push({
+        id: `e-${node.id}-${childId}`,
+        source: node.id,
+        target: String(childId),
+        type: 'bezier',
+        animated: true,
+        sourcePosition: Position.Right,
+        targetPosition: Position.Left
+      })
+    }
+
+    await nextTick()
+    layoutGraph('LR')
+
+  } catch (err) {
+    console.error('태스크 생성 실패:', err)
+    alert('태스크 생성 중 오류 발생')
   }
-
-  nodes.value.push(node)
-  newTasks.value.push(node)
-
-  // 🔗 연결할 선행 태스크가 있으면 edge 생성
-  const parentIds = newNodeData.parentIds || []
-  parentIds.forEach(parentId => {
-    edges.value.push({
-      id: `e-${parentId}-${newId}`,
-      source: String(parentId),
-      target: newId,
-      type: 'bezier',
-      animated: true,
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left
-    })
-  })
-
-  // 🔗 연결할 후행 태스크가 있으면 edge 생성
-  const childIds = newNodeData.childIds || []
-  childIds.forEach(childId => {
-    edges.value.push({
-      id: `e-${newId}-${childId}`,
-      source: newId,
-      target: String(childId),
-      type: 'bezier',
-      animated: true,
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left
-    })
-  })
-
-  showNewTask.value = false
-  nextTick(() => layoutGraph('LR'))
 }
 
 
@@ -590,6 +608,7 @@ watch(showFullscreenView, async (isOpen) => {
     <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
       <NewTaskModal
         v-model:show="showNewTask"
+        :projectId="projectId"
         :deptList="deptList"
         :existingNodes="nodes"
         :initialData="editingNode"
