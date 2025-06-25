@@ -173,7 +173,7 @@
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
         <div style="width:12px; height: 12px;  background-color: #FFCC00;"></div>
         지연 임박</div>
-        <div class="data">1</div>
+        <div class="data">{{ task.selectTask?.nearDueSubtasks || 0 }}</div>
       </div>
       <div class="data-item">
          <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
