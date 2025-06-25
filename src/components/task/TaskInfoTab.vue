@@ -2,23 +2,26 @@
   <div class="task-info-box">
     <!-- 수정 아이콘 / 완료 버튼 -->
     <div class="edit-toggle">
-       <img
+        <!-- 수정 아이콘 -->
+        <v-icon
           v-if="!isEdit"
-          src="@/assets/icons/pentool.svg"
-          class="edit-icon"
-          alt="edit"
           @click="isEdit = true"
-        />
+          size="24"
+          style="cursor: pointer;"
+          title="수정"
+        >
+          mdi-pencil
+        </v-icon>
+
+        <!-- 완료 아이콘 -->
         <v-btn
           v-else
-          class="complete-button"
           @click="handleCompleteClick"
-          color="primary"
-          variant="elevated"
-          height="36"
-          min-width="72"
+          size="small"
+          variant="tonal"
+          color="purple"
         >
-          완료
+        수정 완료
         </v-btn>
 
          <ConfirmModal
@@ -167,13 +170,13 @@
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
         <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
         전체 세부일정</div>
-        <div class="data">{{ activeDetailList.length }}</div>
+        <div class="data">{{ activeDetailList.length || 0 }} 개</div>
       </div>
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
         <div style="width:12px; height: 12px;  background-color: #FFCC00;"></div>
         지연 임박</div>
-        <div class="data">{{ task.selectTask?.nearDueSubtasks || 0 }}</div>
+        <div class="data">{{ task.selectTask?.nearDueSubtasks || 0 }} 개</div>
       </div>
       <div class="data-item">
          <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >

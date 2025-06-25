@@ -202,7 +202,7 @@ function getChildIds(nodeId) {
 async function handleCreateNewNode(nodeData) {
   try {
     const payload = {
-      label: nodeData.label,
+      taskName: nodeData.label,
       description: nodeData.description,
       startBaseLine: nodeData.startBase,
       endBaseLine: nodeData.endBase,
@@ -222,7 +222,7 @@ async function handleCreateNewNode(nodeData) {
       type: 'task',
       position: { x: 200, y: 200 + nodes.value.length * 100 },
       data: {
-        label: nodeData.label,         // ✅ 태스크명 그대로 표시됨
+        taskName: nodeData.label,         // ✅ 태스크명 그대로 표시됨
         description: nodeData.description,
         startBase: nodeData.startBase,
         endBase: nodeData.endBase,
@@ -330,6 +330,7 @@ async function handleUpdateTask(updatedData) {
   // 2. 서버에 수정 요청 전송
   try {
     const requestBody = {
+      taskName: updatedData.label,    
       taskId: Number(updatedData.id),
       projectId: Number(projectId),
       description: updatedData.description,
@@ -512,6 +513,7 @@ async function onSaveTasks() {
         const childIds = getChildIds(node.id).map(Number)
 
         const requestBody = {
+          taskName: node.label,
           taskId: Number(node.id),
           projectId: Number(projectId),
           description: node.data.description,
