@@ -117,7 +117,7 @@
             <v-list-item
               v-for="(item, index) in warningDeadlineTest.subtasks"
               :key="'subtask-' + index"
-              @click="goToDetail(item.workId)"
+              @click="goToDetail(item.parentTaskId, item.workId)"
               style="cursor: pointer; background-color: #eeee; border-radius:15px; padding: 10px;" 
             >
             <!-- v-for="(item, index) in props.warningDeadline.tasks" -->
@@ -182,9 +182,9 @@ const warningDeadlineTest = {
     { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' }
   ],
   subtasks: [
-    { workId: 3, name: '색상 가이드 정리', parentTaskId: 1, endBaseLine: '2025-06-26' },
-    { workId: 4, name: '폰트 정리', parentTaskId: 1, endBaseLine: '2025-06-27' },
-    { workId: 5, name: '컴포넌트 표준 정리', parentTaskId: 1, endBaseLine: '2025-06-27' }
+    { workId: 193, name: '색상 가이드 정리', parentTaskId: 108, endBaseLine: '2025-06-26' },
+    { workId: 193, name: '폰트 정리', parentTaskId: 108, endBaseLine: '2025-06-27' },
+    { workId: 193, name: '컴포넌트 표준 정리', parentTaskId: 108, endBaseLine: '2025-06-27' }
   ]
 }
     // private Long workId;

@@ -483,11 +483,18 @@ const fetchUserList = async () => {
 // 워크 데이 기반 -> 휴일 체크
 // 전체 휴일 정보 가져오기 
 const fetchAllHolidays = async () => {
-  const res = await api.get('/api/holidays');
-  const list = res.data?.data || [];
-  holidaySet.value = new Set(list.map(h => h.date)); // ['2025-05-05', ...]
-};
+  try {
+    console.log("📡 공휴일 요청 시작");
+    const res = await api.get('/api/holidays');
 
+    const list = res.data?.data?.holidays || [];  // ✅ 핵심 수정
+    holidaySet.value = new Set(list.map(h => h.date)); // ✅ date만 추출해서 Set으로
+
+    console.log("✅ 공휴일 로딩 완료:", holidaySet.value);
+  } catch (err) {
+    console.error('❌ 공휴일 로딩 실패:', err);
+  }
+};
 
 // 선택 날짜가 휴일인지 확인
 const checkIfHoliday = async (dateStr) => {
@@ -511,11 +518,14 @@ const workingDuration = computed(() => {
   let count = 0;
   const date = new Date(start);
 
+  const holidays = holidaySet.value; // Set<string>
+
   while (date <= end) {
     const iso = date.toISOString().slice(0, 10);
     const day = date.getDay(); // 일(0), 토(6)
     const isWeekend = day === 0 || day === 6;
-    const isHoliday = holidaySet.value.has(iso); // ✅ API에서 받은 공휴일
+    console.log(holidays)
+    const isHoliday = holidays.has(iso);
 
     if (!isWeekend && !isHoliday) {
       count++;
@@ -525,6 +535,7 @@ const workingDuration = computed(() => {
 
   return count;
 });
+
 
 // 시작-마감 베이스라인 정보 감지
 watch(startDate, async (newVal) => {

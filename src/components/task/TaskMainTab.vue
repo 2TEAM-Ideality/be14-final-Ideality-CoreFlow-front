@@ -12,8 +12,12 @@
       </v-btn>
     </div>
 
-    <component :is="selectedComponent" v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
-      :task-id="taskData.selectTask.taskId" />
+    <component 
+      :is="selectedComponent"
+      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
+      :task-id="taskData.selectTask.taskId" 
+      :work-id="openWorkId"  
+      />
 
     <v-dialog v-model="showModal" max-width="700">
       <v-card>
@@ -296,6 +300,8 @@ const fetchUsersForDepartment = async () => {
 };
 
 
+const openWorkId = ref(null)
+
 // 컴포넌트가 마운트된 후 API 호출
 onMounted(() => {
   fetchDepartments()
@@ -311,7 +317,8 @@ onMounted(() => {
 
   // 디테일 모달 열기 요청 처리
   if (route.query.tab === 'detail' && route.query.openModal === 'true' && route.query.workId) {
-    openWorkId.value = Number(route.query.workId)  // v-model 용으로 세팅
+    selectedTab.value = 'detail'
+    openWorkId.value = Number(route.query.workId)  // 💡 디테일 탭 열릴 때 workId 설정
   }
 
 })
