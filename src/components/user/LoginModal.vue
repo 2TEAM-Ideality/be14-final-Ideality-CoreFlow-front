@@ -139,9 +139,6 @@ async function login() {
 
         await userStore.login(responseLogin);
 
-        if (responseLogin.temp) [
-            // 임시 비번 변경 모달창
-        ]
         await nextTick();
         if (localStorage.getItem("schemaName") !== 'master') {
             router.push('/');

@@ -117,7 +117,7 @@ export const useUserStore = defineStore('user', () => {
         const parsedUser = JSON.parse(savedUser);
         const schemaName = localStorage.getItem('schemaName')
 
-        if (!savedUser || !refreshToken) return
+        if (!savedUser) return
 
         try {
             const response = await api.post('/api/auth/reissue', {

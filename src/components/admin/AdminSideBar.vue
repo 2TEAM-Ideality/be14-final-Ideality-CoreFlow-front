@@ -2,7 +2,7 @@
     <div class="sideBar">
         <nav class="sideNav">
             <div class="admin-home">관리자</div>
-            <router-link to="/admin/org">조직 관리</router-link>
+            <!-- <router-link to="/admin/org">조직 관리</router-link> -->
             <router-link to="/admin/user">사용자 관리</router-link>
         </nav>
     </div>
