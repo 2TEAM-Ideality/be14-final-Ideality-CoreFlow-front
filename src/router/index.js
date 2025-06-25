@@ -191,7 +191,7 @@ router.beforeEach(async (to, from, next) => {
     return next('/')
   }
 
-  if (schema === 'master' && !to.path.startsWith('/master')) {
+  if (schema === 'master' && !to.path('login') &&!to.path.startsWith('/master')) {
     alert('master 계정은 이 페이지에 접근할 수 없습니다.')
     return next('/master')
   }
