@@ -162,6 +162,21 @@ router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   const schema = localStorage.getItem('schemaName')
 
+    // 복원 먼저 시도 (초기 진입 대비)
+  if (!userStore.accessToken && localStorage.getItem('user')) {
+    await userStore.restoreFromStorage()
+  }
+
+  const isLoggedIn = userStore.isLoggedIn
+
+  if (to.path !== '/login' && !isLoggedIn) {
+    next('/login')
+  } else if (to.path === '/login' && isLoggedIn) {
+    next('/')
+  } else {
+    next()
+  }
+
   if (to.path.startsWith('/admin')) {
     const hasAdminRole = userStore.roles.includes('ADMIN')
     if (!hasAdminRole) {
@@ -176,7 +191,7 @@ router.beforeEach(async (to, from, next) => {
     return next('/')
   }
 
-  if (schema === 'master' && !to.path.startsWith('/master')) {
+  if (schema === 'master' && !to.path('login') &&!to.path.startsWith('/master')) {
     alert('master 계정은 이 페이지에 접근할 수 없습니다.')
     return next('/master')
   }
