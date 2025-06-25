@@ -172,21 +172,24 @@ const warningDeadlineTest = {
   taskCount: 2,
   detailCounts: 3,
   tasks: [
-    { workId: 1, name: '디자인 기획서 정리', endBaseLine: '2025-06-28' },
-    { workId: 2, name: 'UI 가이드라인 수립', endBaseLine: '2025-06-29' },
-     { workId: 1, name: '디자인 기획서 정리', endBaseLine: '2025-06-28' },
-    { workId: 2, name: 'UI 가이드라인 수립', endBaseLine: '2025-06-29' },
-     { workId: 1, name: '디자인 기획서 정리', endBaseLine: '2025-06-28' },
-    { workId: 2, name: 'UI 가이드라인 수립', endBaseLine: '2025-06-29' },
-     { workId: 1, name: '디자인 기획서 정리', endBaseLine: '2025-06-28' },
-    { workId: 2, name: 'UI 가이드라인 수립', endBaseLine: '2025-06-29' }
+    { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
+     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
+     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
+     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' }
   ],
   subtasks: [
-    { workId: 3, name: '색상 가이드 정리', endBaseLine: '2025-06-26' },
-    { workId: 4, name: '폰트 정리', endBaseLine: '2025-06-27' },
-    { workId: 5, name: '컴포넌트 표준 정리', endBaseLine: '2025-06-27' }
+    { workId: 3, name: '색상 가이드 정리', parentTaskId: 1, endBaseLine: '2025-06-26' },
+    { workId: 4, name: '폰트 정리', parentTaskId: 1, endBaseLine: '2025-06-27' },
+    { workId: 5, name: '컴포넌트 표준 정리', parentTaskId: 1, endBaseLine: '2025-06-27' }
   ]
 }
+    // private Long workId;
+    // private Long parentTaskId;
+    // private String name;
 
 
 

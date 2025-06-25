@@ -88,7 +88,15 @@ import { useUserStore } from "@/stores/userStore";
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import TaskModal from "@/components/task/DetailModal.vue"; // 모달 컴포넌트 import
 import { mdiPlayCircle, mdiPauseCircle, mdiCheckCircle } from '@mdi/js'; // MDI 아이콘 import
-import { ref } from 'vue'; // ref 추가 (경고창 처리)
+import { ref, onMounted } from 'vue'; // ref 추가 (경고창 처리)
+
+
+const route = useRoute();
+// 태스크 아이디 param 에서 가져오기 
+const taskId = route.params.taskId
+
+const detailList = ref([])
+
 
 export default {
   components: {
@@ -132,7 +140,8 @@ export default {
     }
   },
   methods: {
-confirmAndUpdateStatus(item, newStatus) {
+
+    confirmAndUpdateStatus(item, newStatus) {
   if (item.status === "COMPLETED") {
     this.dialogMessage = "이미 완료된 일정입니다!";
     this.showDialog = true; // 경고창 표시
@@ -205,6 +214,26 @@ confirmAndUpdateStatus(item, newStatus) {
     },
   },
 };
+
+
+// 세부일정 목록 가져오기
+// /api/work/detailList?parentTaskId=4
+const fetchDetailList = async () => {
+  try {
+    const res = await api.get(`/api/work/detailList?parentTaskId=${taskId}`)
+    detailList.value = res.data.data;
+    console.llog('✅세부 일정 목록 조회 성공', detailList.value)
+  }catch(err){
+    console.error('❌ 세부일정 목록 조회 실패', err)
+  }
+}
+
+
+
+onMounted(() => {
+  fetchDetailList()
+})
+
 </script>
 
 <style scoped>
