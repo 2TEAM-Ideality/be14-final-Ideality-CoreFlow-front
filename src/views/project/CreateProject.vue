@@ -815,31 +815,6 @@ const saveProject = async () => {
     leaderIds: selectedLeaders.value.map(user => user.id),   
     directorId: user.id       // 현재 로그인 사용자
   };
-  // // ✅ 날짜 누적 기반으로 nodeList 재생성
-  //   let current = new Date(startDate.value);
-
-  //   const adjustedNodeList = flowNodes.value.map(n => {
-  //     const duration = n.data?.duration || 0;
-  //     const slack = n.data?.slackTime || 0;
-  //     const startBaseLine = current.toISOString().slice(0, 10);
-  //     current.setDate(current.getDate() + duration + slack);
-  //     const endBaseLine = current.toISOString().slice(0, 10);
-
-  //     return {
-  //       id: n.id,
-  //       type: n.type,
-  //       position: n.position,
-  //       data: {
-  //         label: n.data.label,
-  //         description: n.data.description,
-  //         deptList: n.data.deptList,
-  //         slackTime: n.data.slackTime,
-  //         duration: duration,
-  //         startBaseLine,
-  //         endBaseLine
-  //       }
-  //     };
-  //   });
 
   // 슬랙 타임 수정 
   // 날짜 → yyyy-mm-dd 포맷
@@ -925,27 +900,9 @@ const saveProject = async () => {
     payload.templateId = selectedTemplate.value.id;
     payload.endExpect = endDate.value;
 
-    // 시작 베이스라인
-    // startDate
-    // 마감 베이스라인
-    // endDate
-    // start 
-
     payload.templateData = {
       nodeList: adjustedNodeList,
-    //   nodeList: flowNodes.value.map(n => ({
-    //     id: n.id,
-    //     type: n.type,
-    //     position: n.position,
-    //     data: {
-    //     label: n.data.label,
-    //     description: n.data.description,
-    //     slackTime: n.data.slackTime,
-    //     deptList: n.data.deptList,
-    //     startBaseLine: startDate.value, 
-    //     endBaseLine: endDate.value + n.duration    
-    //     }
-    // })),
+
       edgeList: flowEdges.value.map(e => ({
         id: e.id,
         source: e.source,
