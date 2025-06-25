@@ -340,7 +340,7 @@ const handleStyle = {
         <div v-if="status === 'null'">예상 마감일: {{ data.endExpect || '-' }}</div>
 
         <div v-if="status === 'pending'">예상 시작일: {{ data.startBaseLine || '-' }}</div>
-        <div v-if="status === 'pending'">예상 마감일: {{ data.endBaseLine || '-' }}</div>
+        <div v-if="status === 'pending'">예상 마감일: {{ data.startBaseLine || '-' }}</div>
 
         <div v-if="status === 'progress'">실제 시작일: {{ data.startReal || '-' }}</div>
         <div v-if="status === 'progress'">예상 마감일: {{ data.endExpect || '-' }}</div>

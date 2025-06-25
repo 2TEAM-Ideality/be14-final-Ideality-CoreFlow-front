@@ -202,7 +202,7 @@ function getChildIds(nodeId) {
 async function handleCreateNewNode(nodeData) {
   try {
     const payload = {
-      taskName: nodeData.label,
+      label: nodeData.label,
       description: nodeData.description,
       startBaseLine: nodeData.startBase,
       endBaseLine: nodeData.endBase,
@@ -222,7 +222,7 @@ async function handleCreateNewNode(nodeData) {
       type: 'task',
       position: { x: 200, y: 200 + nodes.value.length * 100 },
       data: {
-        taskName: nodeData.label,         // ✅ 태스크명 그대로 표시됨
+        label: nodeData.label,         // ✅ 태스크명 그대로 표시됨
         description: nodeData.description,
         startBase: nodeData.startBase,
         endBase: nodeData.endBase,
@@ -368,7 +368,7 @@ async function onAddNode(parentId = null) {
   const newNodeData = {
     label: '새 태스크',
     description: '',
-    deptList: [], // 생성 시 부서는 선택 안된 상태라면 기본값
+    deptList: [],
     startBase: new Date().toISOString().split('T')[0],
     endBase: new Date().toISOString().split('T')[0],
     status: 'pending',
@@ -379,7 +379,7 @@ async function onAddNode(parentId = null) {
   }
 
   const parentIds = parentId ? [parentId] : []
-  const childIds = []
+  const childIds = []  // ✅ 뒤 노드 없음
 
   const body = {
     label: newNodeData.label,
@@ -388,10 +388,10 @@ async function onAddNode(parentId = null) {
     endBaseLine: newNodeData.endBase,
     projectId: Number(projectId),
     deptList: [],
-    source: parentIds,
-    target: childIds
+    source: parentIds.filter(id => id !== undefined && id !== null), // ✅ 여기!
+    target: []
   }
-
+  
   try {
     const res = await api.post('/api/task', body)
     const savedTask = res.data.data
@@ -409,6 +409,7 @@ async function onAddNode(parentId = null) {
 
     nodes.value.push(node)
 
+    // ✅ 앞 노드만 연결
     if (parentId) {
       edges.value.push({
         id: `e-${parentId}-${savedTask.id}`,
@@ -687,7 +688,7 @@ watch(showFullscreenView, async (isOpen) => {
                 🔀 정렬
               </button>
               <!-- @click="onSaveTasks" -->
-              <button title="편집 완료"  @click="onSaveTasks">
+              <button title="편집 완료"   @click="onSaveTasks">
                 ✅ 편집 완료
               </button>
             </div>
