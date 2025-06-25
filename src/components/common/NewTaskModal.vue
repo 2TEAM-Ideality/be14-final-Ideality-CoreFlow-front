@@ -307,20 +307,7 @@ const getNodeLabel = (item) => {
           </template>
         </div>
       </div>
-      
-      <VDateInput
-        v-model="startBaseModel"
-        label="시작 베이스라인"
-        :allowed-dates="(date) => !holidayStore.isHoliday(dayjs(date).format('YYYY-MM-DD'))"
-        :input-props="{ density: 'compact', variant: 'outlined' }"
-      />
 
-      <VDateInput
-        v-model="endBaseModel"
-        label="마감 베이스라인"
-        :allowed-dates="(date) => !holidayStore.isHoliday(dayjs(date).format('YYYY-MM-DD'))"
-        :input-props="{ density: 'compact', variant: 'outlined' }"
-      />
       
       <div class="input-group">
         <label>담당 부서</label>

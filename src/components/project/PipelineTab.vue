@@ -15,12 +15,14 @@ import { markRaw } from 'vue'
 import dagre from '@dagrejs/dagre'
 import { nanoid } from 'nanoid' 
 
+
 const nodeTypes = {
   task: markRaw(TaskNode)
 }
 
 const { layout } = useLayout()
 const { fitView, zoomTo } = useVueFlow()
+const { setCenter } = useVueFlow()
 
 const route = useRoute()
 
@@ -250,7 +252,16 @@ async function handleCreateNewNode(nodeData) {
     }
 
     await nextTick()
-    layoutGraph('LR')
+    await layoutGraph('LR') // ✅ 위치 계산 먼저
+
+    // ✅ 정확한 위치 반영 후 중심 이동
+    const createdNode = nodes.value.find(n => n.id === String(savedId))
+    if (createdNode) {
+      setCenter(createdNode.position.x, createdNode.position.y, {
+        zoom: 1.5,
+        duration: 500
+      })
+    }
 
   } catch (err) {
     console.error('태스크 생성 실패:', err)
