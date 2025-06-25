@@ -4,6 +4,9 @@ import cloneDeep from 'lodash/cloneDeep'
 import api from '@/api'
 import { useHolidayStore } from '@/stores/holidayStore'
 import dayjs from 'dayjs'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+
+dayjs.extend(isSameOrBefore)
 
 
 const holidayStore = useHolidayStore()
@@ -156,17 +159,26 @@ const handleEndDateChange = (e) => {
 
 // 총 소요일 계산 메서드
 const totalDuration = computed(() => {
-  if (!localNode.startBase || !localNode.endBase) return null;
+  if (!localNode.startBase || !localNode.endBase) return null
 
-  const start = new Date(localNode.startBase);
-  const end = new Date(localNode.endBase);
+  const start = dayjs(localNode.startBase)
+  const end = dayjs(localNode.endBase)
 
-  if (end < start) return 'invalid';
+  if (end.isBefore(start)) return 'invalid'
 
-  const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  let count = 0
+  let current = start.clone()
 
-  return diff > 0 ? diff : null;
-});
+  while (current.isSameOrBefore(end)) {
+    if (!holidayStore.isHoliday(current.format('YYYY-MM-DD'))) {
+      count++
+    }
+    current = current.add(1, 'day')
+  }
+
+  return count
+})
+
 
 // 태스크 생성 유효성 검사
 const handleCreate = async () => {
