@@ -1,5 +1,5 @@
 <script setup>
-import { watch, computed, reactive , onMounted } from 'vue'
+import { watch, computed, reactive, onMounted } from 'vue'
 import cloneDeep from 'lodash/cloneDeep'
 import api from '@/api'
 import { useHolidayStore } from '@/stores/holidayStore'
@@ -97,12 +97,12 @@ watch(() => localNode.endBase, (val) => {
   }
 })
 
-
 onMounted(() => {
   if (holidayStore.holidaySet.size === 0) {
     holidayStore.fetchHolidays()
   }
 })
+
 
 // 선행 태스크 목록
 const filteredParentOptions = computed(() => {
@@ -130,6 +130,27 @@ const filteredChildOptions = computed(() => {
 })
 
 
+// 시작일 변경 시 휴일 검사
+const handleStartDateChange = (e) => {
+  const date = e.target.value
+  if (holidayStore.isHoliday(date)) {
+    alert('시작일로 주말이나 공휴일은 선택할 수 없습니다.')
+    localNode.startBase = ''
+  } else {
+    localNode.startBase = dayjs(date).format('YYYY-MM-DD')
+  }
+}
+
+// 마감일 변경 시 휴일 검사
+const handleEndDateChange = (e) => {
+  const date = e.target.value
+  if (holidayStore.isHoliday(date)) {
+    alert('마감일로 주말이나 공휴일은 선택할 수 없습니다.')
+    localNode.endBase = ''
+  } else {
+    localNode.endBase = dayjs(date).format('YYYY-MM-DD')
+  }
+}
 
 
 
@@ -229,24 +250,6 @@ const getNodeLabel = (item) => {
   const found = props.existingNodes.find(n => String(n.id) === String(id))
   return found?.data?.label || `ID: ${id}`
 }
-
-//  공휴일 확인
-const handleStartDateChange = (e) => {
-  const val = e.target.value
-  if (holidayStore.isHoliday(val)) {
-    alert('공휴일이나 주말은 시작일로 선택할 수 없습니다.')
-    localNode.startBase = ''
-  }
-}
-
-const handleEndDateChange = (e) => {
-  const val = e.target.value
-  if (holidayStore.isHoliday(val)) {
-    alert('공휴일이나 주말은 마감일로 선택할 수 없습니다.')
-    localNode.endBase = ''
-  }
-}
-
 </script>
 
 <template>
@@ -268,21 +271,11 @@ const handleEndDateChange = (e) => {
         <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 10px;">
           <div class="input-group" style="width: 100%;">
             <label>시작 베이스라인</label>
-            <!-- 시작일 -->
-            <input
-              v-model="localNode.startBase"
-              type="date"
-              @change="handleStartDateChange"
-            />
+            <input v-model="localNode.startBase" type="date" @change="handleStartDateChange" />
           </div>
           <div class="input-group" style="width: 100%;">
             <label>마감 베이스라인</label>
-            <!-- 종료일 -->
-            <input
-              v-model="localNode.endBase"
-              type="date"
-              @change="handleEndDateChange"
-            />
+            <input v-model="localNode.endBase" type="date" @change="handleEndDateChange" />
           </div>
         </div>
 
@@ -301,7 +294,19 @@ const handleEndDateChange = (e) => {
         </div>
       </div>
       
-     
+      <VDateInput
+        v-model="startBaseModel"
+        label="시작 베이스라인"
+        :allowed-dates="(date) => !holidayStore.isHoliday(dayjs(date).format('YYYY-MM-DD'))"
+        :input-props="{ density: 'compact', variant: 'outlined' }"
+      />
+
+      <VDateInput
+        v-model="endBaseModel"
+        label="마감 베이스라인"
+        :allowed-dates="(date) => !holidayStore.isHoliday(dayjs(date).format('YYYY-MM-DD'))"
+        :input-props="{ density: 'compact', variant: 'outlined' }"
+      />
       
       <div class="input-group">
         <label>담당 부서</label>
