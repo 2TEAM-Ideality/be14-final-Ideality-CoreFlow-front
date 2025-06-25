@@ -26,10 +26,6 @@ import { decodeJwt } from 'jose'
   onMounted(async () => {
     try {
       await userStore.restoreFromStorage()
-      // 로그인 상태고 현재 경로가 login이면 home으로 보내기
-      if (userStore.isLoggedIn && route.path === '/login') {
-        router.push('/')
-      }
       isRestored.value = true
     } catch (e) {
       console.error('복원 중 오류: ', e)
@@ -39,14 +35,19 @@ import { decodeJwt } from 'jose'
   })
 
   // 로그인 여부 검사
-  watch(() => userStore.isLoggedIn, (isLoggedIn) => {
-    const currentPath = router.currentRoute.value.path
+  watch(
+    () => userStore.isLoggedIn, 
+    (isLoggedIn) => {
+      if (!isRestored.value) return
 
-    if (!isLoggedIn && currentPath !== '/login') {
-      router.push('/login')
-    }
+      const currentPath = router.currentRoute.value.path
+
+      if (!isLoggedIn && currentPath !== '/login') {
+        router.push('/login')
+      }
     { immediate: true }
-  })
+    }
+  )
 
   // 토큰 감시 함수
   function startTokenWatcher() {
