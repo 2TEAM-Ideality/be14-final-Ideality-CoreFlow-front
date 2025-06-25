@@ -507,15 +507,17 @@ const workingDuration = computed(() => {
 
   const start = new Date(startDate.value);
   const end = new Date(endDate.value);
-  const holidays = holidayList.value;
 
   let count = 0;
   const date = new Date(start);
 
   while (date <= end) {
     const iso = date.toISOString().slice(0, 10);
-    const day = date.getDay(); // 0 = 일, 6 = 토
-    if (day !== 0 && day !== 6 && !holidays.includes(iso)) {
+    const day = date.getDay(); // 일(0), 토(6)
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidaySet.value.has(iso); // ✅ API에서 받은 공휴일
+
+    if (!isWeekend && !isHoliday) {
       count++;
     }
     date.setDate(date.getDate() + 1);
@@ -621,16 +623,17 @@ const groupedLeaders = computed(() => {
   return groups
 })
 
-// 
+
 onMounted(async () => {
   try {
-    templateList.value  = await fetchTemplates();   
+    await fetchAllHolidays(); // 공휴일 먼저 로딩
+    templateList.value = await fetchTemplates();   
     userList.value = await fetchUserList();
-
   } catch (err) {
-    console.error("템플릿 목록 불러오기 실패", err);
+    console.error("초기 데이터 로딩 실패", err);
   }
 });
+
 
 // 템플릿 선택 초기화
 const resetSelection = async () => {
