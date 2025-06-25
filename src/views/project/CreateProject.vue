@@ -797,14 +797,12 @@ const convertToFlowData = () => {
 
 // 
 // 날짜 유틸
-const addDays = (dateStr, days) => {
-  const date = new Date(dateStr);
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
+// 날짜 더하는 유틸
+const addDays = (date, days) => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
 };
-
-
-
 
 // 프로젝트 생성
 const saveProject = async () => {
@@ -817,32 +815,111 @@ const saveProject = async () => {
     leaderIds: selectedLeaders.value.map(user => user.id),   
     directorId: user.id       // 현재 로그인 사용자
   };
-  // ✅ 날짜 누적 기반으로 nodeList 재생성
-    let current = new Date(startDate.value);
+  // // ✅ 날짜 누적 기반으로 nodeList 재생성
+  //   let current = new Date(startDate.value);
 
-    const adjustedNodeList = flowNodes.value.map(n => {
-      const duration = n.data?.duration || 0;
-      const slack = n.data?.slackTime || 0;
-      const startBaseLine = current.toISOString().slice(0, 10);
-      current.setDate(current.getDate() + duration + slack);
-      const endBaseLine = current.toISOString().slice(0, 10);
+  //   const adjustedNodeList = flowNodes.value.map(n => {
+  //     const duration = n.data?.duration || 0;
+  //     const slack = n.data?.slackTime || 0;
+  //     const startBaseLine = current.toISOString().slice(0, 10);
+  //     current.setDate(current.getDate() + duration + slack);
+  //     const endBaseLine = current.toISOString().slice(0, 10);
 
-      return {
-        id: n.id,
-        type: n.type,
-        position: n.position,
-        data: {
-          label: n.data.label,
-          description: n.data.description,
-          deptList: n.data.deptList,
-          slackTime: n.data.slackTime,
-          duration: duration,
-          startBaseLine,
-          endBaseLine
-        }
-      };
-    });
+  //     return {
+  //       id: n.id,
+  //       type: n.type,
+  //       position: n.position,
+  //       data: {
+  //         label: n.data.label,
+  //         description: n.data.description,
+  //         deptList: n.data.deptList,
+  //         slackTime: n.data.slackTime,
+  //         duration: duration,
+  //         startBaseLine,
+  //         endBaseLine
+  //       }
+  //     };
+  //   });
 
+  // 슬랙 타임 수정 
+  // 날짜 → yyyy-mm-dd 포맷
+  const formatDate = (date) => date.toISOString().slice(0, 10);
+
+  // 태스크 ID → 태스크 맵
+  const taskMap = new Map();
+  flowNodes.value.forEach(node => taskMap.set(node.id, node));
+
+  // 인접 리스트 구성
+  const inDegree = new Map();
+  const graph = new Map();
+  flowNodes.value.forEach(n => {
+    inDegree.set(n.id, 0);
+    graph.set(n.id, []);
+  });
+
+  flowEdges.value.forEach(e => {
+    graph.get(e.source).push(e.target);
+    inDegree.set(e.target, inDegree.get(e.target) + 1);
+  });
+
+  // 시작일 기준
+  const baseDate = new Date(startDate.value);
+  const taskDates = new Map(); // { id -> {start, end} }
+
+  // 위상 정렬 + 날짜 계산
+  const queue = [];
+  inDegree.forEach((deg, id) => {
+    if (deg === 0) {
+      const node = taskMap.get(id);
+      const duration = node.data?.duration || 0;
+      const start = new Date(baseDate);
+      const end = addDays(start, duration);
+      taskDates.set(id, { start, end });
+      queue.push(id);
+    }
+  });
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    const currentEnd = taskDates.get(currentId).end;
+    const slack = taskMap.get(currentId).data?.slackTime || 0;
+    const availableStart = addDays(currentEnd, slack);
+
+    for (const nextId of graph.get(currentId)) {
+      const prev = taskDates.get(nextId)?.start;
+      if (!prev || availableStart > prev) {
+        // 최신 availableStart로 갱신
+        const node = taskMap.get(nextId);
+        const duration = node.data?.duration || 0;
+        const end = addDays(availableStart, duration);
+        taskDates.set(nextId, { start: availableStart, end });
+      }
+
+      inDegree.set(nextId, inDegree.get(nextId) - 1);
+      if (inDegree.get(nextId) === 0) {
+        queue.push(nextId);
+      }
+    }
+  }
+
+  // 최종 nodeList 생성
+  const adjustedNodeList = flowNodes.value.map(n => {
+    const dates = taskDates.get(n.id);
+    return {
+      id: n.id,
+      type: n.type,
+      position: n.position,
+      data: {
+        label: n.data.label,
+        description: n.data.description,
+        deptList: n.data.deptList,
+        slackTime: n.data.slackTime,
+        duration: n.data.duration,
+        startBaseLine: formatDate(dates.start),
+        endBaseLine: formatDate(dates.end)
+      }
+    };
+  });
   // ✅ 템플릿 적용된 경우
   if (selectedTemplate.value) {
     payload.templateId = selectedTemplate.value.id;
