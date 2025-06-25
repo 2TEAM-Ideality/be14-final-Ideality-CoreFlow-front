@@ -25,7 +25,7 @@ export const useUserStore = defineStore('user', () => {
     const schemaName = ref(null)
     // 로그인 상태 판단
     const isLoggedIn = computed(() =>
-        !!id.value && !!accessToken.value && !forcedLogout.value
+        !!id.value && !forcedLogout.value
     )
 
     function setUserData(data) {
