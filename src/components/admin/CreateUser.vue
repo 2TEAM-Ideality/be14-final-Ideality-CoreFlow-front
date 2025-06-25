@@ -181,7 +181,7 @@
                 isCreation: isCreation.value
             })
             const userData = response.data.data
-            alert(response.message)
+            alert(response.data.message)
             const payload = {
                 id: userData.id,
                 name: userData.name,

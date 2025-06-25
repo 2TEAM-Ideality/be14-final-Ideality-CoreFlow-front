@@ -98,7 +98,7 @@ const displayedList = computed(() => {
     : approvalData.value.sentApproval ?? []
 
     return list.filter(item =>
-        !searchApproval.value || item.title.includes(searchApproval.value)
+        !searchApproval.value || item.title.toLowerCase().includes(searchApproval.value)
     )
 })
 function chipColor(status) {
