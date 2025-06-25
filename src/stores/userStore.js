@@ -67,6 +67,7 @@ export const useUserStore = defineStore('user', () => {
             jobRoleName: jobRoleName.value,
             roles: roles.value
         }))
+        localStorage.setItem('userId', id.value)
         localStorage.setItem('schemaName', schemaName.value)
         sessionStorage.setItem('accessToken', accessToken.value)
     }
@@ -107,21 +108,22 @@ export const useUserStore = defineStore('user', () => {
 
         schemaName.value = null
 
+        localStorage.removeItem('userId')
         localStorage.removeItem('user')
         sessionStorage.removeItem('accessToken')
         localStorage.removeItem('schemaName')
+        forcedLogout.value = false
     }
 
     async function tryReissueToken() {
-        const savedUser = localStorage.getItem('user')
-        const parsedUser = JSON.parse(savedUser);
+        const savedUserId = localStorage.getItem('userId')
         const schemaName = localStorage.getItem('schemaName')
-
-        if (!savedUser) return
+        
+        if (!savedUserId) return
 
         try {
             const response = await api.post('/api/auth/reissue', {
-                userId: parsedUser.id,
+                userId: savedUserId,
                 companySchema: schemaName
             })
 
@@ -152,8 +154,7 @@ export const useUserStore = defineStore('user', () => {
             }))
             return true
         } catch (e) {
-            forcedLogout.value = true
-            logout()
+            forceLogout()
 
             return false
         }
@@ -186,6 +187,7 @@ export const useUserStore = defineStore('user', () => {
                 jobRoleName: jobRoleName.value,
                 roles: roles.value
             }))
+            localStorage.setItem('userId', id.value)
             return true
         } catch (e) {
             console.log(e)
@@ -196,6 +198,10 @@ export const useUserStore = defineStore('user', () => {
     }
 
     async function restoreFromStorage() {
+        const savedUserId = localStorage.getItem('userId')
+        if (savedUserId) {
+            id.value = savedUserId
+        }
         const savedUser = localStorage.getItem('user')
         const savedSchemaName = localStorage.getItem('schemaName')
         const savedAccessToken = sessionStorage.getItem('accessToken') // 저장되어 있다면 복원
@@ -207,8 +213,6 @@ export const useUserStore = defineStore('user', () => {
 
             schemaName.value = savedSchemaName
             accessToken.value = savedAccessToken
-        } else {
-            clearState()
         }
     }
 
