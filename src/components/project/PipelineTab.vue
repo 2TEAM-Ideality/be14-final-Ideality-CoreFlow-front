@@ -608,7 +608,7 @@ watch(showFullscreenView, async (isOpen) => {
               </div>
               <div style="display: flex; flex-direction: column; font-size: 14px;">
                 <div  style="color:#484848">전체 태스크</div>
-                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo.nodeList.length   }} 개</strong></span>
+                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo?.nodeList?.length ||0  }} 개</strong></span>
             </div>
           </div>
           <v-btn icon @click="showFullscreenView = false" variant="plain">
@@ -647,7 +647,8 @@ watch(showFullscreenView, async (isOpen) => {
               <button title="정렬" @click="layoutGraph('LR')">
                 🔀 정렬
               </button>
-              <button title="편집 완료" @click="onSaveTasks">
+              <!-- @click="onSaveTasks" -->
+              <button title="편집 완료"  @click="showFullscreenView = false">
                 ✅ 편집 완료
               </button>
             </div>

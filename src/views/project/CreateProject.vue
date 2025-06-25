@@ -230,15 +230,17 @@
               <div class="mb-3">
                 <div class="section-label">🏢 참여 부서</div>
                 <div class="d-flex flex-wrap dept-chip-wrap mt-1">
-                  <v-chip
-                    v-for="dept in usedDeptList"
-                    :key="dept.id"
-                    size="small"
-                    color="primary"
-                    variant="tonal"
-                  >
-                    {{ dept.name }}
-                  </v-chip>
+                  <v-chip-group  multiple column>
+                    <v-chip
+                      v-for="dept in usedDeptList"
+                      :key="dept.id"
+                      size="small"
+                      color="primary"
+                      variant="tonal"
+                    >
+                      {{ dept.name }}
+                    </v-chip>
+                  </v-chip-group>
                 </div>
               </div>
             </v-card-text>
@@ -379,8 +381,6 @@ const isNotHoliday = (date) => {
 
 const holidayList = computed(() => Array.from(holidaySet.value)); // ["2025-06-25", "2025-07-01", ...]
 
-
-
 // 자동 입력정보
 const createdBy = ref(user?.deptName +" "+ user?.name +" "+ user?.jobRankName)
 const createdAt = ref(formatDate(new Date()))
@@ -446,6 +446,7 @@ console.log('참여 부서', usedDeptList)
 function removeLeader(id) {
   selectedLeaders.value = selectedLeaders.value.filter(user => user.id !== id)
 }
+
 // 템플릿선택 시 팀 자동 선택
 const autoSelectLeadersFromTemplate = () => {
   // 현재 템플릿에 포함된 부서 목록
@@ -710,7 +711,7 @@ const cancelCreate = () => {
 
 
 
-// 선택한 프로젝트 정보 가져와서 노드 리스트 가져오기 
+// 선택한 템플릿 정보 가져와서 노드 리스트 가져오기 
 const handleSelectTemplate = async (template) => {
   console.log("선택한 템플릿은", template.id)
 
@@ -794,12 +795,20 @@ const convertToFlowData = () => {
   }))
 }
 
+// 
+// 날짜 유틸
+const addDays = (dateStr, days) => {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
+
 
 
 // 프로젝트 생성
 const saveProject = async () => {
    
-
   const payload = {
     name: projectName.value,
     description: projectDescription.value,
@@ -808,26 +817,58 @@ const saveProject = async () => {
     leaderIds: selectedLeaders.value.map(user => user.id),   
     directorId: user.id       // 현재 로그인 사용자
   };
+  // ✅ 날짜 누적 기반으로 nodeList 재생성
+    let current = new Date(startDate.value);
+
+    const adjustedNodeList = flowNodes.value.map(n => {
+      const duration = n.data?.duration || 0;
+      const slack = n.data?.slackTime || 0;
+      const startBaseLine = current.toISOString().slice(0, 10);
+      current.setDate(current.getDate() + duration + slack);
+      const endBaseLine = current.toISOString().slice(0, 10);
+
+      return {
+        id: n.id,
+        type: n.type,
+        position: n.position,
+        data: {
+          label: n.data.label,
+          description: n.data.description,
+          deptList: n.data.deptList,
+          slackTime: n.data.slackTime,
+          duration: duration,
+          startBaseLine,
+          endBaseLine
+        }
+      };
+    });
 
   // ✅ 템플릿 적용된 경우
   if (selectedTemplate.value) {
     payload.templateId = selectedTemplate.value.id;
     payload.endExpect = endDate.value;
 
+    // 시작 베이스라인
+    // startDate
+    // 마감 베이스라인
+    // endDate
+    // start 
+
     payload.templateData = {
-      nodeList: flowNodes.value.map(n => ({
-        id: n.id,
-        type: n.type,
-        position: n.position,
-        data: {
-        label: n.data.label,
-        description: n.data.description,
-        slackTime: n.data.slackTime,
-        deptList: n.data.deptList,
-        startBaseLine: n.data.startBaseLine || startDate.value, // ✅ 추가
-        endBaseLine: n.data.endBaseLine || endDate.value        // ✅ 추가
-        }
-    })),
+      nodeList: adjustedNodeList,
+    //   nodeList: flowNodes.value.map(n => ({
+    //     id: n.id,
+    //     type: n.type,
+    //     position: n.position,
+    //     data: {
+    //     label: n.data.label,
+    //     description: n.data.description,
+    //     slackTime: n.data.slackTime,
+    //     deptList: n.data.deptList,
+    //     startBaseLine: startDate.value, 
+    //     endBaseLine: endDate.value + n.duration    
+    //     }
+    // })),
       edgeList: flowEdges.value.map(e => ({
         id: e.id,
         source: e.source,
