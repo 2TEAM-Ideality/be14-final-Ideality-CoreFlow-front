@@ -507,15 +507,17 @@ const workingDuration = computed(() => {
 
   const start = new Date(startDate.value);
   const end = new Date(endDate.value);
-  const holidays = holidayList.value;
 
   let count = 0;
   const date = new Date(start);
 
   while (date <= end) {
     const iso = date.toISOString().slice(0, 10);
-    const day = date.getDay(); // 0 = 일, 6 = 토
-    if (day !== 0 && day !== 6 && !holidays.includes(iso)) {
+    const day = date.getDay(); // 일(0), 토(6)
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidaySet.value.has(iso); // ✅ API에서 받은 공휴일
+
+    if (!isWeekend && !isHoliday) {
       count++;
     }
     date.setDate(date.getDate() + 1);
@@ -531,7 +533,7 @@ watch(startDate, async (newVal) => {
 
   const date = new Date(newVal);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const isHoliday = holidaySet.value.has(newVal);
+  const isHoliday = await checkIfHoliday(newVal); // ✅ API로 확인
 
   if (isWeekend || isHoliday) {
     isStartHoliday.value = true;
@@ -546,7 +548,7 @@ watch(endDate, async (newVal) => {
 
   const date = new Date(newVal);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const isHoliday = holidaySet.value.has(newVal);
+  const isHoliday = await checkIfHoliday(newVal); // ✅ API로 확인
 
   if (isWeekend || isHoliday) {
     isEndHoliday.value = true;
@@ -560,8 +562,9 @@ watch(endDate, async (newVal) => {
 
 // 템플릿 리스트 가져오기 
 const fetchTemplates = async () => {
+  console.log('✅템플릿 리스트 요청')
   const res = await api.get('/api/template/list');
-  console.log("템플릿 리스트 확인", res.data.data);
+  console.log("✅템플릿 리스트 확인", res.data.data);
   return res.data.data;
 };
 
@@ -621,16 +624,27 @@ const groupedLeaders = computed(() => {
   return groups
 })
 
-// 
+
 onMounted(async () => {
   try {
-    templateList.value  = await fetchTemplates();   
-    userList.value = await fetchUserList();
-
+    await fetchAllHolidays();
   } catch (err) {
-    console.error("템플릿 목록 불러오기 실패", err);
+    console.error('❌ 공휴일 로딩 실패:', err);
+  }
+
+  try {
+    templateList.value = await fetchTemplates();
+  } catch (err) {
+    console.error('❌ 템플릿 로딩 실패:', err);
+  }
+
+  try {
+    userList.value = await fetchUserList();
+  } catch (err) {
+    console.error('❌ 유저 로딩 실패:', err);
   }
 });
+
 
 // 템플릿 선택 초기화
 const resetSelection = async () => {
@@ -815,31 +829,6 @@ const saveProject = async () => {
     leaderIds: selectedLeaders.value.map(user => user.id),   
     directorId: user.id       // 현재 로그인 사용자
   };
-  // // ✅ 날짜 누적 기반으로 nodeList 재생성
-  //   let current = new Date(startDate.value);
-
-  //   const adjustedNodeList = flowNodes.value.map(n => {
-  //     const duration = n.data?.duration || 0;
-  //     const slack = n.data?.slackTime || 0;
-  //     const startBaseLine = current.toISOString().slice(0, 10);
-  //     current.setDate(current.getDate() + duration + slack);
-  //     const endBaseLine = current.toISOString().slice(0, 10);
-
-  //     return {
-  //       id: n.id,
-  //       type: n.type,
-  //       position: n.position,
-  //       data: {
-  //         label: n.data.label,
-  //         description: n.data.description,
-  //         deptList: n.data.deptList,
-  //         slackTime: n.data.slackTime,
-  //         duration: duration,
-  //         startBaseLine,
-  //         endBaseLine
-  //       }
-  //     };
-  //   });
 
   // 슬랙 타임 수정 
   // 날짜 → yyyy-mm-dd 포맷
@@ -925,27 +914,9 @@ const saveProject = async () => {
     payload.templateId = selectedTemplate.value.id;
     payload.endExpect = endDate.value;
 
-    // 시작 베이스라인
-    // startDate
-    // 마감 베이스라인
-    // endDate
-    // start 
-
     payload.templateData = {
       nodeList: adjustedNodeList,
-    //   nodeList: flowNodes.value.map(n => ({
-    //     id: n.id,
-    //     type: n.type,
-    //     position: n.position,
-    //     data: {
-    //     label: n.data.label,
-    //     description: n.data.description,
-    //     slackTime: n.data.slackTime,
-    //     deptList: n.data.deptList,
-    //     startBaseLine: startDate.value, 
-    //     endBaseLine: endDate.value + n.duration    
-    //     }
-    // })),
+
       edgeList: flowEdges.value.map(e => ({
         id: e.id,
         source: e.source,

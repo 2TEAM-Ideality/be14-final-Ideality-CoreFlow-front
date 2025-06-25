@@ -86,6 +86,9 @@ import { useUserStore } from '@/stores/userStore'
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import api from '@/api';
 
+
+const route = useRoute()
+
 const emit = defineEmits()
 const openModal = () => {
   console.log("버튼 클릭됨!")
@@ -297,6 +300,20 @@ const fetchUsersForDepartment = async () => {
 onMounted(() => {
   fetchDepartments()
   fetchTasks()
+
+  // 👉 쿼리 파라미터로 전달된 tab과 openModal 처리
+  
+  // tab 전환
+  const tabFromQuery = route.query.tab
+  if (tabFromQuery && tabs.find(t => t.name === tabFromQuery)) {
+    selectedTab.value = tabFromQuery
+  }
+
+  // 디테일 모달 열기 요청 처리
+  if (route.query.tab === 'detail' && route.query.openModal === 'true' && route.query.workId) {
+    openWorkId.value = Number(route.query.workId)  // v-model 용으로 세팅
+  }
+
 })
 </script>
 

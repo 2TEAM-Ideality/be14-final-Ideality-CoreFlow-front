@@ -33,80 +33,93 @@
 
 
     
-    <div style="display: flex; flex-direction: row; gap: 50px;">
+    <div style="display: flex; flex-direction: row; gap: 50px; align-items: center;">
       <div style="width: 250px; height: 250px;">
         <TaskDonutChart 
         :taskInfo="props.taskData" 
         :detailList="props.detailList"/>
       </div>
      
-      <div style="display: flex; flex-direction: column; width: 100%;">
+      <!-- 차트 오른편 -->
+      <div style="display: flex; flex-direction: column; width: 100%; gap: 20px;">
+        <!-- 부서 선택 -->
         <div class="form-row">
-          <label class="form-label">담당 부서 :</label>
-          <div
-            ref="deptDropdownRef"
-            class="department-input-box small-width readonly-box"
-            :class="{ editable: isEdit }"
-            @click="isEdit && handleDeptDropdown()"
-          >
-            <span>{{ selectedDeptName }}</span>
-            <v-icon
-              class="icon-right"
-              :style="{ visibility: isEdit ? 'visible' : 'hidden' }"
-            >mdi-chevron-down</v-icon>
+          <v-combobox
+            v-model="task.deptNames"
+            :items="deptList"
+            label="담당 부서"
+            multiple
+            chips
+            :readonly="!isEdit"
+            variant="outlined"
+            hide-details
+          />
+            <!-- closable-chips -->
+        </div>
 
-            <ul v-if="showDeptDropdown" class="dropdown">
-              <li
-                v-for="(dept, idx) in deptList"
-                :key="idx"
-                @click.stop="selectDept(dept)"
-                class="dropdown-item"
-              >
-                <input type="checkbox" :checked="task.deptNames.includes(dept)" readonly />
-                {{ dept }}
-              </li>
-            </ul>
-          </div>
-          </div>
-          <!-- Task 설명 -->
-          <div class="form-row">
-            <label class="form-label">태스크 설명 :</label>
-            <div class="description-box">
-              <textarea class="task-textarea" :readonly="!isEdit" v-model="task.selectTask.description"></textarea>
-            </div>
-          </div>
+        <!-- 태스크 설명 -->
+        <div class="form-row">
+          <v-textarea
+            v-model="task.selectTask.description"
+            :readonly="!isEdit"
+            auto-grow
+            label="태스크 설명"
+            rows="2"
+            max-rows="4"
+            variant="outlined"
+            hide-details
+          />
+        </div>
 
-          <div class="form-row">
-            <label class="form-label" >베이스라인 :</label>
-            <div style="flex:1">
-              <div style="display: flex; flex-direction: row; gap: 15px;">
-                <div class="input readonly-text"> 시작 - {{ task.selectTask.startBaseLine }}</div>
-                <div class="input readonly-text">종료 -{{ task.selectTask.endBaseLine }}</div>            
-              </div>
-              
-            </div>
-          </div>
-           <div class="form-row">
-            <label class="form-label" >예상 시작/종료 :</label>
-            <div style="flex:1">
-              <div style="display: flex; flex-direction: row; gap: 15px;">
-                <input
-                  type="date"
-                  class="input"
-                  :disabled="!isEdit"
-                  v-model="task.selectTask.expectStartDate"
-                />
-                <input
+        <!-- 베이스라인 (읽기전용) -->
+        <div class="form-row">
+          <v-row no-gutters>
+            <v-col cols="6">
+              <v-text-field
+                :model-value="task.selectTask.startBaseLine"
+                label="시작 베이스라인"
+                readonly
+                variant="outlined"
+                density="compact"
+              />
+            </v-col>
+            <v-col cols="6" class="pl-2">
+              <v-text-field
+                :model-value="task.selectTask.endBaseLine"
+                label="마감 베이스라인"
+                readonly
+                variant="outlined"
+                density="compact"
+              />
+            </v-col>
+          </v-row>
+        </div>
+
+        <!-- 예상 시작/종료 -->
+        <div class="form-row">
+          <v-row no-gutters>
+            <v-col cols="6">
+              <v-text-field
                 type="date"
-                class="input"
-                :disabled="!isEdit"
+                v-model="task.selectTask.expectStartDate"
+                label="예상 시작일"
+                :readonly="!isEdit"
+                variant="outlined"
+                density="compact"
+              />
+            </v-col>
+            <v-col cols="6" class="pl-2">
+              <v-text-field
+                type="date"
                 v-model="task.selectTask.expectEndDate"
-              />      
-              </div>
-              
-            </div>
-          </div>
-
+                label="예상 종료일"
+                :readonly="!isEdit"
+                variant="outlined"
+                density="compact"
+              />
+            </v-col>
+          </v-row>
+        </div>
       </div>
       
     </div>
@@ -116,8 +129,10 @@
       <!-- 경과율 -->
       <div class="data-item">
         <div class="data-label">
+          <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
           <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
           경과율
+          </div>
         </div>
         <div class="data">
           <template v-if="isEdit">
@@ -139,23 +154,13 @@
       <!-- 진척률 -->
       <div class="data-item">
         <div class="data-label">
+          <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
           <div style="width:12px; height: 12px;  background-color: #4D91FF;"></div>
-          태스크 진척률
-        </div>
-        <div class="data">
-          <template v-if="isEdit">
-            <input
-              type="number"
-              min="0"
-              max="100"
-              class="input"
-              v-model.number="task.selectTask.progressRate"
-              style="width: 80px;"
-            /> %
-          </template>
-          <template v-else>
-            {{ task.selectTask.progressRate }}%
-          </template>
+            태스크 진척률
+          </div>
+          <div class="data">
+              {{ task.selectTask.progressRate }}%
+          </div>
         </div>
       </div>
       <div class="data-item">
@@ -168,7 +173,7 @@
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
         <div style="width:12px; height: 12px;  background-color: #FFCC00;"></div>
         지연 임박</div>
-        <div class="data">1</div>
+        <div class="data">{{ task.selectTask?.nearDueSubtasks || 0 }}</div>
       </div>
       <div class="data-item">
          <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
@@ -178,40 +183,6 @@
         <div class="data">{{ task.selectTask.delayDay === 0 ? '0일' : `+ ${task.selectTask.delayDay}일` }}</div>
       </div>
     </div>
-    
-    
-
-    
-
-    <!-- 경과율 / 진척률 / 지연일수 -->
-    <!-- <div class="summary-row">
-      <div class="summary-item">
-        <div class="summary-label">경과율</div>
-        <div class="summary-box">
-          <div class="summary-value purple">{{ task.selectTask.progressRate }} %</div>
-        </div>
-      </div>
-      <div class="summary-item">
-        <div class="summary-label">태스크 진척률</div>
-        <div class="summary-box">
-          <div class="summary-value red">{{ task.selectTask.passedRate }} %</div>
-        </div>
-      </div>
-      <div class="summary-item">
-        <div class="summary-label">지연일수</div>
-        <div class="summary-box">
-          <div
-            class="summary-value"
-            :class="task.selectTask.delayDay === 0 ? 'black' : 'red'"
-          >
-            {{ task.selectTask.delayDay === 0 ? '0일' : `+ ${task.selectTask.delayDay}일` }}
-          </div>
-        </div>
-      </div>
-    </div> -->
-
-    <!-- 일정 입력 (2줄 구성) -->
-    
   </div>
 </template>
 
@@ -222,6 +193,7 @@ import { useUserStore } from '@/stores/userStore';
 import axios from 'axios' 
 import TaskDonutChart from '@/components/task/TaskDonutChart.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
+import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -239,8 +211,11 @@ const props = defineProps({
   detailList: Array,
 })
 
-console.log(props.taskData)
+const taskId = route.params.taskId
+
 const isEdit = ref(false);
+
+
 
 // 태스크 수정 ? 을 위한 깊은 복사
 const originalTask = ref({});
@@ -290,15 +265,12 @@ const nextDropdownRef = ref(null)
 const deptList = ref([])
 const taskList = ref([])
 
+console.log(deptList)
 // 부서 드롭다운
 const handleDeptDropdown = async () => {
   // 프로젝트 id 필히 수정 필요
   try {
-    const res = await axios.get(`http://localhost:5000/api/projects/${task.value.selectTask.projectId}/participants/department`, {
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-      }
-    });
+    const res = await api.get(`/api/projects/${task.value.selectTask.projectId}/participants/department`);
     // 이름만 추출
     deptList.value = res.data.data.map(d => d.deptName);
     showDeptDropdown.value = !showDeptDropdown.value;
@@ -325,11 +297,7 @@ const selectDept = (dept) => {
 const TaskList = async () => {
   // 프로젝트 id는 바로 수정 필요
   try {
-    const res = await axios.get(`http://localhost:5000/api/task/${task.value.selectTask.projectId}`, {
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
-      }
-    });
+    const res = await api.get(`/api/task/${task.value.selectTask.projectId}`);
     // 이름만 추출
     taskList.value = res.data.data;
     console.log(taskList.value);
@@ -343,14 +311,14 @@ const TaskList = async () => {
 const filteredPrevTasks = computed(() =>
   taskList.value.filter(t =>
     new Date(t.startBaseLine) <= new Date(task.value.selectTask.startBaseLine) &&
-    t.id !== task.value.selectTask.taskId  // ← 여기!
+    t.id !== task.value.selectTask.taskId  
   )
 );
 
 const filteredNextTasks = computed(() =>
   taskList.value.filter(t =>
     new Date(t.startBaseLine) >= new Date(task.value.selectTask.startBaseLine) &&
-    t.id !== task.value.selectTask.taskId  // ← 여기!
+    t.id !== task.value.selectTask.taskId  
   )
 );
 
@@ -431,6 +399,7 @@ const hasChanges = computed(() => {
   return JSON.stringify(task.value) !== JSON.stringify(originalTask.value);
 });
 
+// 태스크 상세 정보 수정
 const fetchModify = async () => {
   try {
     const dto = {
@@ -443,12 +412,7 @@ const fetchModify = async () => {
       startExpect: task.value.selectTask.expectStartDate,
       endExpect: task.value.selectTask.expectEndDate,
     };
-    await axios.patch(`http://localhost:5000/api/task/modify/${dto.taskId}`, dto, {
-      headers: {
-        'Authorization': `Bearer ${userStore.accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    await api.patch(`/api/task/modify/${taskId}`, dto);
     alert("수정되었습니다.");
   } catch (error) {
     if (error.response && error.response.status === 403) {
@@ -466,15 +430,11 @@ const fetchModify = async () => {
 // ✅ PATCH: 경과율
 const updatePassedRate = async () => {
   try {
-    await axios.patch(
-      `http://localhost:5000/api/task/${task.value.selectTask.taskId}/passed-rate`,
+    console.log('✅ PATCH: 경과율', taskId)
+    await api.patch(
+      `/api/task/${taskId}/passed-rate`,
       { passedRate: task.value.selectTask.passedRate },
-      {
-        headers: {
-          Authorization: `Bearer ${userStore.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
+
     );
   } catch (err) {
     console.error("경과율 수정 실패:", err);
@@ -482,24 +442,7 @@ const updatePassedRate = async () => {
   }
 };
 
-// ✅ PATCH: 진척률
-const updateProgressRate = async () => {
-  try {
-    await axios.patch(
-      `http://localhost:5000/api/task/${task.value.selectTask.taskId}/progress-rate`,
-      { progressRate: task.value.selectTask.progressRate },
-      {
-        headers: {
-          Authorization: `Bearer ${userStore.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-  } catch (err) {
-    console.error("진척률 수정 실패:", err);
-    throw err;
-  }
-};
+
 
 
 // 완료 클릭 처리
@@ -518,8 +461,10 @@ const submitEdit = async () => {
   isEdit.value = false;
   try {
     await fetchModify();
+    console.log("✅태스크 상세정보 수정 완료")
     await updatePassedRate();
-    await updateProgressRate();
+    console.log("✅ 경과율 수정 완료")
+
     alert("수정되었습니다.");
   } catch (err) {
     alert("일부 수정에 실패했습니다.");
@@ -602,17 +547,6 @@ const completionRate = computed(() => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 16px;
-}
-
-.form-label {
-  width: 100px;
-  text-align: left;
-  /* min-width: 100px; */
-  color: rgb(115, 115, 115);
-  font-weight: bold;
-  font-size: 14px;
-  padding-top: 6px;
 }
 
 .department-input-box,
