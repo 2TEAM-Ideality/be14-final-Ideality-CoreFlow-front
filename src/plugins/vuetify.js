@@ -17,4 +17,4 @@ export default createVuetify({
   date: {
     adapter: DayJsAdapter,
   },
-});
+})

@@ -1,7 +1,12 @@
 <script setup>
-import { watch, computed, reactive } from 'vue'
+import { watch, computed, reactive , onMounted } from 'vue'
 import cloneDeep from 'lodash/cloneDeep'
 import api from '@/api'
+import { useHolidayStore } from '@/stores/holidayStore'
+import dayjs from 'dayjs'
+
+
+const holidayStore = useHolidayStore()
 
 const props = defineProps({
   show: Boolean,
@@ -17,6 +22,8 @@ const dialogVisible = computed({
   set: (val) => emit('update:show', val)
 })
 
+
+
 // ✅ reactive 사용
 const localNode = reactive({
   id: '',
@@ -29,6 +36,23 @@ const localNode = reactive({
   childIds: [] 
 })
 
+
+// 시작 날짜 문자열 ↔ Date 객체 변환
+const startBaseModel = computed({
+  get: () => localNode.startBase,
+  set: (val) => {
+    localNode.startBase = dayjs(val).format('YYYY-MM-DD')
+  }
+})
+
+const endBaseModel = computed({
+  get: () => localNode.endBase,
+  set: (val) => {
+    localNode.endBase = dayjs(val).format('YYYY-MM-DD')
+  }
+})
+
+
 watch(
   () => props.initialData,
   (val) => {
@@ -36,14 +60,14 @@ watch(
       localNode.id = val.id || ''
       localNode.label = val.data.label || ''
       localNode.description = val.data.description || ''
-      localNode.startBase = val.data.startBase || ''
-      localNode.endBase = val.data.endBase || ''
+      localNode.startBase = dayjs(val.data.startBase).format('YYYY-MM-DD') || ''
+      localNode.endBase = dayjs(val.data.endBase).format('YYYY-MM-DD') || ''
       localNode.deptList = val.data.deptList || []
       localNode.parentIds = val.data.parentIds || []
       localNode.childIds = val.data.childIds || []
     }
   },
-  { immediate: true, deep: true } // 👈 이거 추가
+  { immediate: true, deep: true }
 )
 
 
@@ -61,6 +85,24 @@ watch(() => props.show, (val) => {
   }
 })
 
+watch(() => localNode.startBase, (val) => {
+  if (val instanceof Date || typeof val === 'string') {
+    localNode.startBase = dayjs(val).format('YYYY-MM-DD')
+  }
+})
+
+watch(() => localNode.endBase, (val) => {
+  if (val instanceof Date || typeof val === 'string') {
+    localNode.endBase = dayjs(val).format('YYYY-MM-DD')
+  }
+})
+
+
+onMounted(() => {
+  if (holidayStore.holidaySet.size === 0) {
+    holidayStore.fetchHolidays()
+  }
+})
 
 // 선행 태스크 목록
 const filteredParentOptions = computed(() => {
@@ -187,6 +229,24 @@ const getNodeLabel = (item) => {
   const found = props.existingNodes.find(n => String(n.id) === String(id))
   return found?.data?.label || `ID: ${id}`
 }
+
+//  공휴일 확인
+const handleStartDateChange = (e) => {
+  const val = e.target.value
+  if (holidayStore.isHoliday(val)) {
+    alert('공휴일이나 주말은 시작일로 선택할 수 없습니다.')
+    localNode.startBase = ''
+  }
+}
+
+const handleEndDateChange = (e) => {
+  const val = e.target.value
+  if (holidayStore.isHoliday(val)) {
+    alert('공휴일이나 주말은 마감일로 선택할 수 없습니다.')
+    localNode.endBase = ''
+  }
+}
+
 </script>
 
 <template>
@@ -208,11 +268,21 @@ const getNodeLabel = (item) => {
         <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 10px;">
           <div class="input-group" style="width: 100%;">
             <label>시작 베이스라인</label>
-            <input v-model="localNode.startBase" type="date" />
+            <!-- 시작일 -->
+            <input
+              v-model="localNode.startBase"
+              type="date"
+              @change="handleStartDateChange"
+            />
           </div>
           <div class="input-group" style="width: 100%;">
             <label>마감 베이스라인</label>
-            <input v-model="localNode.endBase" type="date" />
+            <!-- 종료일 -->
+            <input
+              v-model="localNode.endBase"
+              type="date"
+              @change="handleEndDateChange"
+            />
           </div>
         </div>
 
@@ -231,6 +301,7 @@ const getNodeLabel = (item) => {
         </div>
       </div>
       
+     
       
       <div class="input-group">
         <label>담당 부서</label>
