@@ -144,9 +144,14 @@ const submitForm = async () => {
   console.log(form.value.followingTasks);
   console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
 
-  // 선행 일정과 후행 일정이 비어 있으면 null로 설정
-  const precedingTasks = form.value.precedingTasks.length > 0 ? form.value.precedingTasks : null;
-  const followingTasks = form.value.followingTasks.length > 0 ? form.value.followingTasks : null;
+    // 선행 일정과 후행 일정이 비어 있으면 빈 배열로 설정하고, 빈 문자열이 포함되면 빈 배열로 처리
+  const precedingTasks = form.value.precedingTasks && form.value.precedingTasks.length > 0
+    ? form.value.precedingTasks.filter(task => task !== "") // 빈 문자열 제외
+    : [];
+  const followingTasks = form.value.followingTasks && form.value.followingTasks.length > 0
+    ? form.value.followingTasks.filter(task => task !== "") // 빈 문자열 제외
+    : [];
+
 
   // 요청 데이터 구성
   const requestData = {
@@ -157,8 +162,8 @@ const submitForm = async () => {
     startBase: form.value.startDate, // 시작 베이스라인
     endBase: form.value.endDate, // 마감 베이스라인
     deptId: form.value.department.deptId, // 부서 ID
-    source: Array.from(form.value.precedingTasks), // Proxy 객체를 배열로 변환
-    target: Array.from(form.value.followingTasks), // Proxy 객체를 배열로 변환
+    source: Array.from(precedingTasks), // Proxy 객체를 배열로 변환
+    target: Array.from(followingTasks), // Proxy 객체를 배열로 변환
     assigneeId: form.value.responsible, // 책임자 ID
     participantIds: Array.from(form.value.participants), // Proxy 객체를 배열로 변환
   };
