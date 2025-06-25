@@ -531,7 +531,7 @@ watch(startDate, async (newVal) => {
 
   const date = new Date(newVal);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const isHoliday = holidaySet.value.has(newVal);
+  const isHoliday = await checkIfHoliday(newVal); // ✅ API로 확인
 
   if (isWeekend || isHoliday) {
     isStartHoliday.value = true;
@@ -546,7 +546,7 @@ watch(endDate, async (newVal) => {
 
   const date = new Date(newVal);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const isHoliday = holidaySet.value.has(newVal);
+  const isHoliday = await checkIfHoliday(newVal); // ✅ API로 확인
 
   if (isWeekend || isHoliday) {
     isEndHoliday.value = true;
