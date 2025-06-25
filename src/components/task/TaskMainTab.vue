@@ -2,30 +2,18 @@
   <div class="task-main-container">
     <div class="tab-row">
       <div class="tab-menu">
-        <button
-          v-for="tab in tabs"
-          :key="tab.name"
-          @click="selectedTab = tab.name"
+        <button v-for="tab in tabs" :key="tab.name" @click="selectedTab = tab.name"
           :class="['tab-button', { active: selectedTab === tab.name }]">
           {{ tab.label }}
         </button>
       </div>
-      <v-btn
-        color="#7578ee"
-        variant="flat"
-        prepend-icon="mdi-plus"
-        class="schedule-button"
-        @click="openModal"
-      >
+      <v-btn color="#7578ee" variant="flat" prepend-icon="mdi-plus" class="schedule-button" @click="openModal">
         세부일정 생성
       </v-btn>
     </div>
 
-    <component
-      :is="selectedComponent"
-      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
-      :task-id="taskData.selectTask.taskId"
-    />
+    <component :is="selectedComponent" v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
+      :task-id="taskData.selectTask.taskId" />
 
     <v-dialog v-model="showModal" max-width="700">
       <v-card>
@@ -44,18 +32,8 @@
             <v-textarea label="세부 일정 설명" v-model="form.description" required></v-textarea>
 
             <div class="inline-fields-baseline">
-              <v-text-field
-                label="시작 베이스라인"
-                v-model="form.startDate"
-                type="date"
-                required
-              />
-              <v-text-field
-                label="마감 베이스라인"
-                v-model="form.endDate"
-                type="date"
-                required
-              />
+              <v-text-field label="시작 베이스라인" v-model="form.startDate" type="date" required />
+              <v-text-field label="마감 베이스라인" v-model="form.endDate" type="date" required />
             </div>
             <div class="inline-fields">
               <div class="field-container">
@@ -63,62 +41,28 @@
                   <span>선행 일정</span>
                   <v-btn icon @click="addPrecedingTask"><v-icon>mdi-plus</v-icon></v-btn>
                 </div>
-                <v-select
-                  v-for="(task, i) in form.precedingTasks"
-                  :key="i"
-                  v-model="form.precedingTasks[i]"
-                  :items="tasks"
-                  item-title="name"
-                  item-value="id"
-                  label="선행 일정 선택"
-                />
+                <v-select v-for="(task, i) in form.precedingTasks" :key="i" v-model="form.precedingTasks[i]"
+                  :items="tasks" item-title="name" item-value="id" label="선행 일정 선택" />
               </div>
               <div class="field-container">
                 <div class="label-container">
                   <span>후행 일정</span>
                   <v-btn icon @click="addFollowingTask"><v-icon>mdi-plus</v-icon></v-btn>
                 </div>
-                <v-select
-                  v-for="(task, i) in form.followingTasks"
-                  :key="i"
-                  v-model="form.followingTasks[i]"
-                  :items="tasks"
-                  item-title="name"
-                  item-value="id"
-                  label="후행 일정 선택"
-                />
+                <v-select v-for="(task, i) in form.followingTasks" :key="i" v-model="form.followingTasks[i]"
+                  :items="tasks" item-title="name" item-value="id" label="후행 일정 선택" />
               </div>
             </div>
             <!-- 담당 부서 & 책임자 & 참여자 -->
-            <v-select
-              label="담당 부서"
-              v-model="form.department"
-              :items="departments"
-              item-title="deptName"
-              item-value="deptId"
-              return-object
-              @update:modelValue="fetchUsersForDepartment"
-              required
-            />
+            <v-select label="담당 부서" v-model="form.department" :items="departments" item-title="deptName"
+              item-value="deptId" return-object @update:modelValue="fetchUsersForDepartment" required />
 
-            <v-select
-              label="책임자"
-              v-model="form.responsible"
-              :items="users"
-              item-title="name"
-              item-value="id"
-              required
-            />
+            <v-select label="책임자" v-model="form.responsible" :items="users" item-title="name" item-value="id"
+              required />
 
             <v-label class="mt-4">참여자:</v-label>
-            <v-checkbox
-              v-for="user in users"
-              :key="user.id"
-              v-model="form.participants"
-              :label="user.name"
-              :value="user.id"
-              density="compact"
-            />
+            <v-checkbox v-for="user in users" :key="user.id" v-model="form.participants" :label="user.name"
+              :value="user.id" density="compact" />
 
             <v-btn type="submit" class="mt-4" color="primary" :loading="isSubmitting">추가</v-btn>
           </v-form>
@@ -131,7 +75,7 @@
 
 <script setup>
 import { useRoute } from "vue-router";
-import { ref, computed,onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import TaskInfoTab from '@/components/task/TaskInfoTab.vue'
 import TaskApprovalTab from '@/components/task/TaskApprovalTab.vue'
 import TaskAttachmentTab from '@/components/task/TaskAttachmentTab.vue'
@@ -197,9 +141,9 @@ const submitForm = async () => {
   }
 
   console.log(form.value.precedingTasks);
-console.log(form.value.followingTasks);
-console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
-  
+  console.log(form.value.followingTasks);
+  console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
+
   // 선행 일정과 후행 일정이 비어 있으면 null로 설정
   const precedingTasks = form.value.precedingTasks.length > 0 ? form.value.precedingTasks : null;
   const followingTasks = form.value.followingTasks.length > 0 ? form.value.followingTasks : null;
@@ -212,14 +156,14 @@ console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
     description: form.value.description, // 설명
     startBase: form.value.startDate, // 시작 베이스라인
     endBase: form.value.endDate, // 마감 베이스라인
-    deptId: form.value.department, // 부서 ID
+    deptId: form.value.department.deptId, // 부서 ID
     source: Array.from(form.value.precedingTasks), // Proxy 객체를 배열로 변환
     target: Array.from(form.value.followingTasks), // Proxy 객체를 배열로 변환
     assigneeId: form.value.responsible, // 책임자 ID
     participantIds: Array.from(form.value.participants), // Proxy 객체를 배열로 변환
   };
 
-   console.log(requestData)
+  console.log(requestData)
   // 토큰과 taskId를 넘겨서 store의 createItem 메서드 호출
   const userStore = useUserStore();
   const token = userStore.accessToken;
@@ -233,7 +177,7 @@ console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
   const taskStore = useTaskStore();
   const result = await taskStore.createItem(requestData, props.taskData.selectTask.taskId, token);
 
-            
+
 
   if (result) {
     // 성공적인 처리 후 추가 동작 (예: 모달 닫기)
@@ -251,8 +195,8 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  detailList : {
-    type : Array,
+  detailList: {
+    type: Array,
     required: true
   }
 });
@@ -357,18 +301,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
 .tab-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 8px;
 }
+
 .tab-menu {
   display: flex;
   gap: 24px;
   border-bottom: 1px solid #ccc;
 }
+
 .tab-button {
   font-size: 15px;
   color: #444;
@@ -377,11 +322,13 @@ onMounted(() => {
   border-bottom: 2px solid transparent;
   transition: 0.2s;
 }
+
 .tab-button.active {
   font-weight: bold;
   color: #000;
   border-color: #000;
 }
+
 .schedule-button {
   background-color: #7578ee;
   color: white;
@@ -392,142 +339,143 @@ onMounted(() => {
   cursor: pointer;
   margin-right: 2%;
 }
+
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
 
 .modal-content {
-    background-color: white;
-    padding: 20px 40px;
-    border-radius: 0px;
-    width: 700px;
-    max-height: 80vh;
-    overflow-y: auto;
-    margin-top: 50px;
-    position: relative;
+  background-color: white;
+  padding: 20px 40px;
+  border-radius: 0px;
+  width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  margin-top: 50px;
+  position: relative;
 }
 
 label {
-    margin-top: 10px;
-    font-weight: bold;
+  margin-top: 10px;
+  font-weight: bold;
 }
 
 input,
 select,
 textarea {
-    width: 100%;
-    padding: 1px 6px;
-    margin-top: 3px;
-    border: 1px solid #ddd;
+  width: 100%;
+  padding: 1px 6px;
+  margin-top: 3px;
+  border: 1px solid #ddd;
 }
 
 textarea {
-    height: 80px;
+  height: 80px;
 }
 
 hr {
-    margin: 20px 0;
-    border: 1px solid #ddd;
+  margin: 20px 0;
+  border: 1px solid #ddd;
 }
 
 .close-btn {
-    position: absolute;
-    top: 18px;
-    right: 40px;
-    font-size: 25px;
-    cursor: pointer;
-    color: #000;
-    font-weight: bold;
-    background-color: transparent;
-    border: none;
-    padding: 5px;
+  position: absolute;
+  top: 18px;
+  right: 40px;
+  font-size: 25px;
+  cursor: pointer;
+  color: #000;
+  font-weight: bold;
+  background-color: transparent;
+  border: none;
+  padding: 5px;
 }
 
 .inline-fields {
-    display: flex;
-    justify-content: space-between;
-    gap: 30px;
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
 }
 
 .field-container {
-    flex: 1;
+  flex: 1;
 }
 
 .field-group {
-    margin-top: 5px;
-    display: flex;
-    align-items: center;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
 }
 
 /* 날짜 선택 부분을 flex로 가로 정렬 */
 .inline-fields-baseline {
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
 }
 
 .baseline-group {
-    margin-top: 5px;
+  margin-top: 5px;
 }
 
 .date-group {
-    flex: 1;
+  flex: 1;
 }
 
 .depart {
-    width: 200px;
-    margin-left: 10px;
+  width: 200px;
+  margin-left: 10px;
 }
 
 .label-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .add-btn {
-    background-color: transparent;
-    border: 2px solid black;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    color: black;
-    font-weight: bold;
-    text-align: center;
-    line-height: 10px;
-    cursor: pointer;
-    padding: 0;
+  background-color: transparent;
+  border: 2px solid black;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  color: black;
+  font-weight: bold;
+  text-align: center;
+  line-height: 10px;
+  cursor: pointer;
+  padding: 0;
 }
 
 .add-btn:hover {
-    background-color: #f0f0f0;
+  background-color: #f0f0f0;
 }
 
 form>div {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .submit-btn {
-    background-color: white;
-    color: black;
-    border: 1px solid #000;
-    border-radius: 5px;
-    padding: 8px 20px;
-    position: absolute;
-    /* 위치를 절대 위치로 설정 */
-    right: 40px;
+  background-color: white;
+  color: black;
+  border: 1px solid #000;
+  border-radius: 5px;
+  padding: 8px 20px;
+  position: absolute;
+  /* 위치를 절대 위치로 설정 */
+  right: 40px;
 }
 
 .submit-btn:hover {
-    background-color: grey;
+  background-color: grey;
 }
 
 .suggestions-list {
@@ -535,11 +483,14 @@ form>div {
   z-index: 10;
   border: 1px solid #ccc;
   background-color: white;
-  width: 605px; /* 입력 필드와 동일한 너비 */
+  width: 605px;
+  /* 입력 필드와 동일한 너비 */
   max-height: 150px;
   overflow-y: auto;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  /* 그림자 추가 */
 }
+
 .suggestions-list ul {
   list-style: none;
   margin: 0;
@@ -555,6 +506,7 @@ form>div {
 .suggestions-list li:hover {
   background-color: #f0f0f0;
 }
+
 /* 참여자 체크박스 표 스타일 */
 table {
   width: 100%;
@@ -562,7 +514,8 @@ table {
   margin-top: 10px;
 }
 
-th, td {
+th,
+td {
   padding: 10px;
   text-align: left;
   border: 1px solid #ddd;
@@ -576,7 +529,4 @@ th {
 input[type="checkbox"] {
   margin-right: 10px;
 }
-
-
 </style>
-  
