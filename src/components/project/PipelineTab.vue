@@ -512,21 +512,39 @@ async function onSaveTasks() {
         const parentIds = getParentIds(node.id).map(Number)
         const childIds = getChildIds(node.id).map(Number)
 
-        const requestBody = {
-          taskName: node.label,
-          taskId: Number(node.id),
-          projectId: Number(projectId),
-          description: node.data.description,
-          deptLists: node.data.deptList,
-          prevTaskList: parentIds,
-          nextTaskList: childIds,
-          startExpect: node.data.startBase,
-          endExpect: node.data.endBase
+        // 기존 관계 정보와 현재 관계 정보 비교해서 달라졌을 경우에도 갱신
+        const prev = node.data.parentIds || []
+        const next = node.data.childIds || []
+
+        const isRelationChanged =
+          JSON.stringify(prev.sort()) !== JSON.stringify(parentIds.sort()) ||
+          JSON.stringify(next.sort()) !== JSON.stringify(childIds.sort())
+
+        // 조건: 내용이 바뀌었거나, 관계가 바뀌었을 경우
+        if (
+          node.label !== node.data.taskName || 
+          node.description !== node.data.description ||
+          isRelationChanged
+        ) {
+          const requestBody = {
+            taskName: node.data.label,
+            taskId: Number(node.id),
+            projectId: Number(projectId),
+            description: node.data.description,
+            deptLists: node.data.deptList,
+            prevTaskList: parentIds,
+            nextTaskList: childIds,
+            startExpect: node.data.startBase,
+            endExpect: node.data.endBase
+          }
+
+          console.log(`📌 태스크 수정 요청: ${node.id}`, requestBody)
+          await api.patch(`/api/task/modify/${node.id}`, requestBody)
+
+          // 관계 갱신을 위해 현재 관계 정보를 data에 반영
+          node.data.parentIds = parentIds
+          node.data.childIds = childIds
         }
-
-        console.log(`📌 기존 태스크 갱신: ${node.data.label}`, requestBody)
-
-        await api.patch(`/api/task/modify/${node.id}`, requestBody)
       }
     }
 
@@ -669,7 +687,7 @@ watch(showFullscreenView, async (isOpen) => {
                 🔀 정렬
               </button>
               <!-- @click="onSaveTasks" -->
-              <button title="편집 완료"  @click="showFullscreenView = false">
+              <button title="편집 완료"  @click="onSaveTasks">
                 ✅ 편집 완료
               </button>
             </div>
