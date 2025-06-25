@@ -108,7 +108,7 @@ const statusIcon = computed(() => {
       <!-- COMPLETED 상태일 때 -->
       <template v-else-if="status === 'COMPLETED'">
         <v-list-item @click="emit('report')" :disabled="!isDirector">
-          <v-list-item-title>분석 리포트 다운로드</v-list-item-title>
+          <v-list-item-title>분석 리포트 생성</v-list-item-title>
         </v-list-item>
         <v-list-item @click="emit('deleted')">
           <v-list-item-title class="text-red">프로젝트 삭제</v-list-item-title>

@@ -3,10 +3,16 @@ import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
   type: String, // 'approver' | 'viewer | project'
-  userList: Array,
+  userList: {
+    type: Array,
+    default: () => []
+  },
   selectedApprover: Array,
   selectedViewers: Array,
-  selectedLeaders: Array
+  selectedLeaders: {
+    type: Array,
+    default: () => []
+  }
 })
 
 const emit = defineEmits(['close', 'select'])
@@ -21,6 +27,7 @@ const isApprover = computed(() => props.type === 'approver')
 const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project')
 
 onMounted(() => {
+  console.log(props.userList)
   if (isApprover.value) {
     selectedUserId.value = (props.selectedApprover?.[0]?.id) ?? null
   } else {
@@ -30,6 +37,7 @@ onMounted(() => {
 
 const groupedUsers = computed(() => {
   const groups = {}
+  if (!props.userList || !Array.isArray(props.userList)) return groups
   props.userList.forEach(user => {
     const dept = user.deptName || '기타'
     if (!groups[dept]) groups[dept] = []

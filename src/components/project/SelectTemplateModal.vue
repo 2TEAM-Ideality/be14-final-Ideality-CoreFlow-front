@@ -62,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   show: Boolean,
@@ -74,17 +74,23 @@ const emit = defineEmits(['select', 'close'])
 const search = ref('')
 const selected = ref(null)
 
-
-
 const filteredTemplates = computed(() => {
   return props.templates.filter(p =>
     p.name?.toLowerCase().includes(search.value.toLowerCase())
   )
 })
 
+// ✅ show가 false로 바뀌면 선택 초기화
+watch(() => props.show, (newVal) => {
+  if (!newVal) {
+    selected.value = null
+    search.value = ''
+  }
+})
+
 const toggleSelection = (template) => {
   if (selected.value?.id === template.id) {
-    selected.value = null // 선택 취소
+    selected.value = null
   } else {
     selected.value = template
   }
