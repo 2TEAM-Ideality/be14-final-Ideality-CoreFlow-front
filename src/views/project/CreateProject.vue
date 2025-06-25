@@ -562,8 +562,9 @@ watch(endDate, async (newVal) => {
 
 // 템플릿 리스트 가져오기 
 const fetchTemplates = async () => {
+  console.log('✅템플릿 리스트 요청')
   const res = await api.get('/api/template/list');
-  console.log("템플릿 리스트 확인", res.data.data);
+  console.log("✅템플릿 리스트 확인", res.data.data);
   return res.data.data;
 };
 
@@ -626,11 +627,21 @@ const groupedLeaders = computed(() => {
 
 onMounted(async () => {
   try {
-    await fetchAllHolidays(); // 공휴일 먼저 로딩
-    templateList.value = await fetchTemplates();   
+    await fetchAllHolidays();
+  } catch (err) {
+    console.error('❌ 공휴일 로딩 실패:', err);
+  }
+
+  try {
+    templateList.value = await fetchTemplates();
+  } catch (err) {
+    console.error('❌ 템플릿 로딩 실패:', err);
+  }
+
+  try {
     userList.value = await fetchUserList();
   } catch (err) {
-    console.error("초기 데이터 로딩 실패", err);
+    console.error('❌ 유저 로딩 실패:', err);
   }
 });
 
