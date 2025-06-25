@@ -176,7 +176,7 @@
 
         </v-card-text>
 
-          <v-card-actions class="d-flex justify-end">
+        <v-card-actions class="d-flex justify-end">
             <v-btn variant="text" @click="showCreateCheck = false">취소</v-btn>
             <v-btn class="color-button" @click="createApproval">확인</v-btn>
           </v-card-actions>

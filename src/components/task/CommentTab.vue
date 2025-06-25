@@ -136,7 +136,6 @@
 import { ref, watch, computed, onUpdated, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
-import axios from 'axios' 
 import api from '@/api';
 
 
@@ -175,6 +174,7 @@ const scrollToBottom = () => {
   })
 }
 
+//  댓글 목록 가져오기
 const fetchComments = async (id)=> {
   try {
     console.log("댓글 가져오기 요청")
@@ -221,7 +221,7 @@ function convertToTree(flatList) {
 const dropdownIndex = ref(null)
 
 const toggleDropdown = (id) => {
-dropdownIndex.value = dropdownIndex.value === id ? null : id
+  dropdownIndex.value = dropdownIndex.value === id ? null : id
 }
 
 const handleClickOutside = (event) => {
@@ -249,6 +249,7 @@ const closeDeleteModal = () => {
   deleteTargetId.value = null;
 };
 
+// 댓글 삭제
 const deleteComment = async () => {
   try {
     await api.patch(`/api/comment/${deleteTargetId.value}/delete`)
@@ -273,6 +274,7 @@ const deleteComment = async () => {
   }
 }
 
+// 댓글 수정
 const updateNoticeComment = async (id) => {
   console.log("공지로 등록한 댓글", id)
   try {

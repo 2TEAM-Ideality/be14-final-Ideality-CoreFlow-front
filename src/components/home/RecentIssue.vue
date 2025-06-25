@@ -7,16 +7,15 @@
           <v-icon>mdi-alert-outline</v-icon>
         </v-btn>
         <div class="issue-data">
-          <div class="issue-title">마감 임박 태스크</div>
-          <div class="issue-desc">{{ props.warningDeadline?.taskCount + props.warningDeadline?.detailCounts || 0 }} 건</div>
+          <div class="issue-title">마감 임박</div>
+          <div class="issue-desc">태스크 {{ props.warningDeadline?.taskCount }} 건 /  세부일정 {{ props.warningDeadline?.detailCount || 0 }} 건</div>
         </div>
       </div>
-      <v-btn icon variant="plain" class="link-icon" size="small" @click="goToDelayAlert">
+      <v-btn icon variant="plain" class="link-icon" size="small" @click="openDelayAlert = true">
         <v-icon color="gray">mdi-chevron-right</v-icon>
       </v-btn>
     </div>
 
-    <!-- 결재 알림 -->
     <div class="issue-item">
       <div class="item-left">
         <v-btn icon color="info" class="approval-button" @click="goToApproval">
@@ -31,6 +30,23 @@
         <v-icon color="gray">mdi-chevron-right</v-icon>
       </v-btn>
     </div>
+   
+
+    <!-- 결재 알림 -->
+    <!-- <div class="issue-item">
+      <div class="item-left">
+        <v-btn icon color="info" class="approval-button" @click="goToApproval">
+          <v-icon>mdi-file-document-alert-outline</v-icon>
+        </v-btn>
+        <div class="issue-data">
+          <div class="issue-title">결재 알림</div>
+          <div class="issue-desc">n개</div>
+        </div>
+      </div>
+      <v-btn icon variant="plain" class="link-icon" size="small" @click="goToApproval">
+        <v-icon color="gray">mdi-chevron-right</v-icon>
+      </v-btn>
+    </div> -->
 
     <!-- 부서 일정 -->
     <div class="issue-item">
@@ -49,26 +65,82 @@
       </v-btn>
     </div>
 
-    <!-- 개인 일정 -->
-    <!-- <div class="issue-item">
-      <div class="item-left">
-        <v-btn icon color="primary" class="approval-button">
-          <v-icon>mdi-calendar-account</v-icon>
-        </v-btn>
-        <div class="issue-data">
-          <div class="issue-title">오늘의 일정</div>
-          <div class="issue-desc">{{ props.todayDeptList?.length + props.todayCount }} 개</div>
-        </div>
-      </div>
-      <v-btn icon variant="plain" class="link-icon" size="small" @click="goToCalendar">
-        <v-icon color="gray">mdi-chevron-right</v-icon>
-      </v-btn>
-    </div> -->
   </div>
+
+  <v-dialog v-model="openDelayAlert" max-width="600px">
+    <v-card style="padding: 5%; ">
+      <v-card-title class="text-h6 font-weight-bold" style="display:flex; flex-direction: row; gap: 10px; align-items: center;">
+        마감 임박 일정
+        <v-icon color="warning" class="mr-2">mdi-alert-circle-outline</v-icon>
+      </v-card-title>
+
+      <!-- Tabs -->
+      <v-tabs v-model="activeTab" class="mt-3 mb-2" color="warning">
+        <v-tab value="task">태스크 {{ props.warningDeadline?.taskCount }}</v-tab>
+        <v-tab value="subtask">세부일정 {{ props.warningDeadline?.detailCount }}</v-tab>
+      </v-tabs>
+
+      <v-window v-model="activeTab">
+        <v-window-item value="task">
+          <!-- TASK LIST -->
+          <v-list
+            v-if="warningDeadlineTest.tasks"
+            style="max-height: 400px; overflow-y: auto; gap: 10px; display: flex; flex-direction: column; padding:  20px 10px;"
+          >
+          <!-- v-if="props.warningDeadline?.tasks?.length" -->
+            <v-list-item
+              :key="'task-' + index"
+              v-for="(item, index) in warningDeadlineTest.tasks"
+              style="cursor: pointer; background-color: #eeee; border-radius:15px; padding: 10px;" 
+              @click="goToTask(item.workId)"
+            >
+              <!-- v-for="(item, index) in props.warningDeadline.tasks" -->
+
+              <v-list-item-content>
+                <div class="warning-item">
+                  <div>{{ item.name }}</div>
+                  <div> 🔔 {{ item.endBaseLine }} 마감</div>
+                </div>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+
+          <div v-else class="text-grey text-caption" style="height: 400px; padding:  30px 20px;">
+            임박한 태스크가 없습니다.
+          </div>
+        </v-window-item>
+
+        <v-window-item value="subtask">
+          <v-list v-if="warningDeadlineTest.subtasks?.length" 
+          style="max-height: 400px; overflow-y: auto; gap: 10px; display: flex; flex-direction: column; padding:  20px 10px;">
+          <!-- <v-list v-if="props.warningDeadline?.subtasks?.length"> -->
+            <v-list-item
+              v-for="(item, index) in warningDeadlineTest.subtasks"
+              :key="'subtask-' + index"
+              @click="goToDetail(item.workId)"
+              style="cursor: pointer; background-color: #eeee; border-radius:15px; padding: 10px;" 
+            >
+            <!-- v-for="(item, index) in props.warningDeadline.tasks" -->
+              <v-list-item-content>
+                <div class="warning-item">
+                  <div>{{ item.name }}</div>
+                  <div> 🔔 {{ item.endBaseLine }} 마감</div>
+                </div>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+          <div v-else class="text-grey text-caption" style="height: 300px; padding:  30px 20px;">
+            임박한 세부일정이 없습니다.</div>
+        </v-window-item>
+      </v-window>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { ref } from 'vue'
+
 
 const props = defineProps({
   todayDeptList: {
@@ -89,11 +161,37 @@ const props = defineProps({
   }
 })
 
-    // int taskCount;
-    // int detailCount;
-    // private List<WorkSummaryDTO> tasks;
-    // private List<WorkSummaryDTO> subtasks;
+
 const router = useRouter()
+
+const openDelayAlert = ref(false)   // 마감 임박 리스트 모달 
+const activeTab = ref('task')
+
+// 테스트용 더미 데이터
+const warningDeadlineTest = {
+  taskCount: 2,
+  detailCounts: 3,
+  tasks: [
+    { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
+     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
+     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
+     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' }
+  ],
+  subtasks: [
+    { workId: 3, name: '색상 가이드 정리', parentTaskId: 1, endBaseLine: '2025-06-26' },
+    { workId: 4, name: '폰트 정리', parentTaskId: 1, endBaseLine: '2025-06-27' },
+    { workId: 5, name: '컴포넌트 표준 정리', parentTaskId: 1, endBaseLine: '2025-06-27' }
+  ]
+}
+    // private Long workId;
+    // private Long parentTaskId;
+    // private String name;
+
+
 
 const goToApproval = () => {
   router.push(`/approval`)
@@ -102,6 +200,24 @@ const goToApproval = () => {
 const goToCalendar = () => {
     router.push(`/calendar`)
 }
+
+const goToTask = (taskId) => {
+  router.push(`/task/${taskId}`)
+}
+
+const goToDetail = (taskId, workId) => {
+  router.push({
+    path: `/task/${taskId}`,
+    query: {
+      tab: 'detail',
+      openModal: 'true',
+      workId: workId
+    }
+  })
+}
+
+
+
 </script>
 
 
@@ -109,7 +225,7 @@ const goToCalendar = () => {
 .issue-container {
   width: 100%;
   display: flex;
-  flex-wrap: wrap; /* 👉 자동 줄바꿈 */
+  flex-wrap: wrap; 
   justify-content: space-between;
   gap: 16px;
 }
@@ -157,5 +273,13 @@ const goToCalendar = () => {
   background-color: white;
   border: 1px solid #e0e0e0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.warning-item{
+  display: flex; 
+  flex-direction: row; 
+  justify-content: space-between;
+   padding : 5px 20px;
+   border-radius: 15px;
+   font-size: 15px;
 }
 </style>
