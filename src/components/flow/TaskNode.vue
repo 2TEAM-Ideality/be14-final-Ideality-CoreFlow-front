@@ -488,7 +488,7 @@ const handleStyle = {
   right: -15px;
   top: 50%;
   transform: translateY(-50%);
-  background-color: #10b981 !important;
+  background-color: #7578ee !important;
   color: white;
   border-radius: 50%;
   width: 28px;

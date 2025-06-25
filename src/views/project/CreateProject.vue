@@ -30,11 +30,13 @@
             <div class="baseline-label">시작 베이스라인</div>
             <div class="sub-label">목표로 하는 프로젝트 시작일</div>
             <v-text-field
-                v-model="startDate"
-                type="date"
-                variant="outlined"
-                density="compact"
-                class="baseline-field"
+              v-model="startDate"
+              type="date"
+              variant="outlined"
+              density="compact"
+              class="baseline-field"
+              :error="isStartHoliday"
+              :error-messages="isStartHoliday ? ['휴일은 선택할 수 없습니다.'] : []"
             />
             </v-col>
 
@@ -42,13 +44,16 @@
             <div class="baseline-label">마감 베이스라인</div>
             <div class="sub-label">목표로 하는 프로젝트 마감일</div>
             <v-text-field
-                v-model="endDate"
-                type="date"
-                variant="outlined"
-                :min="startDate" 
-                density="compact"
-                class="baseline-field"
+              v-model="endDate"
+              type="date"
+              variant="outlined"
+              :min="startDate"
+              density="compact"
+              class="baseline-field"
+              :error="isEndHoliday"
+              :error-messages="isEndHoliday ? ['휴일은 선택할 수 없습니다.'] : []"
             />
+
             </v-col>
         </v-row>
         </v-container>
@@ -57,8 +62,8 @@
         <!-- <div class="section-label">프로젝트 설명</div> -->
         <v-row v-if="baseLineDuration > 0" class="text-caption" align="center" no-gutters>
         <v-col class="d-flex align-center" style="color: #1976D2;">
-            <v-icon start>mdi-calendar-clock</v-icon>
-            베이스라인 기준 소요일: {{ baseLineDuration }}일
+          <v-icon start>mdi-calendar-clock</v-icon>
+          워크 데이 기반 소요일:   <span><strong> {{ workingDuration }}일</strong></span>
         </v-col>
         </v-row>
 
@@ -105,24 +110,32 @@
                 편집하기
             </v-btn>
         </div>
+        <!-- 템플릿 소요일 표시 -->
+        <div style="display: flex; flex-direction: row; align-items: flex-start; gap: 8px;">
+          <!-- 워크데이 / 템플릿 소요일 -->
+          <div v-if="selectedTemplate && workingDuration && templateDuration"
+              class="text-caption d-flex align-center"
+              style="color: #757575;">
+            <v-icon start>mdi-calendar-range</v-icon>
+            <!-- 워크데이: &nbsp;<strong>{{ workingDuration }}일</strong>&nbsp;/&nbsp; -->
+            템플릿 소요일: &nbsp;<strong>{{ templateDuration }}일</strong>
+          </div>
 
-         <!-- 초과/부족 여부 메시지 -->
-        <v-row v-if="durationDifference !== null" class="text-caption" align="center" no-gutters >
-        <v-col v-if="durationDifference < 0" class="d-flex align-center" style="color: red;">
-            <v-icon start>mdi-alert</v-icon>
-            마감 베이스라인보다 {{ Math.abs(durationDifference) }}일 초과
-        </v-col>
+          <!-- 초과/부족 여부 메시지 -->
+          <div v-if="durationDifference !== null" class="text-caption d-flex align-center"
+              :style="{ color: durationDifference < 0 ? 'red' : durationDifference > 0 ? 'green' : '#000' }">
+            <v-icon start>
+              {{ durationDifference < 0 ? 'mdi-alert' : durationDifference > 0 ? 'mdi-check-circle' : 'mdi-timer' }}
+            </v-icon>
+            <span v-if="durationDifference < 0">워크데이보다 {{ Math.abs(durationDifference) }}일 초과됨</span>
+            <span v-else-if="durationDifference > 0">여유 워크데이 {{ durationDifference }}일</span>
+            <span v-else>베이스라인과 딱 맞음</span>
+          </div>
+        </div>
 
-        <v-col v-else-if="durationDifference > 0" class="d-flex align-center" style="color: green;">
-            <v-icon start>mdi-check-circle</v-icon>
-            마감일 기준 여유 {{ durationDifference }}일
-        </v-col>
+      
 
-        <v-col v-else class="d-flex align-center">
-            <v-icon start>mdi-timer</v-icon>
-            베이스라인과 딱 맞음
-        </v-col>
-        </v-row>
+          
 
 
         <!-- 템플릿이 선택되었을 때만 보이게 -->
@@ -143,7 +156,11 @@
         <!-- 팀장 초대 -->
         <div class="section-label" style="margin-top: 40px;">프로젝트 팀장 초대</div>
         <div style="justify-content: flex-start; width: 100%; display :flex; flex-direction: row; margin-bottom: 20px; align-items: center; gap: 15px;">
-        <v-btn @click="openLeaderModal('project')" size="small" style="width:fit-content; " variant="tonal" color="purple">구성원 조회</v-btn>
+        <v-btn 
+        @click="openLeaderModal('project')" 
+        size="small" style="width:fit-content; " variant="tonal" color="purple"
+        >
+          구성원 조회</v-btn>
         <span style="font-size: 13px; color: gray;">프로젝트에 참여할 팀장을 선택해주세요.</span>
         </div>
         
@@ -155,7 +172,7 @@
               :key="user.id"
               closable
               class="participant-chip"
-              @click:close="removeViewer(user.id)"
+              @click:close="removeLeader(user.id)"
             >
               <v-icon size="20" class="mr-2">mdi-account-tie</v-icon>
               {{ user.name }} {{ user.jobRankName }}
@@ -203,9 +220,9 @@
               </div>
 
               <div class="mb-3">
-                <div class="section-label">⏱️ 총 소요일 / 전체 태스크 수</div>
+                <div class="section-label">⏱️ 워크데이 기준 총 소요일 / 전체 태스크 수</div>
                 <div style="display :flex; flex-direction: row; gap: 10px; width :100%;">
-                  <div class="check-item" style="width: 50%;"> {{ duration || '-' }}일 </div> 
+                  <div class="check-item" style="width: 50%;"> {{ workingDuration || '-' }}일 </div> 
                   <div class="check-item" style="width: 50%;">{{ selectedTemplate ? taskCount : '-' }}개</div>
                 </div>
               </div>
@@ -262,14 +279,13 @@
         <ParticipantSelectModal
           v-if="showLeaderModal"
           :type="modalType"
-          :userList="userList"
+          :userList="availableLeaderCandidates" 
           :selectedLeaders="selectedLeaders"
           @close="showLeaderModal = false"
           @select="handleLeaderSelect"
         />
-        
+                    
             
-    
     
     </template>
     
@@ -300,23 +316,22 @@
 
 <script setup >
 import BasicLayout from '@/components/layout/BasicLayout.vue';
-import { computed } from 'vue'
-import { ref , onMounted } from 'vue';
+import { computed, watch, ref , onMounted, markRaw, nextTick  } from 'vue'
 import dagre from '@dagrejs/dagre'
-import api from '@/api.js'
 import { Position } from '@vue-flow/core'
 import { VueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { Controls } from '@vue-flow/controls'
-import { markRaw } from 'vue'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 import TemplateViewNode from '@/components/template/TemplateViewNode.vue'
 import SelectedTemplateModal from '@/components/project/SelectTemplateModal.vue'
 import InfoField from '@/components/common/SideInfoField.vue'
 import ParticipantSelectModal from '@/components/approval/ParticipantSelectModal.vue'
-
 import PipePage from '@/views/test/PipePage.vue'
+
+import api from '@/api.js'
+
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 
@@ -326,6 +341,8 @@ const nodeTypes = {
 
 const user = useUserStore();
 const router = useRouter();
+
+
 
 // 프로젝트 작성 정보
 const projectName = ref('');
@@ -343,14 +360,25 @@ const baseLineDuration = computed(() => {
 });
 
 const durationDifference = computed(() => {
-  if (!baseLineDuration.value || !duration.value) return null;
-  return baseLineDuration.value - duration.value;
+  if (!workingDuration.value || !duration.value) return null;
+  return workingDuration.value - duration.value;
 });
 
 const formatDate = (date) => {
   const pad = (n) => n.toString().padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
+
+// 베이스라인 휴일 여부
+const holidaySet = ref(new Set());  // 전체 휴일 정보 
+const isStartHoliday = ref(false)
+const isEndHoliday = ref(false)
+const isNotHoliday = (date) => {
+  return !holidayList.value.has(date);
+};
+
+const holidayList = computed(() => Array.from(holidaySet.value)); // ["2025-06-25", "2025-07-01", ...]
+
 
 
 // 자동 입력정보
@@ -383,35 +411,61 @@ const userList = ref([])    // 초대 가능 유저
 
 
 
-// 참여 부서 (템플릿 + 팀장 초대)
+// 참여 부서 (템플릿 + 팀장 초대) -> 중복 제거
 const usedDeptList = computed(() => {
-  const deptSet = new Map()
+  const deptMap = new Map();
 
-  // 1. 템플릿 노드의 부서
-  const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : []
-  nodes
-    .flatMap(node => node.data?.deptList || [])
-    .forEach(d => {
-      const id = d.id ?? d.deptId ?? d
-      const name = d.name ?? d.deptName ?? d
-      if (id && !deptSet.has(id)) {
-        deptSet.set(id, { id, name })
-      }
-    })
+  // ✅ 1. 템플릿 노드에 있는 부서 먼저 추가 (우선순위 높음)
+  const templateDeptIds = new Set();
 
-  // 2. 선택된 팀장의 부서
+  const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : [];
+  nodes.flatMap(node => node.data?.deptList || []).forEach(d => {
+    const id = d.id ?? d.deptId ?? d;
+    const name = d.name ?? d.deptName ?? d;
+    if (id && !deptMap.has(id)) {
+      deptMap.set(id, { id, name });
+      templateDeptIds.add(id); // 템플릿 부서로 등록
+    }
+  });
+
+  // ✅ 2. 팀장 초대에서 템플릿에 없는 부서만 추가
   selectedLeaders.value.forEach(user => {
-    const dept = {
-      id: user.deptId ?? user.deptName, // deptId가 없다면 name로 fallback
-      name: user.deptName
+    const id = user.deptId ?? user.deptName;
+    const name = user.deptName;
+    if (id && !templateDeptIds.has(id) && !deptMap.has(id)) {
+      deptMap.set(id, { id, name });
     }
-    if (dept.id && !deptSet.has(dept.id)) {
-      deptSet.set(dept.id, dept)
-    }
-  })
+  });
 
-  return Array.from(deptSet.values())
-})
+  return Array.from(deptMap.values());
+});
+
+
+console.log('참여 부서', usedDeptList)
+// 참여 팀장 삭제
+function removeLeader(id) {
+  selectedLeaders.value = selectedLeaders.value.filter(user => user.id !== id)
+}
+// 템플릿선택 시 팀 자동 선택
+const autoSelectLeadersFromTemplate = () => {
+  // 현재 템플릿에 포함된 부서 목록
+  const deptIds = new Set();
+  const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : [];
+
+  nodes.flatMap(node => node.data?.deptList || []).forEach(d => {
+    const id = d.id ?? d.deptId;
+    if (id) deptIds.add(id);
+  });
+
+  // 해당 부서 소속 유저 필터링
+  const deptUsers = userList.value.filter(user => deptIds.has(user.deptId));
+  const selectedIds = new Set(selectedLeaders.value.map(user => user.id));
+
+  // 중복되지 않은 유저만 추가
+  const newUsers = deptUsers.filter(user => !selectedIds.has(user.id));
+  selectedLeaders.value.push(...newUsers);
+};
+
 
 //  초대 가능한 유저 목록 가져오기
 const fetchUserList = async () => {
@@ -425,6 +479,84 @@ const fetchUserList = async () => {
   return filteredUsers;
 }
 
+// 워크 데이 기반 -> 휴일 체크
+// 전체 휴일 정보 가져오기 
+const fetchAllHolidays = async () => {
+  const res = await api.get('/api/holidays');
+  const list = res.data?.data || [];
+  holidaySet.value = new Set(list.map(h => h.date)); // ['2025-05-05', ...]
+};
+
+
+// 선택 날짜가 휴일인지 확인
+const checkIfHoliday = async (dateStr) => {
+  if (!dateStr) return false;
+  try {
+    const res = await api.get(`/api/holidays/check?date=${dateStr}`);
+    return res.data?.data?.isHoliday || false;
+  } catch (err) {
+    console.error('🚫 휴일 확인 실패:', err);
+    return false;
+  }
+};
+
+// 워크데이 기반 소요일 계산
+const workingDuration = computed(() => {
+  if (!startDate.value || !endDate.value) return null;
+
+  const start = new Date(startDate.value);
+  const end = new Date(endDate.value);
+  const holidays = holidayList.value;
+
+  let count = 0;
+  const date = new Date(start);
+
+  while (date <= end) {
+    const iso = date.toISOString().slice(0, 10);
+    const day = date.getDay(); // 0 = 일, 6 = 토
+    if (day !== 0 && day !== 6 && !holidays.includes(iso)) {
+      count++;
+    }
+    date.setDate(date.getDate() + 1);
+  }
+
+  return count;
+});
+
+// 시작-마감 베이스라인 정보 감지
+watch(startDate, async (newVal) => {
+  isStartHoliday.value = false;
+  if (!newVal) return;
+
+  const date = new Date(newVal);
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+  const isHoliday = holidaySet.value.has(newVal);
+
+  if (isWeekend || isHoliday) {
+    isStartHoliday.value = true;
+    startDate.value = '';
+    alert('주말 또는 공휴일은 선택할 수 없습니다.');
+  }
+});
+
+watch(endDate, async (newVal) => {
+  isEndHoliday.value = false;
+  if (!newVal) return;
+
+  const date = new Date(newVal);
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+  const isHoliday = holidaySet.value.has(newVal);
+
+  if (isWeekend || isHoliday) {
+    isEndHoliday.value = true;
+    endDate.value = '';
+    alert('주말 또는 공휴일은 선택할 수 없습니다.');
+  }
+});
+// -----------------------------------------------------------------
+
+
+
 // 템플릿 리스트 가져오기 
 const fetchTemplates = async () => {
   const res = await api.get('/api/template/list');
@@ -432,12 +564,45 @@ const fetchTemplates = async () => {
   return res.data.data;
 };
 
+// 선택한 템플릿의 총 소요일 (duration + slackTime)
+const templateDuration = computed(() => {
+  return flowNodes.value.reduce((total, node) => {
+    return total + (node.data?.duration || 0) + (node.data?.slackTime || 0);
+  }, 0);
+});
+
+
+// 선택 가능한 유저 목록 필터링
+const availableLeaderCandidates = computed(() => {
+  if (!selectedTemplate.value) {
+    // 템플릿이 없으면 전체 유저 목록에서 필터 없이 리턴
+    return userList.value;
+  }
+
+  console.log('템플릿 선택 후 확인:', usedDeptList.value);
+
+  // 이미 사용된 부서 이름을 Set으로 저장
+  const usedDeptNames = new Set(
+    usedDeptList.value.map(d => d.name)
+  );
+
+  // 사용된 부서에 속하지 않은 유저만 리턴
+  return userList.value.filter(user => {
+    return !usedDeptNames.has(user.deptName);
+  });
+});
+
+
 // 팀장 초대 모달 열기
 function openLeaderModal(type) {
-    modalType.value = type
-    showLeaderModal.value = type
+  const available = availableLeaderCandidates.value
+  if (!available || available.length === 0) {
+    alert('초대할 수 있는 팀장이 없습니다.');
+    return;
+  }
+  modalType.value = type;
+  showLeaderModal.value = true;
 }
-
 // 팀장 선택 관리
 function handleLeaderSelect(selectedUsers) {
   selectedLeaders.value = selectedUsers || []
@@ -466,10 +631,29 @@ onMounted(async () => {
   }
 });
 
-// 초기화
-const resetSelection = () => {
+// 템플릿 선택 초기화
+const resetSelection = async () => {
   selectedTemplate.value = null
+  nodeList.value = []
+  edgeList.value = []
+  flowNodes.value = []
+  flowEdges.value = []
+  taskCount.value = 0
+  duration.value = 0
+  selectedLeaders.value = []
+
+  // ❗️선택 초기화 후 초대 유저 목록을 갱신
+  userList.value = await fetchUserList()
+
+  await nextTick()
+  console.log('💡 resetSelection 이후 usedDeptList:', usedDeptList.value)
+  console.log('💡 초대 가능한 유저 목록:', availableLeaderCandidates.value)
 }
+
+watch(usedDeptList, (newVal) => {
+  console.log('📌 usedDeptList 변경됨:', newVal)
+  console.log('👉 초대 가능한 유저:', availableLeaderCandidates.value)
+})
 
 // 편집 버튼 클릭
 const editTemplate = () => {
@@ -548,7 +732,8 @@ const handleSelectTemplate = async (template) => {
 
     console.log('템플릿 상세 정보 가져옴', data)
 
-    convertToFlowData()
+    await convertToFlowData()
+    autoSelectLeadersFromTemplate()
   } catch (err) {
     console.error(`템플릿 정보 가져오기 실패!`, err)
   }
