@@ -104,7 +104,7 @@ const totalDuration = computed(() => {
 });
 
 // 태스크 생성 유효성 검사
-const handleCreate = () => {
+const handleCreate = async () => {
   if (!localNode.label || !localNode.label.trim()) {
     alert('태스크명을 입력해주세요.')
     return
@@ -118,8 +118,42 @@ const handleCreate = () => {
     return
   }
 
-  emit('create', cloneDeep(localNode))
+  try {
+    const requestBody = {
+      label: localNode.label,
+      description: localNode.description,
+      startBaseLine: localNode.startBase,
+      endBaseLine: localNode.endBase,
+      projectId: 1, // ✅ 고정값 또는 props로 넘기기
+      deptList: localNode.deptList,
+      source: localNode.parentIds,  // 선행 태스크
+      target: localNode.childIds   // 후행 태스크
+    }
+
+    const response = await fetch('/api/task', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    if (!response.ok) {
+      throw new Error('태스크 생성 실패')
+    }
+
+    const result = await response.json()
+
+    alert('✅ 태스크가 성공적으로 생성되었습니다!')
+    emit('create', result.data) // 생성 결과 전달
+    emit('close') // 모달 닫기
+
+  } catch (err) {
+    console.error(err)
+    alert('❌ 태스크 생성 중 오류가 발생했습니다.')
+  }
 }
+
 
 const handleUpdate = () => {
   if (!localNode.label || !localNode.label.trim()) {
