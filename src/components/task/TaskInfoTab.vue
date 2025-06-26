@@ -49,7 +49,6 @@
         <div class="form-row">
           <template v-if="isEdit">
             <!-- 수정 모드: 드롭다운 -->
-             <!-- props.taskData?.prevTasks.map(t => t.prevWorkName)" -->
             <v-select
               v-model="task.deptNames"
               :items="deptList"
@@ -346,7 +345,6 @@ const handleDeptDropdown = async () => {
       console.warn('⚠️ 프로젝트 ID 없음');
       return;
     }
-    // /api/projects/{projectId}/participants/leaderDept
     const res = await api.get(`/api/projects/${projectId}/participants/leaderDept`);
     deptList.value = res.data.data.map(d => d.name);
     console.log('부서 목록 확인', deptList.value)

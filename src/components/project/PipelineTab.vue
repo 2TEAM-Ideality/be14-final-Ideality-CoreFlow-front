@@ -150,7 +150,7 @@ async function fetchPipeline() {
 // 부서 목록 조회
 const fetchDeptList = async () => {
   const res = await api.get(`/api/projects/${projectId}/participants/leaderDept`)
-  deptList.value = res.data.data;
+  deptList.value = res.data.data.map(d => d.name);
   console.log('✅ 부서 목록', res)
 }
 
