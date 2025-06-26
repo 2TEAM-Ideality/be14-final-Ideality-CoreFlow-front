@@ -431,6 +431,7 @@ console.log(selectedDept);
   top: 0;
   left: 0;
   width: 100%;
+  height: 100%; 
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
@@ -446,7 +447,7 @@ console.log(selectedDept);
   padding: 20px;
   border-radius: 10px;
   max-width: 600px;
-  max-height: 750px;
+  max-height: 80vh;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -475,6 +476,8 @@ console.log(selectedDept);
 
 .modal-body {
   margin-top: 20px;
+  flex-grow: 1; /* 콘텐츠 영역이 최대한 차지하도록 설정 */
+  overflow-y: auto; /* 스크롤을 활성화 */
 }
 
 .info-table {
