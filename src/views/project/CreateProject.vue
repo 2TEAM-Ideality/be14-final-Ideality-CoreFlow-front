@@ -544,14 +544,11 @@ watch(startDate, async (newVal) => {
 
   const date = new Date(newVal);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const isHoliday = await checkIfHoliday(newVal); // ✅ API로 확인
+  const isHoliday = await checkIfHoliday(newVal);
 
-  if (isWeekend || isHoliday) {
-    isStartHoliday.value = true;
-    startDate.value = '';
-    alert('주말 또는 공휴일은 선택할 수 없습니다.');
-  }
+  isStartHoliday.value = isWeekend || isHoliday;
 });
+
 
 watch(endDate, async (newVal) => {
   isEndHoliday.value = false;
@@ -559,14 +556,11 @@ watch(endDate, async (newVal) => {
 
   const date = new Date(newVal);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const isHoliday = await checkIfHoliday(newVal); // ✅ API로 확인
+  const isHoliday = await checkIfHoliday(newVal);
 
-  if (isWeekend || isHoliday) {
-    isEndHoliday.value = true;
-    endDate.value = '';
-    alert('주말 또는 공휴일은 선택할 수 없습니다.');
-  }
+  isEndHoliday.value = isWeekend || isHoliday;
 });
+
 // -----------------------------------------------------------------
 
 
@@ -705,7 +699,7 @@ const openModal = () => {
 };
 
 // 프로젝트 생성 확인 모달
-const checkSaveProject = () => {
+const checkSaveProject = async() => {
    // 🔸 공통 필수 입력값 검사
     if (!projectName.value || !startDate.value || !endDate.value) {
       alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
@@ -715,6 +709,27 @@ const checkSaveProject = () => {
     // 🔸 템플릿을 사용하지 않는 경우, 팀장은 필수
     if (!selectedTemplate.value && selectedLeaders.value.length === 0) {
       alert('템플릿을 사용하지 않는 경우, 팀장 초대는 필수입니다.');
+      return;
+    }
+    
+
+    // 시작일 검사
+    const start = new Date(startDate.value);
+    const startIsWeekend = start.getDay() === 0 || start.getDay() === 6;
+    const startIsHoliday = await checkIfHoliday(startDate.value);
+
+    if (startIsWeekend || startIsHoliday) {
+      alert('시작일은 주말 또는 공휴일로 설정할 수 없습니다.');
+      return;
+    }
+
+    // 마감일 검사
+    const end = new Date(endDate.value);
+    const endIsWeekend = end.getDay() === 0 || end.getDay() === 6;
+    const endIsHoliday = await checkIfHoliday(endDate.value);
+
+    if (endIsWeekend || endIsHoliday) {
+      alert('마감일은 주말 또는 공휴일로 설정할 수 없습니다.');
       return;
     }
     showSaveCheck.value = true;
@@ -1074,5 +1089,7 @@ const editProjectTask = (payload) => {
   background-color: #EEEFFA;
   border-radius: 5px;
 }
-
+.leftAndRight{
+  display: flex;
+}
 </style>

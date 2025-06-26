@@ -83,7 +83,7 @@ const originItems = ref([]);
 
 const fetchAttachment = async () => {
     try {
-        const res = await api.get(`/task/${taskId.value}/attachment/list`)
+        const res = await api.get(`/api/task/${taskId.value}/attachment/list`)
 
         console.log(res);
         originItems.value = res.data.data;
