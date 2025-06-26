@@ -22,7 +22,7 @@
                 :taskData="originTaskValue" 
                 :detailList = "detailList"
                 />
-             </div>
+            </div>
         </template>
 
         <template #sidebar>
