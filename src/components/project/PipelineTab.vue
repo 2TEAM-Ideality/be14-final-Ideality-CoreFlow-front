@@ -15,6 +15,8 @@ import { markRaw } from 'vue'
 import dagre from '@dagrejs/dagre'
 import { nanoid } from 'nanoid' 
 
+import pipelineData from '@/assets/data/warning-dummy.json'
+
 
 const nodeTypes = {
   task: markRaw(TaskNode)
@@ -185,10 +187,15 @@ const newTasks = ref([])        // 생성할 태스크 목록
 // 프로젝트 파이프라인 데이터 가져오기
 async function fetchPipeline() {
   try {
+    // api
     const res = await api.get(`/api/projects/${projectId}/pipeline`, {
       params: { projectId }
     })
     const data = res.data.data
+
+    // warning TEST 용 
+    // const data = pipelineData.data
+
     console.log('✅ 파이프라인 데이터 조회', data)
    
     projectName.value = data.name
@@ -234,6 +241,7 @@ async function fetchPipeline() {
         passedRate : node.passedRate,
         delayDays : node.delayDays,
         status: node.status,
+        warning: node.warning,
         deptList: Array.from(new Set(node.deptList.map(d => d.name))), // 중복 부서 제거
         toolbarVisible: false
       }
@@ -855,14 +863,33 @@ function handleCloseModal() {
         <!-- 상단 메뉴 -->
         <div class="d-flex justify-space-between align-center mb-2">
           <h3 class="text-h6">📌 {{ projectName }}</h3>
-          <div style="display:flex; flex-direction: row;">
+          <div style="display: flex; flex-direction: row; gap: 20px; background-color: #F8F9FA; border-radius: 15px; padding: 15px 30px; margin-left: auto;">
+            <!-- 총 소요일 -->
             <div style="display: flex; flex-direction: column; font-size: 14px;">
-              <div style="color:#484848">지연일</div>
-                <span style="color: #6750A4; font-size: 20px;" ><strong>{{ projectInfo.delayDays }} 일</strong></span>
+              <div style="color:#484848">총 소요일</div>
+              <span style="color: #6750A4; font-size: 20px;"><strong>{{ projectInfo.delayDays }} 일</strong></span>
+            </div>
+
+            <!-- 전체 태스크 -->
+            <div style="display: flex; flex-direction: column; font-size: 14px;">
+              <div style="color:#484848">전체 태스크</div>
+              <span style="color: #6750A4; font-size: 20px;"><strong>{{ projectInfo?.nodeList?.length || 0 }} 개</strong></span>
+            </div>
+
+            <!-- 부서 목록 -->
+            <div style="display: flex; flex-direction: column; font-size: 14px;">
+              <div style="color:#484848">부서 목록</div>
+              <div class="chip-container" >
+                <v-chip
+                  size="small"
+                  variant="outlined"
+                  v-for="dept in deptList"
+                  :key="dept.deptId"
+                  style="margin-right: 3px;"
+                >
+                  {{ dept.name }}
+                </v-chip>
               </div>
-              <div style="display: flex; flex-direction: column; font-size: 14px;">
-                <div  style="color:#484848">전체 태스크</div>
-                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo?.nodeList?.length ||0  }} 개</strong></span>
             </div>
           </div>
           <v-btn icon @click="showFullscreenView = false" variant="plain">

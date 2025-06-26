@@ -40,8 +40,12 @@ const showCompleteModal = ref(false)    // 완료 처리 모달
 const confirmDialog = ref(false)
 const confirmDeleteDialog = ref(false)  // 삭제 확인 창
 
+
 const selectedAction = ref('') // 어떤 액션 눌렀는지 저장
 
+// 지연 위험 태스크 여부 
+const isWarningActive = computed(() => props.data.warning === true)     
+// 배경색도 warning일 때 강제 적용
 
 const delay = props.data?.delayDays ?? 0
 const delayText = delay > 0 ? `+${delay}일` : '0일'
@@ -49,9 +53,17 @@ const delayColor = delay > 0 ? 'text-red' : 'text-grey'
 const progressColor = 'deep-purple-lighten-1'
 
 const status = computed(() => props.data?.status?.toLowerCase() || 'pending')
-const icon = computed(() => iconMap[status.value])
-const iconColor = computed(() => colorMap[status.value])
-const backgroundColor = computed(() => backgroundMap[status.value])
+const iconColor = computed(() =>
+  isWarningActive.value ? colorMap.warning : colorMap[status.value]
+)
+
+const icon = computed(() =>
+  isWarningActive.value ? iconMap.warning : iconMap[status.value]
+)
+
+const backgroundColor = computed(() =>
+  isWarningActive.value ? backgroundMap.warning : backgroundMap[status.value]
+)
 const statusActions = computed(() => actionMap[status.value] || ['작업 없음'])
 
 const menuVisible = ref(false)
@@ -215,16 +227,21 @@ const backgroundMap = {
 
 
 const cardStyle = computed(() => ({
-  backgroundColor: backgroundColor.value,
+  backgroundColor: isWarningActive.value ? '#FFF8E1' : backgroundColor.value,
   border: `1px solid ${iconColor.value}`,
   borderRadius: '5px',
 }))
+
 const handleStyle = {
   width: '8px',
   height: '8px',
   background: '#1e293b',
 }
 
+
+onMounted(() => {
+  console.log(props.data)
+})
 
 
 </script>
@@ -352,6 +369,10 @@ const handleStyle = {
         <div v-if="status === 'warning'">예상 마감일: {{ data.endExpect || '-' }}</div>
 
         <div v-if="status === 'cancelled' || status === 'deleted'">기간 없음</div>
+      </div>
+      <!-- ⚠️ 지연 위험 표시 -->
+      <div v-if="isWarningActive" class="warning-banner">
+        ⚠️ 지연 위험
       </div>
 
       <!-- 진행 정보 -->
@@ -514,5 +535,14 @@ const handleStyle = {
   color: white;
 }
 
-
+.warning-banner {
+  background-color: #fff3cd;
+  color: #b86a00;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-align: center;
+}
 </style>
