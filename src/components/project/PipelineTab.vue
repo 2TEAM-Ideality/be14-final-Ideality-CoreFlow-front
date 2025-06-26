@@ -69,6 +69,51 @@ function showEdgeDeleteConfirm(id) {
   })
 }
 
+// 노드만 backsapce 로 삭제 시 업데이트 함수
+async function updateNextPrevTasksAfterNodeDelete(deletedNodeId) {
+  const sid = Number(deletedNodeId)
+  const idToNameMap = Object.fromEntries(deptList.value.map(d => [d.deptId, d.deptName]))
+
+  // 삭제된 노드 기준으로 source/target 찾기
+  const prevNodes = getParentIds(sid) // 이 노드를 자식으로 갖던 노드들
+  const nextNodes = getChildIds(sid)  // 이 노드를 부모로 갖던 노드들
+
+  const updateTargets = [...new Set([...prevNodes, ...nextNodes])]
+
+  for (const tid of updateTargets) {
+    const targetNode = nodes.value.find(n => Number(n.id) === tid)
+    if (!targetNode) continue
+
+    const newPrev = getParentIds(tid).filter(id => id !== sid)
+    const newNext = getChildIds(tid).filter(id => id !== sid)
+
+    const deptNames = (targetNode.data.deptList || []).map(d =>
+      typeof d === 'number' ? idToNameMap[d] : d
+    )
+
+    const requestBody = {
+      taskName: targetNode.data.label,
+      taskId: tid,
+      projectId: Number(projectId),
+      description: targetNode.data.description,
+      deptLists: deptNames,
+      prevTaskList: newPrev,
+      nextTaskList: newNext,
+      startExpect: targetNode.data.startBase,
+      endExpect: targetNode.data.endBase
+    }
+
+    try {
+      await api.patch(`/api/task/modify/${tid}`, requestBody)
+      console.log(`✅ 노드 ${tid}의 연결 갱신 완료 (삭제된 ${sid} 반영)`)
+    } catch (err) {
+      console.error(`❌ 노드 ${tid} 갱신 실패`, err)
+    }
+  }
+}
+
+
+// 엣지만 backspace 삭제 시 업데이트 함수
 async function updateNextPrevTasksAfterEdgeDelete(sourceId, targetId) {
   const sid = Number(sourceId)
   const tid = Number(targetId)
@@ -656,6 +701,9 @@ async function handleNodesDelete(deletedNodes) {
     const nodeId = Number(node.id)
 
     try {
+      // 🔁 연결된 노드들 관계 갱신
+      await updateNextPrevTasksAfterNodeDelete(nodeId)
+
       // 서버에 소프트 삭제 요청
       await api.patch(`/api/task/delete/${nodeId}`)
 
@@ -673,7 +721,6 @@ async function handleNodesDelete(deletedNodes) {
   await nextTick()
   layoutGraph('LR')
 }
-
 
 
 // 엣지 삭제 
