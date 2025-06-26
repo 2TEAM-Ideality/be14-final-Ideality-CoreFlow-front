@@ -1,126 +1,138 @@
 <template>
-  <v-dialog v-model="isVisible" max-width="600px" persistent scrollable>
-    <v-card>
-      <v-card-title>
-        <span class="headline">세부일정 조회</span>
-        <v-btn icon @click="closeModal">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
-
-      <v-card-subtitle v-if="taskDetails">
-        <v-simple-table>
+  <div v-if="isVisible" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>세부일정 조회</h3>
+        <button class="close-btn" @click="closeModal">X</button>
+      </div>
+      <div class="modal-body" v-if="taskDetails">
+        <!-- 테이블 형식으로 정보 표시 -->
+        <table class="info-table">
           <thead>
             <tr>
-              <th class="text-left">항목</th>
-              <th class="text-left">내용</th>
+              <th colspan="2">항목</th>
+              <th colspan="2">내용</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>세부일정명</strong></td>
-              <td>
-                <v-text-field v-model="taskDetails.taskName" :disabled="!localEditMode"></v-text-field>
+              <td colspan="2"><strong>세부일정명</strong></td>
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.taskName }}</td>
+              <td colspan="2" v-if="localEditMode"><input v-model="taskDetails.taskName" class="input-field"
+                  type="text" />
               </td>
             </tr>
             <tr>
-              <td><strong>세부일정 내용</strong></td>
-              <td>
-                <v-textarea v-model="taskDetails.taskDescription" :disabled="!localEditMode"></v-textarea>
-              </td>
+              <td colspan="2"><strong>세부일정 내용</strong></td>
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.taskDescription }}</td>
+              <td colspan="2" v-if="localEditMode"><textarea v-model="taskDetails.taskDescription"
+                  class="input-field"></textarea></td>
             </tr>
+
+            <!-- 시작 베이스라인과 마감 베이스라인을 한 행에 표시 -->
             <tr>
               <td><strong>시작 베이스라인</strong></td>
               <td>{{ taskDetails.startBase }}</td>
+
               <td><strong>마감 베이스라인</strong></td>
               <td>{{ taskDetails.endBase }}</td>
+
             </tr>
+
+            <!-- 예상 시작일과 예상 마감일을 한 행에 표시 -->
             <tr>
               <td><strong>예상 시작일</strong></td>
               <td>{{ taskDetails.startExpect }}</td>
+
               <td><strong>예상 마감일</strong></td>
-              <td>
-                <v-text-field v-model="taskDetails.endExpect" v-if="localEditMode" type="date"></v-text-field>
-                <span v-if="!localEditMode">{{ taskDetails.endExpect }}</span>
-              </td>
+              <td v-if="!localEditMode">{{ taskDetails.endExpect }}</td>
+              <td v-if="localEditMode"><input v-model="taskDetails.endExpect" type="date" class="input-field" /></td>
             </tr>
+
+            <!-- 시작 베이스라인과 마감 베이스라인을 한 행에 표시 -->
             <tr>
               <td><strong>실제 시작일</strong></td>
               <td>{{ taskDetails.startReal }}</td>
+
               <td><strong>실제 마감일</strong></td>
               <td>{{ taskDetails.endReal }}</td>
+
             </tr>
+
+            <!-- 선행 일정 -->
             <tr>
               <td><strong>선행 일정</strong></td>
-              <td>{{ taskDetails.prevWorkNames.join(', ') || '없음' }}</td>
+              <td v-if="taskDetails && taskDetails.prevWorkIds && taskDetails.prevWorkIds.length > 0">{{
+                taskDetails.prevWorkNames.join(', ') }}</td>
+              <td v-else>없음</td>
+
+              <!-- 후행 일정 -->
               <td><strong>후행 일정</strong></td>
-              <td>{{ taskDetails.nextWorkNames.join(', ') || '없음' }}</td>
+              <td v-if="taskDetails && taskDetails.nextWorkIds && taskDetails.nextWorkIds.length > 0">{{
+                taskDetails.nextWorkNames.join(', ') }}</td>
+              <td v-else>없음</td>
+            </tr>
+
+            <tr>
+              <td colspan="2"><strong>진척률</strong></td>
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.progressRate }}%</td>
+              <td colspan="2" v-if="localEditMode"><input v-model="taskDetails.progressRate" type="number" min="0" max="100"
+                  class="input-field" /></td>
             </tr>
             <tr>
-              <td><strong>진척률</strong></td>
-              <td>
-                <v-text-field v-model="taskDetails.progressRate" :disabled="!localEditMode" type="number" min="0" max="100"></v-text-field>
-              </td>
+              <td colspan="2"><strong>지연일</strong></td>
+              <td colspan="2">{{ taskDetails.delayDays }}일</td>
             </tr>
+
             <tr>
-              <td><strong>지연일</strong></td>
-              <td>{{ taskDetails.delayDays }}일</td>
-            </tr>
-            <tr>
-              <td><strong>담당 부서</strong></td>
-              <td>
-                <v-select
-                  v-model="taskDetails.deptId"
-                  :items="departments"
-                  item-text="deptName"
-                  item-value="deptId"
-                  label="부서 선택"
-                  :disabled="!localEditMode"
-                  @change="onDeptChange"
-                ></v-select>
+              <td colspan="2"><strong>담당 부서</strong></td>
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.deptName }}</td>
+              <td colspan="2" v-if="localEditMode">
+                <!-- 부서 선택 드롭다운 -->
+                <select v-model="taskDetails.deptId" @change="onDeptChange" class="input-field">
+                  <option v-for="dept in departments" :key="dept.deptName.deptName.deptId" :value="dept.deptName.deptName.deptId">{{ dept.deptName.deptName.deptName }}
+                  </option>
+                </select>
               </td>
             </tr>
-            <tr v-if="taskDetails.assignees">
-              <td><strong>책임자</strong></td>
-              <td>
-                <v-select
-                  v-model="taskDetails.assignees"
-                  :items="users"
-                  item-text="name"
-                  item-value="id"
-                  label="책임자 선택"
-                  multiple
-                  :disabled="!localEditMode"
-                ></v-select>
+            
+
+            <tr v-if="taskDetails && taskDetails.assignees">
+              <td colspan="2"><strong>책임자</strong></td>
+              <td colspan="2" v-if="!localEditMode">{{taskDetails.assignees.map(a => a.name).join(', ')}}</td>
+              <td colspan="2" v-if="localEditMode">
+                <select v-model="taskDetails.assignees" class="input-field" multiple>
+                  <option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                </select>
               </td>
             </tr>
-            <tr v-if="taskDetails.participants">
-              <td><strong>참여자</strong></td>
-              <td>
-                <v-checkbox-group v-model="taskDetails.participants">
-                  <v-checkbox
-                    v-for="user in users"
-                    :key="user.id"
-                    :label="user.name"
-                    :value="user.id"
-                    :disabled="!localEditMode"
-                  ></v-checkbox>
-                </v-checkbox-group>
+            <tr v-if="taskDetails && Array.isArray(taskDetails.participants)">
+              <td colspan="2"><strong>참여자</strong></td>
+              <td colspan="2" v-if="!localEditMode">{{taskDetails.participants.map(p => p.name).join(', ')}}</td>
+              <td colspan="2" v-if="localEditMode">
+                <div v-for="user in users" :key="user.id" class="checkbox-container">
+                  <input type="checkbox" :id="'participant-' + user.id" :value="user.id"
+                    v-model="taskDetails.participants" />
+                  <label :for="'participant-' + user.id">{{ user.name }}</label>
+                </div>
               </td>
+
             </tr>
           </tbody>
-        </v-simple-table>
+        </table>
 
+        <!-- 경고 메시지 표시 -->
         <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-      </v-card-subtitle>
 
-      <v-card-actions>
-        <v-btn v-if="!isEditMode" @click="openEditModal" color="primary">수정</v-btn>
-        <v-btn v-if="isEditMode" @click="saveChanges" color="primary">저장</v-btn>
-        <v-btn @click="deleteTask" color="error">삭제</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+
+        <div class="modal-footer">
+          <button class="edit-btn" @click="openEditModal" v-if="!isEditMode">수정</button>
+          <button class="save-btn" @click="saveChanges" v-if="isEditMode">저장</button>
+          <button class="delete-btn" @click="deleteTask">삭제</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
