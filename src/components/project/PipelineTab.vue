@@ -33,7 +33,7 @@ const nodes = ref([])   // 원본 노드 데이터
 const edges = ref([])   // 원본 엣지 데이터 
 
 const deptList = ref([])    // 부서 목록 
-
+console.log(deptList.value)
 const showFullscreenView = ref(false)   // 전체 보기 
 const vueFlowRef = ref(null)    // 
 
@@ -315,23 +315,29 @@ async function handleUpdateTask(updatedData) {
   const node = nodes.value.find(n => n.id === updatedData.id)
   if (!node) return
 
-  // 1. 로컬 데이터 수정
+  // ✅ 부서 ID → 부서명 변환
+  let deptNames = updatedData.deptList
+  if (typeof deptNames?.[0] === 'number') {
+    const idToNameMap = Object.fromEntries(deptList.value.map(d => [d.deptId, d.deptName]))
+    deptNames = updatedData.deptList.map(id => idToNameMap[id]).filter(Boolean)
+  }
+
+  // 로컬 노드 데이터 반영
   Object.assign(node.data, {
     label: updatedData.label,
     description: updatedData.description,
     startBase: updatedData.startBase,
     endBase: updatedData.endBase,
-    deptList: updatedData.deptList
+    deptList: deptNames
   })
 
-  // 2. 서버에 수정 요청 전송
   try {
     const requestBody = {
-      taskName: updatedData.label,    
+      taskName: updatedData.label,
       taskId: Number(updatedData.id),
       projectId: Number(projectId),
       description: updatedData.description,
-      deptLists: updatedData.deptList,  // 이미 부서명 문자열 리스트
+      deptLists: deptNames,  // ✅ 부서명 문자열 리스트
       prevTaskList: getParentIds(updatedData.id),
       nextTaskList: getChildIds(updatedData.id),
       startExpect: updatedData.startBase,
@@ -340,15 +346,12 @@ async function handleUpdateTask(updatedData) {
 
     await api.patch(`/api/task/modify/${updatedData.id}`, requestBody)
     console.log('✅ 태스크 수정 성공')
-
-    // 선택적으로 다시 불러오기 (동기화)
-    // await fetchPipeline()
   } catch (err) {
     console.error('태스크 수정 실패:', err)
     alert('태스크 수정 요청에 실패했습니다.')
   }
 
-  // 3. 상태 초기화 및 레이아웃 재정렬
+  // 모달 상태 초기화 및 정렬
   showEditModal.value = false
   editingNode.value = null
   await nextTick()
@@ -529,12 +532,22 @@ async function onSaveTasks() {
         const parentIds = getParentIds(node.id).map(Number)
         const childIds = getChildIds(node.id).map(Number)
 
+        let deptData = node.data.deptList
+
+        // ✅ deptList 값이 숫자일 경우 → 수정용 deptName 변환 필요
+        if (typeof deptData?.[0] === 'number') {
+          const idToNameMap = Object.fromEntries(
+            deptList.value.map(d => [d.deptId, d.deptName])
+          )
+          deptData = deptData.map(id => idToNameMap[id]).filter(Boolean)
+        }
+
         const requestBody = {
           taskName: node.data.label,
           taskId: Number(node.id),
           projectId: Number(projectId),
           description: node.data.description,
-          deptLists: node.data.deptList,
+          deptLists: deptData, // ✅ 변환된 부서명 목록
           prevTaskList: parentIds,
           nextTaskList: childIds,
           startExpect: node.data.startBase,
