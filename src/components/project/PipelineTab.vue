@@ -15,12 +15,14 @@ import { markRaw } from 'vue'
 import dagre from '@dagrejs/dagre'
 import { nanoid } from 'nanoid' 
 
+
 const nodeTypes = {
   task: markRaw(TaskNode)
 }
 
 const { layout } = useLayout()
 const { fitView, zoomTo } = useVueFlow()
+const { setCenter } = useVueFlow()
 
 const route = useRoute()
 
@@ -150,7 +152,8 @@ async function fetchPipeline() {
 
 // 부서 목록 가져오기
 const fetchDeptList = async () => {
-  const res = await api.get('/api/dept/all')
+  // const res = await api.get('/api/dept/all')
+  const res = await api.get(`/api/projects/${projectId}/participants/department`)
   deptList.value = res.data.data;
   console.log('부서 목록', res)
 }
@@ -185,20 +188,22 @@ function handleStartTask(taskId) {
   console.log('Started task', taskId)
 }
 
-
+// source/target task에 null 들어가는 것 방지
 function getParentIds(nodeId) {
   return edges.value
-    .filter(e => e.target === nodeId)
-    .map(e => Number(e.source));
+    .filter(e => e.target === nodeId && e.source != null)
+    .map(e => Number(e.source))
+    .filter(id => !isNaN(id));
 }
 
 function getChildIds(nodeId) {
   return edges.value
-    .filter(e => e.source === nodeId)
-    .map(e => Number(e.target));
+    .filter(e => e.source === nodeId && e.target != null)
+    .map(e => Number(e.target))
+    .filter(id => !isNaN(id));
 }
 
-
+// 태스크 생성
 async function handleCreateNewNode(nodeData) {
   try {
     const payload = {
@@ -213,64 +218,56 @@ async function handleCreateNewNode(nodeData) {
     }
 
     const res = await api.post('/api/task', payload)
-    const saved = res.data.data
+    const savedId = res.data.data  // 단일 숫자 ID만 반환됨
 
-    console.log("✅ 태스크 생성 성공!", saved)
+    console.log("✅ 태스크 생성 성공!", savedId)
 
-    const node = {
-      id: String(saved.id),
+    nodes.value.push({
+      id: String(savedId),
       type: 'task',
-      position: { x: 200, y: 200 + nodes.value.length * 100 },
+      position: { x: 0, y: 0 }, // 임시 위치
       data: {
-        label: nodeData.label,         // ✅ 태스크명 그대로 표시됨
+        label: nodeData.label,
         description: nodeData.description,
         startBase: nodeData.startBase,
         endBase: nodeData.endBase,
-        deptList: nodeData.deptList,
-        toolbarVisible: false,
         status: 'pending',
-        progressRate: 0,
-        passedRate: 0,
-        delayDays: 0
+        deptList: nodeData.deptList,
+        toolbarVisible: false
+      }
+    })
+
+    if (nodeData.parentIds?.length) {
+      for (const parentId of nodeData.parentIds) {
+        edges.value.push({
+          id: `e-${parentId}-${savedId}`,
+          source: String(parentId),
+          target: String(savedId),
+          type: 'bezier',
+          animated: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left
+        })
       }
     }
 
-    nodes.value.push(node)
-
-    // 연결 처리 (parent/child edges)
-    for (const parentId of nodeData.parentIds || []) {
-      edges.value.push({
-        id: `e-${parentId}-${node.id}`,
-        source: String(parentId),
-        target: node.id,
-        type: 'bezier',
-        animated: true,
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left
-      })
-    }
-
-    for (const childId of nodeData.childIds || []) {
-      edges.value.push({
-        id: `e-${node.id}-${childId}`,
-        source: node.id,
-        target: String(childId),
-        type: 'bezier',
-        animated: true,
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left
-      })
-    }
-
     await nextTick()
-    layoutGraph('LR')
+    await layoutGraph('LR') // ✅ 위치 계산 먼저
+
+    // ✅ 정확한 위치 반영 후 중심 이동
+    const createdNode = nodes.value.find(n => n.id === String(savedId))
+    if (createdNode) {
+      setCenter(createdNode.position.x, createdNode.position.y, {
+        zoom: 1.5,
+        duration: 500
+      })
+    }
 
   } catch (err) {
     console.error('태스크 생성 실패:', err)
     alert('태스크 생성 중 오류 발생')
   }
 }
-
 
 
 // 태스크 수정 모달 
@@ -393,34 +390,35 @@ async function onAddNode(parentId = null) {
   }
   
   try {
+    console.log("+ 버튼으로 후행 태스크 생성 요청", body)
     const res = await api.post('/api/task', body)
-    const savedTask = res.data.data
+    const savedTaskId = res.data.data  // 숫자 또는 문자열
+    console.log("✅ + 버튼으로 후행 태스크 생성 완료", savedTaskId)
 
     const node = {
-      id: String(savedTask.id),
+      id: String(savedTaskId),
       type: 'task',
       position: { x: 200, y: 200 + nodes.value.length * 100 },
       data: {
-        ...newNodeData,
-        ...savedTask,
+        ...newNodeData,         // 이 안에 label, deptList 등 있음
         toolbarVisible: false
       }
     }
 
     nodes.value.push(node)
 
-    // ✅ 앞 노드만 연결
     if (parentId) {
       edges.value.push({
-        id: `e-${parentId}-${savedTask.id}`,
-        source: parentId,
-        target: String(savedTask.id),
+        id: `e-${parentId}-${savedTaskId}`,
+        source: String(parentId),
+        target: String(savedTaskId),
         type: 'bezier',
         animated: true,
         sourcePosition: Position.Right,
         targetPosition: Position.Left
       })
     }
+
 
     await nextTick()
     layoutGraph('LR')
@@ -472,19 +470,49 @@ async function onAddNode(parentId = null) {
 
 
 async function onSaveTasks() {
+  console.log('📌 현재 노드 목록', nodes.value)
   try {
     showFullscreenView.value = false
     const idMap = new Map()
 
     // 1. 새 태스크 저장
-    for (const node of newTasks.value) {
-      // 생략된 유효성 검사 & 저장...
-      const res = await api.post('/api/task', body)
-      const realId = res.data.data.taskId
-      idMap.set(node.id, realId)
-    }
+    // for (const node of newTasks.value) {
+    //   const payload = {
+    //     label: node.data.label,
+    //     description: node.data.description,
+    //     startBaseLine: node.data.startBase,
+    //     endBaseLine: node.data.endBase,
+    //     projectId: Number(projectId),
+    //     deptList: node.data.deptList || [],
+    //     source: getParentIds(node.id).filter(Boolean),
+    //     target: getChildIds(node.id).filter(Boolean)
+    //     // source: getParentIds(node.id),  // 기존 엣지로부터 부모 추출
+    //     // target: getChildIds(node.id)
+    //   }
 
-    // 2. 노드 ID 변경
+    //   const res = await api.post('/api/task', payload)
+    //   const realId = res.data.data.taskId
+    //   idMap.set(node.id, realId)
+    // }
+
+    // ✅ 2. 엣지 먼저 갱신
+    edges.value = edges.value.map(e => {
+      const newSource = idMap.get(e.source) || e.source
+      const newTarget = idMap.get(e.target) || e.target
+
+      // 👇 에러 방지용 로그
+      if (!newSource || !newTarget) {
+        console.warn('⚠️ 엣지 소스/타겟 ID 중 null 있음:', e)
+      }
+
+      return {
+        ...e,
+        id: `e-${newSource}-${newTarget}`,
+        source: String(newSource),
+        target: String(newTarget)
+      }
+    })
+    // ✅ 3. 노드 ID 갱신
     nodes.value = nodes.value.map(n => {
       const newId = idMap.get(n.id)
       if (!newId) return n
@@ -494,73 +522,42 @@ async function onSaveTasks() {
         data: { ...n.data }
       }
     })
-
-    // 3. 엣지 ID 변경
-    edges.value = edges.value.map(e => {
-      const newSource = idMap.get(e.source) || e.source
-      const newTarget = idMap.get(e.target) || e.target
-      return {
-        ...e,
-        id: `e-${newSource}-${newTarget}`,
-        source: String(newSource),
-        target: String(newTarget)
-      }
-    })
-
-    // ✅ 4. 기존 태스크 연결 업데이트
+    
+    // ✅ 4. 이제 getParentIds / getChildIds 안전하게 사용 가능
     for (const node of nodes.value) {
       if (!idMap.has(node.id)) {
         const parentIds = getParentIds(node.id).map(Number)
         const childIds = getChildIds(node.id).map(Number)
 
-        // 기존 관계 정보와 현재 관계 정보 비교해서 달라졌을 경우에도 갱신
-        const prev = node.data.parentIds || []
-        const next = node.data.childIds || []
-
-        const isRelationChanged =
-          JSON.stringify(prev.sort()) !== JSON.stringify(parentIds.sort()) ||
-          JSON.stringify(next.sort()) !== JSON.stringify(childIds.sort())
-
-        // 조건: 내용이 바뀌었거나, 관계가 바뀌었을 경우
-        if (
-          node.label !== node.data.taskName || 
-          node.description !== node.data.description ||
-          isRelationChanged
-        ) {
-          const requestBody = {
-            taskName: node.data.label,
-            taskId: Number(node.id),
-            projectId: Number(projectId),
-            description: node.data.description,
-            deptLists: node.data.deptList,
-            prevTaskList: parentIds,
-            nextTaskList: childIds,
-            startExpect: node.data.startBase,
-            endExpect: node.data.endBase
-          }
-
-          console.log(`📌 태스크 수정 요청: ${node.id}`, requestBody)
-          await api.patch(`/api/task/modify/${node.id}`, requestBody)
-
-          // 관계 갱신을 위해 현재 관계 정보를 data에 반영
-          node.data.parentIds = parentIds
-          node.data.childIds = childIds
+        const requestBody = {
+          taskName: node.data.label,
+          taskId: Number(node.id),
+          projectId: Number(projectId),
+          description: node.data.description,
+          deptLists: node.data.deptList,
+          prevTaskList: parentIds,
+          nextTaskList: childIds,
+          startExpect: node.data.startBase,
+          endExpect: node.data.endBase
         }
+
+        console.log(`📌 태스크 수정 요청: ${node.id}`, requestBody)
+        await api.patch(`/api/task/modify/${node.id}`, requestBody)
       }
     }
 
-    newTasks.value = []
+        newTasks.value = []
 
-    await nextTick()
-    layoutGraph('LR')
-    fitView()
+        await nextTick()
+        layoutGraph('LR')
+        fitView()
 
-    console.log('✅ 전체 태스크 저장 및 연결 반영 완료')
-  } catch (err) {
-    console.error('편집 완료 중 오류 발생:', err)
-    alert('편집 완료 중 오류가 발생했습니다.')
-  }
-}
+        console.log('✅ 전체 태스크 저장 및 연결 반영 완료')
+      } catch (err) {
+        console.error('편집 완료 중 오류 발생:', err)
+        alert('편집 완료 중 오류가 발생했습니다.')
+      }
+    }
 
 
 
@@ -629,7 +626,7 @@ watch(showFullscreenView, async (isOpen) => {
     <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
       <NewTaskModal
         v-model:show="showNewTask"
-        :projectId="projectId"
+        :projectId="Number(projectId)"
         :deptList="deptList"
         :existingNodes="nodes"
         :initialData="editingNode"
