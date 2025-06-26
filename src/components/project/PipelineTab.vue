@@ -33,7 +33,6 @@ const nodes = ref([])   // 원본 노드 데이터
 const edges = ref([])   // 원본 엣지 데이터 
 
 const deptList = ref([])    // 부서 목록 
-console.log(deptList.value)
 const showFullscreenView = ref(false)   // 전체 보기 
 const vueFlowRef = ref(null)    // 
 
@@ -43,7 +42,6 @@ const editingNode = ref(null)       // 수정 대상 태스크
 
 const newTasks = ref([])        // 생성할 태스크 목록 
 
-console.log(projectInfo.value)
 
 
 // 프로젝트 파이프라인 데이터 가져오기
@@ -53,8 +51,7 @@ async function fetchPipeline() {
       params: { projectId }
     })
     const data = res.data.data
-    console.log(data)
-    // projectInfo.value = data
+    console.log('✅ 파이프라인 데이터 조회', data)
    
     projectName.value = data.name
     
@@ -150,12 +147,11 @@ async function fetchPipeline() {
   }
 }
 
-// 부서 목록 가져오기
+// 부서 목록 조회
 const fetchDeptList = async () => {
-  // const res = await api.get('/api/dept/all')
-  const res = await api.get(`/api/projects/${projectId}/participants/department`)
+  const res = await api.get(`/api/projects/${projectId}/participants/leaderDept`)
   deptList.value = res.data.data;
-  console.log('부서 목록', res)
+  console.log('✅ 부서 목록', res)
 }
 
 onMounted(() => {
@@ -185,7 +181,7 @@ async function handleNodesInitialized() {
 
 function handleStartTask(taskId) {
   // 태스크 시작 로직
-  console.log('Started task', taskId)
+  console.log('✅ Started task', taskId)
 }
 
 // source/target task에 null 들어가는 것 방지
@@ -300,7 +296,7 @@ function onEditNode(nodeId) {
 
 // 태스크 삭제 연결
 async function handleDeleteTask(nodeId) {
-  console.log("태스크 삭제하러 옴")
+  console.log("✅ 태스크 삭제 요청")
   try {
     // 서버에 삭제 요청 (실제로는 soft-delete 처리)
     await api.patch(`/api/task/delete/${nodeId}`)
@@ -439,45 +435,6 @@ async function onAddNode(parentId = null) {
   }
 }
 
-// function onAddNode(parentId = null) {
-//   const newId = nanoid(6)
-//   const newNode = {
-//     id: newId,
-//     type: 'task',
-//     position: { x: 200, y: 200 + nodes.value.length * 100 },
-//     data: {
-//       label: `새 태스크`,
-//       description: '',
-//       deptList: [],
-//       duration: null,
-//       slackTime: null,
-//       status: 'pending',
-//       progressRate: 0,
-//       passedRate: 0,
-//       delayDays: 0,
-//       toolbarVisible: false
-//     }
-//   }
-
-//   nodes.value.push(newNode)
-//   newTasks.value.push(newNode) // 🔥 저장 대상에 추가
-
-//   if (parentId) {
-//     edges.value.push({
-//       id: `e-${parentId}-${newId}`,
-//       source: parentId,
-//       target: newId,
-//       type: 'bezier',
-//       animated: true,
-//       sourcePosition: Position.Right,
-//       targetPosition: Position.Left
-//     })
-//   }
-
-//   nextTick(() => {
-//     layoutGraph('LR')
-//   })
-// }
 
 
 async function onSaveTasks() {
@@ -486,27 +443,7 @@ async function onSaveTasks() {
     showFullscreenView.value = false
     const idMap = new Map()
 
-    // 1. 새 태스크 저장
-    // for (const node of newTasks.value) {
-    //   const payload = {
-    //     label: node.data.label,
-    //     description: node.data.description,
-    //     startBaseLine: node.data.startBase,
-    //     endBaseLine: node.data.endBase,
-    //     projectId: Number(projectId),
-    //     deptList: node.data.deptList || [],
-    //     source: getParentIds(node.id).filter(Boolean),
-    //     target: getChildIds(node.id).filter(Boolean)
-    //     // source: getParentIds(node.id),  // 기존 엣지로부터 부모 추출
-    //     // target: getChildIds(node.id)
-    //   }
-
-    //   const res = await api.post('/api/task', payload)
-    //   const realId = res.data.data.taskId
-    //   idMap.set(node.id, realId)
-    // }
-
-    // ✅ 2. 엣지 먼저 갱신
+    // ✅ 엣지 먼저 갱신
     edges.value = edges.value.map(e => {
       const newSource = idMap.get(e.source) || e.source
       const newTarget = idMap.get(e.target) || e.target
@@ -523,7 +460,7 @@ async function onSaveTasks() {
         target: String(newTarget)
       }
     })
-    // ✅ 3. 노드 ID 갱신
+    // ✅ 노드 ID 갱신
     nodes.value = nodes.value.map(n => {
       const newId = idMap.get(n.id)
       if (!newId) return n
@@ -534,7 +471,7 @@ async function onSaveTasks() {
       }
     })
     
-    // ✅ 4. 이제 getParentIds / getChildIds 안전하게 사용 가능
+    // ✅
     for (const node of nodes.value) {
       if (!idMap.has(node.id)) {
         const parentIds = getParentIds(node.id).map(Number)
