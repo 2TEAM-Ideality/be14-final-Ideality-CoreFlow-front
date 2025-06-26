@@ -1,8 +1,10 @@
 <template>
-    <v-container class="py-4" @click="clearSelection">
-        <h3 class="mb-5">결재 내역</h3>
-        <v-tabs v-model="currentTab" background-color="transparent" class="approval-tab">
+    <v-container @click="clearSelection" style="padding: 0;">
+        <!-- <h3 class="mb-5">결재 내역</h3> -->
+        <v-tabs v-model="currentTab" background-color="transparent" class="approval-tab" >
             <v-tab value="received"  @click="selectTab('received')">수신</v-tab>
+            <v-tab value="sent"  @click="selectTab('sent')">발신</v-tab>
+            <v-tab value="sent"  @click="selectTab('sent')">대기 중</v-tab>
             <v-tab value="sent"  @click="selectTab('sent')">발신</v-tab>
         </v-tabs>
         <input type="text" placeholder="검색 🔍" class="approval-search" v-model="searchApproval"/>

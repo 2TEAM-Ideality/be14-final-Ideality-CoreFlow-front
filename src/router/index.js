@@ -107,7 +107,8 @@ const routes = [
   {
     path: '/approval',
     name: 'Approval',
-    component: () => import('@/views/approval/Approval.vue')
+    // component: () => import('@/views/approval/Approval.vue')
+    component: () => import('@/views/approval/NewApproval.vue')
   },
 
   {
