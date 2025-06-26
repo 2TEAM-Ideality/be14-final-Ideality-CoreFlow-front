@@ -23,9 +23,9 @@
                 :detailList = "detailList"
                 />
 
-              
-
-             </div>
+          
+               <DetailTab v-show="false" :taskData="originTaskValue" />
+    </div>
         </template>
 
         <template #sidebar>

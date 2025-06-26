@@ -48,6 +48,7 @@
         <!-- :taskId="taskId" -->
 
       <TaskCommentInput
+        :projectId="task.projectId"
         :replyTargetId="replyTargetId"
         :replyTargetUser="replyTargetUser"
         :editData="editData"
