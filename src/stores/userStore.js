@@ -3,6 +3,9 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import api from '@/api'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 export const useUserStore = defineStore('user', () => {
     const id = ref(null)
@@ -78,6 +81,7 @@ export const useUserStore = defineStore('user', () => {
             const response = await api.post('/api/auth/logout')
             console.log('로그아웃 요청 완료')
             console.log(response.data.data)
+            router.push('/login')
             alert(response.data.message);
         } catch (e) {
             console.warn("로그아웃 실패 무시")
@@ -192,16 +196,12 @@ export const useUserStore = defineStore('user', () => {
         } catch (e) {
             console.log(e)
             forcedLogout.value = true
-            logout()
+            // logout()
             return false
         }
     }
 
     async function restoreFromStorage() {
-        const savedUserId = localStorage.getItem('userId')
-        if (savedUserId) {
-            id.value = savedUserId
-        }
         const savedUser = localStorage.getItem('user')
         const savedSchemaName = localStorage.getItem('schemaName')
         const savedAccessToken = sessionStorage.getItem('accessToken') // 저장되어 있다면 복원

@@ -27,27 +27,32 @@ import { decodeJwt } from 'jose'
     try {
       await userStore.restoreFromStorage()
       isRestored.value = true
+
+      if (!userStore.isLoggedIn) {
+        router.push('/login')
+      }
     } catch (e) {
       console.error('복원 중 오류: ', e)
+      router.push('/login')
     }
 
     startTokenWatcher()
   })
 
   // 로그인 여부 검사
-  watch(
-    () => userStore.isLoggedIn, 
-    (isLoggedIn) => {
-      if (!isRestored.value) return
+  // watch(
+  //   () => userStore.isLoggedIn, 
+  //   (isLoggedIn) => {
+  //     if (!isRestored.value) return
 
-      const currentPath = router.currentRoute.value.path
+  //     const currentPath = router.currentRoute.value.path
 
-      if (!isLoggedIn && currentPath !== '/login') {
-        router.push('/login')
-      }
-    { immediate: true }
-    }
-  )
+  //     if (!isLoggedIn && currentPath !== '/login') {
+  //       router.push('/login')
+  //     }
+  //   },
+  //   { immediate: true }
+  // )
 
   // 토큰 감시 함수
   function startTokenWatcher() {

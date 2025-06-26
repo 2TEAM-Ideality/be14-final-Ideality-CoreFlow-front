@@ -163,19 +163,19 @@ router.beforeEach(async (to, from, next) => {
   const schema = localStorage.getItem('schemaName')
 
     // 복원 먼저 시도 (초기 진입 대비)
-  if (!userStore.accessToken && localStorage.getItem('user')) {
-    await userStore.restoreFromStorage()
-  }
+  // if (!userStore.accessToken && localStorage.getItem('user')) {
+  //   await userStore.restoreFromStorage()
+  // }
 
-  const isLoggedIn = userStore.isLoggedIn
+  // const isLoggedIn = userStore.isLoggedIn
 
-  if (to.path !== '/login' && !isLoggedIn) {
-    next('/login')
-  } else if (to.path === '/login' && isLoggedIn) {
-    next('/')
-  } else {
-    next()
-  }
+  // if (to.path !== '/login' && !isLoggedIn) {
+  //   next('/login')
+  // } else if (to.path === '/login' && isLoggedIn) {
+  //   next('/')
+  // } else {
+  //   next()
+  // }
 
   if (to.path.startsWith('/admin')) {
     const hasAdminRole = userStore.roles.includes('ADMIN')
