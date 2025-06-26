@@ -23,10 +23,15 @@ import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
+import { useUpdateStore } from '@/stores/updateStore'
+
 import api from '@/api';
+
 
 const route = useRoute();
 const userStore = useUserStore();
+const updateStore = useUpdateStore()
+
 
 // 테이블 헤더로 넣을 값
 const customHeaders = [
@@ -169,6 +174,18 @@ function applyFilters() {
 watch(searchKeyword, () => {
     applyFilters()
 })
+
+
+watch(
+  () => updateStore.shouldRefreshSearchHistory,
+  (val) => {
+    if (val) {
+      fetchAttachment()             // 실제 다시 불러오기
+      updateStore.acknowledgeSearchHistoryUpdate() // 신호 초기화
+    }
+  }
+)
+
 
 onMounted(async () => {
     await fetchAttachment();

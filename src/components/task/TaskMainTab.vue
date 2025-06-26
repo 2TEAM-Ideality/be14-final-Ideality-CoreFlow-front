@@ -20,16 +20,13 @@
       />
 
     <v-dialog v-model="showModal" max-width="700">
-      <v-card>
-        <v-card-title class="d-flex justify-space-between align-center">
+      <v-card style="padding: 5%; ">
+        <v-card-title class="text-h6 font-weight-bold d-flex justify-space-between align-center">
           <span>세부 일정 생성</span>
           <v-btn icon @click="closeModal">
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-
-        <v-divider></v-divider>
-
         <v-card-text>
           <v-form @submit.prevent="submitForm">
             <v-text-field label="세부 일정 제목" v-model="form.title" required></v-text-field>
@@ -62,6 +59,14 @@
               <!-- <v-text-field label="시작 베이스라인" v-model="form.startDate" type="date" required />
               <v-text-field label="마감 베이스라인" v-model="form.endDate" type="date" required /> -->
             </div>
+            
+            <!-- 워크데이 소요일 표시 -->
+            <div v-if="workingDuration !== null" class="mt-2">
+              <v-alert type="info" density="compact" variant="tonal">
+                워크데이 기준 소요일: <strong>{{ workingDuration }}일</strong>
+              </v-alert>
+            </div>
+
             <div class="inline-fields">
               <div class="field-container">
                 <div class="label-container">
@@ -120,6 +125,34 @@ import dayjs from 'dayjs'
 const holidayStore = useHolidayStore()
 const startDateError = ref('')
 const endDateError = ref('')
+const holidaySet = computed(() => holidayStore.holidaySet)
+
+// 워크 데이 기반 소요일
+const workingDuration = computed(() => {
+  if (!form.value.startDate || !form.value.endDate) return null;
+
+  const start = new Date(form.value.startDate);
+  const end = new Date(form.value.endDate);
+  let count = 0;
+  const date = new Date(start);
+
+  const holidays = holidaySet.value; // Set<string>
+
+  while (date <= end) {
+    const iso = date.toISOString().slice(0, 10);
+    const day = date.getDay(); // 일(0), 토(6)
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidays.has(iso);
+
+    if (!isWeekend && !isHoliday) {
+      count++;
+    }
+    date.setDate(date.getDate() + 1);
+  }
+
+  return count;
+});
+
 
 onMounted(() => {
   if (holidayStore.holidaySet.size === 0) {
