@@ -364,7 +364,9 @@ const handleStyle = {
             size="40"
             width="4"
           >
+          <span style="font-size: 12px;">
             {{ (data.progressRate || 0) + '%' }}
+          </span>
           </v-progress-circular>
         </div>
         <div class="metric">
@@ -375,7 +377,9 @@ const handleStyle = {
             size="40"
             width="4"
           >
+          <span style="font-size: 12px;">
             {{ (data.passedRate || 0) + '%' }}
+          </span>
           </v-progress-circular>
         </div>
         <div class="metric">
