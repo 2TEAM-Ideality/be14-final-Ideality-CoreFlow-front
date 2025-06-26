@@ -218,7 +218,7 @@
         <div class="data-label">
           <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
           <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
-          경과율
+           태스크 경과율
           </div>
         </div>
         <div class="data">

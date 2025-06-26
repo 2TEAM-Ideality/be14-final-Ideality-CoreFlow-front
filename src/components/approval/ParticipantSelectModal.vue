@@ -37,7 +37,8 @@ const isApprover = computed(() => props.type === 'approver')
 const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project' || props.type === 'leader' || props.type === 'member')
 
 onMounted(() => {
-  console.log(props.userList)
+  console.log('선택 대상들', props.userList)
+  console.log('선택 리더들', props.selectedLeaders)
   if (isApprover.value) {
     selectedUserId.value = (props.selectedApprover?.[0]?.id) ?? null
   } else {
@@ -63,10 +64,18 @@ const groupedUsers = computed(() => {
   return filtered
 })
 
+// const selectedUsers = computed(() => {
+//   return isApprover.value
+//     ? props.userList.filter(user => user.id === selectedUserId.value)
+//     : props.userList.filter(user => selectedUserIds.value.includes(user.id))
+// })
+
 const selectedUsers = computed(() => {
   return isApprover.value
-    ? props.userList.filter(user => user.id === selectedUserId.value)
-    : props.userList.filter(user => selectedUserIds.value.includes(user.id))
+    ? props.userList.filter(user => (user.id ?? user.userId) === selectedUserId.value)
+    : props.userList.filter(user =>
+        selectedUserIds.value.includes(user.userId ?? user.id)
+      )
 })
 
 function removeUser(id) {
@@ -92,9 +101,22 @@ function isIndeterminate(dept) {
   return selected.length > 0 && selected.length < users.length
 }
 
+// function toggleGroup(dept) {
+//   const users = groupedUsers.value[dept]
+//   const userIds = users.map(u => u.id)
+//   if (isAllSelected(dept)) {
+//     selectedUserIds.value = selectedUserIds.value.filter(id => !userIds.includes(id))
+//   } else {
+//     const toAdd = userIds.filter(id => !selectedUserIds.value.includes(id))
+//     selectedUserIds.value.push(...toAdd)
+//   }
+// }
+
+
 function toggleGroup(dept) {
   const users = groupedUsers.value[dept]
-  const userIds = users.map(u => u.id)
+  const userIds = users.map(u => u.userId ?? u.id)
+
   if (isAllSelected(dept)) {
     selectedUserIds.value = selectedUserIds.value.filter(id => !userIds.includes(id))
   } else {
@@ -102,6 +124,7 @@ function toggleGroup(dept) {
     selectedUserIds.value.push(...toAdd)
   }
 }
+
 
 function confirmSelection() {
   const selected = isApprover.value
@@ -123,6 +146,8 @@ watch(groupedUsers, (val) => {
     .filter(index => index !== null)
   openedPanels.value = panelList
 })
+
+console.log('그룹!!!!!!!!!!!!!', groupedUsers)
 </script>
 
 <template>
@@ -186,17 +211,12 @@ watch(groupedUsers, (val) => {
                       <v-checkbox
                         v-else
                         v-model="selectedUserIds"
-                        :value="user.id || user.userId"
+                        :value="user.userId ?? user.id"
                         density="compact"
                         hide-details
-                        @update:modelValue="checked => {
-                          if (checked) {
-                            selectedUserIds.push(user.userId)
-                            console.log('✅ 선택됨:', user.userId)
-                          } else {
-                            selectedUserIds = selectedUserIds.filter(id => id !== user.userId)
-                            console.log('❌ 해제됨:', user.name, user.id)
-                          }
+                        @update:modelValue="() => {
+                          console.log('📌 현재 선택된 ID:', [...selectedUserIds])
+                          
                         }"
                       >
                         <template #label>
