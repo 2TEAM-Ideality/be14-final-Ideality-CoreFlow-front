@@ -24,8 +24,7 @@
                 />
 
                 <DetailTab v-show="false" :taskData="originTaskValue" />
-
-             </div>
+            </div>
         </template>
 
         <template #sidebar>

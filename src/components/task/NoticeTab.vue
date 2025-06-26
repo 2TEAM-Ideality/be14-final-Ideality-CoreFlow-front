@@ -138,7 +138,7 @@ const closeDeleteModal = () => {
 
 const deleteComment = async () => {
   try {
-    await api.patch(`/comment/${deleteTargetId.value}/delete`);
+    await api.patch(`/api/comment/${deleteTargetId.value}/delete`);
     closeDeleteModal();
     await fetchComments(taskId);
   } catch (error) {
