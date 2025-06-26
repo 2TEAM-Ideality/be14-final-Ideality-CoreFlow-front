@@ -230,15 +230,17 @@
               <div class="mb-3">
                 <div class="section-label">🏢 참여 부서</div>
                 <div class="d-flex flex-wrap dept-chip-wrap mt-1">
-                  <v-chip
-                    v-for="dept in usedDeptList"
-                    :key="dept.id"
-                    size="small"
-                    color="primary"
-                    variant="tonal"
-                  >
-                    {{ dept.name }}
-                  </v-chip>
+                  <v-chip-group  multiple column>
+                    <v-chip
+                      v-for="dept in usedDeptList"
+                      :key="dept.id"
+                      size="small"
+                      color="primary"
+                      variant="tonal"
+                    >
+                      {{ dept.name }}
+                    </v-chip>
+                  </v-chip-group>
                 </div>
               </div>
             </v-card-text>
@@ -379,8 +381,6 @@ const isNotHoliday = (date) => {
 
 const holidayList = computed(() => Array.from(holidaySet.value)); // ["2025-06-25", "2025-07-01", ...]
 
-
-
 // 자동 입력정보
 const createdBy = ref(user?.deptName +" "+ user?.name +" "+ user?.jobRankName)
 const createdAt = ref(formatDate(new Date()))
@@ -446,6 +446,7 @@ console.log('참여 부서', usedDeptList)
 function removeLeader(id) {
   selectedLeaders.value = selectedLeaders.value.filter(user => user.id !== id)
 }
+
 // 템플릿선택 시 팀 자동 선택
 const autoSelectLeadersFromTemplate = () => {
   // 현재 템플릿에 포함된 부서 목록
@@ -482,11 +483,18 @@ const fetchUserList = async () => {
 // 워크 데이 기반 -> 휴일 체크
 // 전체 휴일 정보 가져오기 
 const fetchAllHolidays = async () => {
-  const res = await api.get('/api/holidays');
-  const list = res.data?.data || [];
-  holidaySet.value = new Set(list.map(h => h.date)); // ['2025-05-05', ...]
-};
+  try {
+    console.log("📡 공휴일 요청 시작");
+    const res = await api.get('/api/holidays');
 
+    const list = res.data?.data?.holidays || [];  // ✅ 핵심 수정
+    holidaySet.value = new Set(list.map(h => h.date)); // ✅ date만 추출해서 Set으로
+
+    console.log("✅ 공휴일 로딩 완료:", holidaySet.value);
+  } catch (err) {
+    console.error('❌ 공휴일 로딩 실패:', err);
+  }
+};
 
 // 선택 날짜가 휴일인지 확인
 const checkIfHoliday = async (dateStr) => {
@@ -506,15 +514,20 @@ const workingDuration = computed(() => {
 
   const start = new Date(startDate.value);
   const end = new Date(endDate.value);
-  const holidays = holidayList.value;
 
   let count = 0;
   const date = new Date(start);
 
+  const holidays = holidaySet.value; // Set<string>
+
   while (date <= end) {
     const iso = date.toISOString().slice(0, 10);
-    const day = date.getDay(); // 0 = 일, 6 = 토
-    if (day !== 0 && day !== 6 && !holidays.includes(iso)) {
+    const day = date.getDay(); // 일(0), 토(6)
+    const isWeekend = day === 0 || day === 6;
+    console.log(holidays)
+    const isHoliday = holidays.has(iso);
+
+    if (!isWeekend && !isHoliday) {
       count++;
     }
     date.setDate(date.getDate() + 1);
@@ -523,6 +536,7 @@ const workingDuration = computed(() => {
   return count;
 });
 
+
 // 시작-마감 베이스라인 정보 감지
 watch(startDate, async (newVal) => {
   isStartHoliday.value = false;
@@ -530,7 +544,7 @@ watch(startDate, async (newVal) => {
 
   const date = new Date(newVal);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const isHoliday = holidaySet.value.has(newVal);
+  const isHoliday = await checkIfHoliday(newVal); // ✅ API로 확인
 
   if (isWeekend || isHoliday) {
     isStartHoliday.value = true;
@@ -545,7 +559,7 @@ watch(endDate, async (newVal) => {
 
   const date = new Date(newVal);
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const isHoliday = holidaySet.value.has(newVal);
+  const isHoliday = await checkIfHoliday(newVal); // ✅ API로 확인
 
   if (isWeekend || isHoliday) {
     isEndHoliday.value = true;
@@ -559,8 +573,9 @@ watch(endDate, async (newVal) => {
 
 // 템플릿 리스트 가져오기 
 const fetchTemplates = async () => {
+  console.log('✅템플릿 리스트 요청')
   const res = await api.get('/api/template/list');
-  console.log("템플릿 리스트 확인", res.data.data);
+  console.log("✅템플릿 리스트 확인", res.data.data);
   return res.data.data;
 };
 
@@ -620,16 +635,27 @@ const groupedLeaders = computed(() => {
   return groups
 })
 
-// 
+
 onMounted(async () => {
   try {
-    templateList.value  = await fetchTemplates();   
-    userList.value = await fetchUserList();
-
+    await fetchAllHolidays();
   } catch (err) {
-    console.error("템플릿 목록 불러오기 실패", err);
+    console.error('❌ 공휴일 로딩 실패:', err);
+  }
+
+  try {
+    templateList.value = await fetchTemplates();
+  } catch (err) {
+    console.error('❌ 템플릿 로딩 실패:', err);
+  }
+
+  try {
+    userList.value = await fetchUserList();
+  } catch (err) {
+    console.error('❌ 유저 로딩 실패:', err);
   }
 });
+
 
 // 템플릿 선택 초기화
 const resetSelection = async () => {
@@ -654,6 +680,9 @@ watch(usedDeptList, (newVal) => {
   console.log('📌 usedDeptList 변경됨:', newVal)
   console.log('👉 초대 가능한 유저:', availableLeaderCandidates.value)
 })
+
+
+
 
 // 편집 버튼 클릭
 const editTemplate = () => {
@@ -710,7 +739,7 @@ const cancelCreate = () => {
 
 
 
-// 선택한 프로젝트 정보 가져와서 노드 리스트 가져오기 
+// 선택한 템플릿 정보 가져와서 노드 리스트 가져오기 
 const handleSelectTemplate = async (template) => {
   console.log("선택한 템플릿은", template.id)
 
@@ -794,12 +823,18 @@ const convertToFlowData = () => {
   }))
 }
 
-
+// 
+// 날짜 유틸
+// 날짜 더하는 유틸
+const addDays = (date, days) => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
 
 // 프로젝트 생성
 const saveProject = async () => {
    
-
   const payload = {
     name: projectName.value,
     description: projectDescription.value,
@@ -809,25 +844,93 @@ const saveProject = async () => {
     directorId: user.id       // 현재 로그인 사용자
   };
 
+  // 슬랙 타임 수정 
+  // 날짜 → yyyy-mm-dd 포맷
+  const formatDate = (date) => date.toISOString().slice(0, 10);
+
+  // 태스크 ID → 태스크 맵
+  const taskMap = new Map();
+  flowNodes.value.forEach(node => taskMap.set(node.id, node));
+
+  // 인접 리스트 구성
+  const inDegree = new Map();
+  const graph = new Map();
+  flowNodes.value.forEach(n => {
+    inDegree.set(n.id, 0);
+    graph.set(n.id, []);
+  });
+
+  flowEdges.value.forEach(e => {
+    graph.get(e.source).push(e.target);
+    inDegree.set(e.target, inDegree.get(e.target) + 1);
+  });
+
+  // 시작일 기준
+  const baseDate = new Date(startDate.value);
+  const taskDates = new Map(); // { id -> {start, end} }
+
+  // 위상 정렬 + 날짜 계산
+  const queue = [];
+  inDegree.forEach((deg, id) => {
+    if (deg === 0) {
+      const node = taskMap.get(id);
+      const duration = node.data?.duration || 0;
+      const start = new Date(baseDate);
+      const end = addDays(start, duration);
+      taskDates.set(id, { start, end });
+      queue.push(id);
+    }
+  });
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    const currentEnd = taskDates.get(currentId).end;
+    const slack = taskMap.get(currentId).data?.slackTime || 0;
+    const availableStart = addDays(currentEnd, slack);
+
+    for (const nextId of graph.get(currentId)) {
+      const prev = taskDates.get(nextId)?.start;
+      if (!prev || availableStart > prev) {
+        // 최신 availableStart로 갱신
+        const node = taskMap.get(nextId);
+        const duration = node.data?.duration || 0;
+        const end = addDays(availableStart, duration);
+        taskDates.set(nextId, { start: availableStart, end });
+      }
+
+      inDegree.set(nextId, inDegree.get(nextId) - 1);
+      if (inDegree.get(nextId) === 0) {
+        queue.push(nextId);
+      }
+    }
+  }
+
+  // 최종 nodeList 생성
+  const adjustedNodeList = flowNodes.value.map(n => {
+    const dates = taskDates.get(n.id);
+    return {
+      id: n.id,
+      type: n.type,
+      position: n.position,
+      data: {
+        label: n.data.label,
+        description: n.data.description,
+        deptList: n.data.deptList,
+        slackTime: n.data.slackTime,
+        duration: n.data.duration,
+        startBaseLine: formatDate(dates.start),
+        endBaseLine: formatDate(dates.end)
+      }
+    };
+  });
   // ✅ 템플릿 적용된 경우
   if (selectedTemplate.value) {
     payload.templateId = selectedTemplate.value.id;
     payload.endExpect = endDate.value;
 
     payload.templateData = {
-      nodeList: flowNodes.value.map(n => ({
-        id: n.id,
-        type: n.type,
-        position: n.position,
-        data: {
-        label: n.data.label,
-        description: n.data.description,
-        slackTime: n.data.slackTime,
-        deptList: n.data.deptList,
-        startBaseLine: n.data.startBaseLine || startDate.value, // ✅ 추가
-        endBaseLine: n.data.endBaseLine || endDate.value        // ✅ 추가
-        }
-    })),
+      nodeList: adjustedNodeList,
+
       edgeList: flowEdges.value.map(e => ({
         id: e.id,
         source: e.source,

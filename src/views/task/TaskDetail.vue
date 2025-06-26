@@ -22,6 +22,8 @@
                 :taskData="originTaskValue" 
                 :detailList = "detailList"
                 />
+
+                <DetailTab v-show="false" :taskData="originTaskValue" />
             </div>
         </template>
 
@@ -85,11 +87,7 @@ const fetchTask = async (id) => {
 
 const fetchDetailList = async (parentTaskId) => {
   try {
-    const res = await api.get('/api/work/detailList', {
-      params: {
-        parentTaskId
-      }
-    });
+    const res = await api.get(`/api/work/detailList?parentTaskId=${parentTaskId}`);
     console.log('상세 태스크 목록:', res.data.data);
     detailList.value = res.data.data;
   } catch (error) {

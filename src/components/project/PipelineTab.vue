@@ -15,12 +15,14 @@ import { markRaw } from 'vue'
 import dagre from '@dagrejs/dagre'
 import { nanoid } from 'nanoid' 
 
+
 const nodeTypes = {
   task: markRaw(TaskNode)
 }
 
 const { layout } = useLayout()
 const { fitView, zoomTo } = useVueFlow()
+const { setCenter } = useVueFlow()
 
 const route = useRoute()
 
@@ -150,7 +152,8 @@ async function fetchPipeline() {
 
 // 부서 목록 가져오기
 const fetchDeptList = async () => {
-  const res = await api.get('/api/dept/all')
+  // const res = await api.get('/api/dept/all')
+  const res = await api.get(`/api/projects/${projectId}/participants/department`)
   deptList.value = res.data.data;
   console.log('부서 목록', res)
 }
@@ -185,74 +188,86 @@ function handleStartTask(taskId) {
   console.log('Started task', taskId)
 }
 
-
+// source/target task에 null 들어가는 것 방지
 function getParentIds(nodeId) {
   return edges.value
-    .filter(e => e.target === nodeId)
-    .map(e => Number(e.source));
+    .filter(e => e.target === nodeId && e.source != null)
+    .map(e => Number(e.source))
+    .filter(id => !isNaN(id));
 }
 
 function getChildIds(nodeId) {
   return edges.value
-    .filter(e => e.source === nodeId)
-    .map(e => Number(e.target));
+    .filter(e => e.source === nodeId && e.target != null)
+    .map(e => Number(e.target))
+    .filter(id => !isNaN(id));
 }
 
-
-
-function handleCreateNewNode(newNodeData) {
-  console.log(newNodeData)
-  const newId = nanoid(6)
-
-  const node = {
-    id: newId,
-    type: 'task',
-    position: { x: 200, y: 200 + nodes.value.length * 100 },
-    data: {
-      ...newNodeData,
-      toolbarVisible: false,
-      status: 'pending',
-      progressRate: 0,
-      passedRate: 0,
-      delayDays: 0,
+// 태스크 생성
+async function handleCreateNewNode(nodeData) {
+  try {
+    const payload = {
+      label: nodeData.label,
+      description: nodeData.description,
+      startBaseLine: nodeData.startBase,
+      endBaseLine: nodeData.endBase,
+      projectId: Number(projectId),
+      deptList: nodeData.deptList,
+      source: nodeData.parentIds,
+      target: nodeData.childIds
     }
+
+    const res = await api.post('/api/task', payload)
+    const savedId = res.data.data  // 단일 숫자 ID만 반환됨
+
+    console.log("✅ 태스크 생성 성공!", savedId)
+
+    nodes.value.push({
+      id: String(savedId),
+      type: 'task',
+      position: { x: 0, y: 0 }, // 임시 위치
+      data: {
+        label: nodeData.label,
+        description: nodeData.description,
+        startBase: nodeData.startBase,
+        endBase: nodeData.endBase,
+        status: 'pending',
+        deptList: nodeData.deptList,
+        toolbarVisible: false
+      }
+    })
+
+    if (nodeData.parentIds?.length) {
+      for (const parentId of nodeData.parentIds) {
+        edges.value.push({
+          id: `e-${parentId}-${savedId}`,
+          source: String(parentId),
+          target: String(savedId),
+          type: 'bezier',
+          animated: true,
+          sourcePosition: Position.Right,
+          targetPosition: Position.Left
+        })
+      }
+    }
+
+    await nextTick()
+    await layoutGraph('LR') // ✅ 위치 계산 먼저
+
+    // ✅ 정확한 위치 반영 후 중심 이동
+    const createdNode = nodes.value.find(n => n.id === String(savedId))
+    if (createdNode) {
+      setCenter(createdNode.position.x, createdNode.position.y, {
+        zoom: 1.5,
+        duration: 500
+      })
+    }
+
+  } catch (err) {
+    console.error('태스크 생성 실패:', err)
+    alert('태스크 생성 중 오류 발생')
   }
-
-  nodes.value.push(node)
-  newTasks.value.push(node)
-
-  // 🔗 연결할 선행 태스크가 있으면 edge 생성
-  const parentIds = newNodeData.parentIds || []
-  parentIds.forEach(parentId => {
-    edges.value.push({
-      id: `e-${parentId}-${newId}`,
-      source: String(parentId),
-      target: newId,
-      type: 'bezier',
-      animated: true,
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left
-    })
-  })
-
-  // 🔗 연결할 후행 태스크가 있으면 edge 생성
-  const childIds = newNodeData.childIds || []
-  childIds.forEach(childId => {
-    edges.value.push({
-      id: `e-${newId}-${childId}`,
-      source: newId,
-      target: String(childId),
-      type: 'bezier',
-      animated: true,
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left
-    })
-  })
-
-  showNewTask.value = false
-  nextTick(() => layoutGraph('LR'))
 }
-
 
 
 // 태스크 수정 모달 
@@ -312,6 +327,7 @@ async function handleUpdateTask(updatedData) {
   // 2. 서버에 수정 요청 전송
   try {
     const requestBody = {
+      taskName: updatedData.label,    
       taskId: Number(updatedData.id),
       projectId: Number(projectId),
       description: updatedData.description,
@@ -349,7 +365,7 @@ async function onAddNode(parentId = null) {
   const newNodeData = {
     label: '새 태스크',
     description: '',
-    deptList: [], // 생성 시 부서는 선택 안된 상태라면 기본값
+    deptList: [],
     startBase: new Date().toISOString().split('T')[0],
     endBase: new Date().toISOString().split('T')[0],
     status: 'pending',
@@ -360,7 +376,7 @@ async function onAddNode(parentId = null) {
   }
 
   const parentIds = parentId ? [parentId] : []
-  const childIds = []
+  const childIds = []  // ✅ 뒤 노드 없음
 
   const body = {
     label: newNodeData.label,
@@ -369,21 +385,22 @@ async function onAddNode(parentId = null) {
     endBaseLine: newNodeData.endBase,
     projectId: Number(projectId),
     deptList: [],
-    source: parentIds,
-    target: childIds
+    source: parentIds.filter(id => id !== undefined && id !== null), // ✅ 여기!
+    target: []
   }
-
+  
   try {
+    console.log("+ 버튼으로 후행 태스크 생성 요청", body)
     const res = await api.post('/api/task', body)
-    const savedTask = res.data.data
+    const savedTaskId = res.data.data  // 숫자 또는 문자열
+    console.log("✅ + 버튼으로 후행 태스크 생성 완료", savedTaskId)
 
     const node = {
-      id: String(savedTask.id),
+      id: String(savedTaskId),
       type: 'task',
       position: { x: 200, y: 200 + nodes.value.length * 100 },
       data: {
-        ...newNodeData,
-        ...savedTask,
+        ...newNodeData,         // 이 안에 label, deptList 등 있음
         toolbarVisible: false
       }
     }
@@ -392,15 +409,16 @@ async function onAddNode(parentId = null) {
 
     if (parentId) {
       edges.value.push({
-        id: `e-${parentId}-${savedTask.id}`,
-        source: parentId,
-        target: String(savedTask.id),
+        id: `e-${parentId}-${savedTaskId}`,
+        source: String(parentId),
+        target: String(savedTaskId),
         type: 'bezier',
         animated: true,
         sourcePosition: Position.Right,
         targetPosition: Position.Left
       })
     }
+
 
     await nextTick()
     layoutGraph('LR')
@@ -452,19 +470,49 @@ async function onAddNode(parentId = null) {
 
 
 async function onSaveTasks() {
+  console.log('📌 현재 노드 목록', nodes.value)
   try {
     showFullscreenView.value = false
     const idMap = new Map()
 
     // 1. 새 태스크 저장
-    for (const node of newTasks.value) {
-      // 생략된 유효성 검사 & 저장...
-      const res = await api.post('/api/task', body)
-      const realId = res.data.data.taskId
-      idMap.set(node.id, realId)
-    }
+    // for (const node of newTasks.value) {
+    //   const payload = {
+    //     label: node.data.label,
+    //     description: node.data.description,
+    //     startBaseLine: node.data.startBase,
+    //     endBaseLine: node.data.endBase,
+    //     projectId: Number(projectId),
+    //     deptList: node.data.deptList || [],
+    //     source: getParentIds(node.id).filter(Boolean),
+    //     target: getChildIds(node.id).filter(Boolean)
+    //     // source: getParentIds(node.id),  // 기존 엣지로부터 부모 추출
+    //     // target: getChildIds(node.id)
+    //   }
 
-    // 2. 노드 ID 변경
+    //   const res = await api.post('/api/task', payload)
+    //   const realId = res.data.data.taskId
+    //   idMap.set(node.id, realId)
+    // }
+
+    // ✅ 2. 엣지 먼저 갱신
+    edges.value = edges.value.map(e => {
+      const newSource = idMap.get(e.source) || e.source
+      const newTarget = idMap.get(e.target) || e.target
+
+      // 👇 에러 방지용 로그
+      if (!newSource || !newTarget) {
+        console.warn('⚠️ 엣지 소스/타겟 ID 중 null 있음:', e)
+      }
+
+      return {
+        ...e,
+        id: `e-${newSource}-${newTarget}`,
+        source: String(newSource),
+        target: String(newTarget)
+      }
+    })
+    // ✅ 3. 노드 ID 갱신
     nodes.value = nodes.value.map(n => {
       const newId = idMap.get(n.id)
       if (!newId) return n
@@ -474,26 +522,15 @@ async function onSaveTasks() {
         data: { ...n.data }
       }
     })
-
-    // 3. 엣지 ID 변경
-    edges.value = edges.value.map(e => {
-      const newSource = idMap.get(e.source) || e.source
-      const newTarget = idMap.get(e.target) || e.target
-      return {
-        ...e,
-        id: `e-${newSource}-${newTarget}`,
-        source: String(newSource),
-        target: String(newTarget)
-      }
-    })
-
-    // ✅ 4. 기존 태스크 연결 업데이트
+    
+    // ✅ 4. 이제 getParentIds / getChildIds 안전하게 사용 가능
     for (const node of nodes.value) {
       if (!idMap.has(node.id)) {
         const parentIds = getParentIds(node.id).map(Number)
         const childIds = getChildIds(node.id).map(Number)
 
         const requestBody = {
+          taskName: node.data.label,
           taskId: Number(node.id),
           projectId: Number(projectId),
           description: node.data.description,
@@ -504,24 +541,23 @@ async function onSaveTasks() {
           endExpect: node.data.endBase
         }
 
-        console.log(`📌 기존 태스크 갱신: ${node.data.label}`, requestBody)
-
+        console.log(`📌 태스크 수정 요청: ${node.id}`, requestBody)
         await api.patch(`/api/task/modify/${node.id}`, requestBody)
       }
     }
 
-    newTasks.value = []
+        newTasks.value = []
 
-    await nextTick()
-    layoutGraph('LR')
-    fitView()
+        await nextTick()
+        layoutGraph('LR')
+        fitView()
 
-    console.log('✅ 전체 태스크 저장 및 연결 반영 완료')
-  } catch (err) {
-    console.error('편집 완료 중 오류 발생:', err)
-    alert('편집 완료 중 오류가 발생했습니다.')
-  }
-}
+        console.log('✅ 전체 태스크 저장 및 연결 반영 완료')
+      } catch (err) {
+        console.error('편집 완료 중 오류 발생:', err)
+        alert('편집 완료 중 오류가 발생했습니다.')
+      }
+    }
 
 
 
@@ -590,6 +626,7 @@ watch(showFullscreenView, async (isOpen) => {
     <v-dialog v-model="showFullscreenView" fullscreen transition="dialog-bottom-transition" persistent>
       <NewTaskModal
         v-model:show="showNewTask"
+        :projectId="Number(projectId)"
         :deptList="deptList"
         :existingNodes="nodes"
         :initialData="editingNode"
@@ -608,7 +645,7 @@ watch(showFullscreenView, async (isOpen) => {
               </div>
               <div style="display: flex; flex-direction: column; font-size: 14px;">
                 <div  style="color:#484848">전체 태스크</div>
-                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo.nodeList.length   }} 개</strong></span>
+                <span style="color: #6750A4; font-size: 20px;" ><strong>{{projectInfo?.nodeList?.length ||0  }} 개</strong></span>
             </div>
           </div>
           <v-btn icon @click="showFullscreenView = false" variant="plain">
@@ -647,7 +684,8 @@ watch(showFullscreenView, async (isOpen) => {
               <button title="정렬" @click="layoutGraph('LR')">
                 🔀 정렬
               </button>
-              <button title="편집 완료" @click="onSaveTasks">
+              <!-- @click="onSaveTasks" -->
+              <button title="편집 완료"   @click="onSaveTasks">
                 ✅ 편집 완료
               </button>
             </div>

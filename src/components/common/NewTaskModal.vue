@@ -1,9 +1,19 @@
 <script setup>
-import { watch, computed, reactive } from 'vue'
+import { watch, computed, reactive, onMounted } from 'vue'
 import cloneDeep from 'lodash/cloneDeep'
+import api from '@/api'
+import { useHolidayStore } from '@/stores/holidayStore'
+import dayjs from 'dayjs'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+
+dayjs.extend(isSameOrBefore)
+
+
+const holidayStore = useHolidayStore()
 
 const props = defineProps({
   show: Boolean,
+  projectId: Number,
   deptList: Array,
   initialData: Object,
   existingNodes: Array
@@ -14,6 +24,8 @@ const dialogVisible = computed({
   get: () => props.show,
   set: (val) => emit('update:show', val)
 })
+
+
 
 // ✅ reactive 사용
 const localNode = reactive({
@@ -27,6 +39,23 @@ const localNode = reactive({
   childIds: [] 
 })
 
+
+// 시작 날짜 문자열 ↔ Date 객체 변환
+const startBaseModel = computed({
+  get: () => localNode.startBase,
+  set: (val) => {
+    localNode.startBase = dayjs(val).format('YYYY-MM-DD')
+  }
+})
+
+const endBaseModel = computed({
+  get: () => localNode.endBase,
+  set: (val) => {
+    localNode.endBase = dayjs(val).format('YYYY-MM-DD')
+  }
+})
+
+
 watch(
   () => props.initialData,
   (val) => {
@@ -34,14 +63,14 @@ watch(
       localNode.id = val.id || ''
       localNode.label = val.data.label || ''
       localNode.description = val.data.description || ''
-      localNode.startBase = val.data.startBase || ''
-      localNode.endBase = val.data.endBase || ''
+      localNode.startBase = dayjs(val.data.startBase).format('YYYY-MM-DD') || ''
+      localNode.endBase = dayjs(val.data.endBase).format('YYYY-MM-DD') || ''
       localNode.deptList = val.data.deptList || []
       localNode.parentIds = val.data.parentIds || []
       localNode.childIds = val.data.childIds || []
     }
   },
-  { immediate: true, deep: true } // 👈 이거 추가
+  { immediate: true, deep: true }
 )
 
 
@@ -56,6 +85,24 @@ watch(() => props.show, (val) => {
     localNode.deptList = []
     localNode.parentIds = []
     localNode.childIds = []
+  }
+})
+
+watch(() => localNode.startBase, (val) => {
+  if (val instanceof Date || typeof val === 'string') {
+    localNode.startBase = dayjs(val).format('YYYY-MM-DD')
+  }
+})
+
+watch(() => localNode.endBase, (val) => {
+  if (val instanceof Date || typeof val === 'string') {
+    localNode.endBase = dayjs(val).format('YYYY-MM-DD')
+  }
+})
+
+onMounted(() => {
+  if (holidayStore.holidaySet.size === 0) {
+    holidayStore.fetchHolidays()
   }
 })
 
@@ -86,25 +133,55 @@ const filteredChildOptions = computed(() => {
 })
 
 
+// 시작일 변경 시 휴일 검사
+const handleStartDateChange = (e) => {
+  const date = e.target.value
+  if (holidayStore.isHoliday(date)) {
+    alert('시작일로 주말이나 공휴일은 선택할 수 없습니다.')
+    localNode.startBase = ''
+  } else {
+    localNode.startBase = dayjs(date).format('YYYY-MM-DD')
+  }
+}
+
+// 마감일 변경 시 휴일 검사
+const handleEndDateChange = (e) => {
+  const date = e.target.value
+  if (holidayStore.isHoliday(date)) {
+    alert('마감일로 주말이나 공휴일은 선택할 수 없습니다.')
+    localNode.endBase = ''
+  } else {
+    localNode.endBase = dayjs(date).format('YYYY-MM-DD')
+  }
+}
 
 
 
 // 총 소요일 계산 메서드
 const totalDuration = computed(() => {
-  if (!localNode.startBase || !localNode.endBase) return null;
+  if (!localNode.startBase || !localNode.endBase) return null
 
-  const start = new Date(localNode.startBase);
-  const end = new Date(localNode.endBase);
+  const start = dayjs(localNode.startBase)
+  const end = dayjs(localNode.endBase)
 
-  if (end < start) return 'invalid';
+  if (end.isBefore(start)) return 'invalid'
 
-  const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  let count = 0
+  let current = start.clone()
 
-  return diff > 0 ? diff : null;
-});
+  while (current.isSameOrBefore(end)) {
+    if (!holidayStore.isHoliday(current.format('YYYY-MM-DD'))) {
+      count++
+    }
+    current = current.add(1, 'day')
+  }
+
+  return count
+})
+
 
 // 태스크 생성 유효성 검사
-const handleCreate = () => {
+const handleCreate = async () => {
   if (!localNode.label || !localNode.label.trim()) {
     alert('태스크명을 입력해주세요.')
     return
@@ -118,7 +195,34 @@ const handleCreate = () => {
     return
   }
 
-  emit('create', cloneDeep(localNode))
+  try {
+    
+    // const payload = {
+    //   label: localNode.label,
+    //   description: localNode.description,
+    //   startBaseLine: localNode.startBase,
+    //   endBaseLine: localNode.endBase,
+    //   projectId: props.projectId, 
+    //   deptList: localNode.deptList,
+    //   source: localNode.parentIds,  // 선행 태스크
+    //   target: localNode.childIds   // 후행 태스크
+    // }
+
+    emit('create', cloneDeep(localNode))
+    emit('close')
+
+    // const res = await api.post(`/api/task`, payload)
+    // console.log('태스크 생성 성공', res.data)
+
+    // const result = res.data.data
+
+    // // 생성 성공 후 emit으로 닫기 및 외부로 전달
+    // emit('create', result)  // 생성된 데이터 필요 시 전달
+    // emit('close')           // 모달 닫기
+
+  } catch (err) {
+    console.error('태스크 생성 실패', err)
+  }
 }
 
 const handleUpdate = () => {
@@ -179,11 +283,11 @@ const getNodeLabel = (item) => {
         <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 10px;">
           <div class="input-group" style="width: 100%;">
             <label>시작 베이스라인</label>
-            <input v-model="localNode.startBase" type="date" />
+            <input v-model="localNode.startBase" type="date" @change="handleStartDateChange" value="localNode.startBase"/>
           </div>
           <div class="input-group" style="width: 100%;">
             <label>마감 베이스라인</label>
-            <input v-model="localNode.endBase" type="date" />
+            <input v-model="localNode.endBase" type="date" @change="handleEndDateChange" value="localNode.startBase"/>
           </div>
         </div>
 
@@ -191,17 +295,19 @@ const getNodeLabel = (item) => {
         <div
           v-if="totalDuration"
           style="align-self: flex-end; font-size: 12px; margin-top: -10px;"
-          :style="{ color: totalDuration === 'invalid' ? '#FF4545' : '#666' }"
+          :style="{ color: totalDuration === 'invalid' ? '#FF4545' : '#1976D2' }"
         >
           <template v-if="totalDuration === 'invalid'">
+            
             종료일은 시작일보다 이후여야 합니다
           </template>
           <template v-else>
-            총 소요일: {{ totalDuration }}일
+            <v-icon start>mdi-calendar-clock</v-icon>
+            워크데이 기반 총 소요일: <span><strong>  {{ totalDuration }}일</strong></span>
           </template>
         </div>
       </div>
-      
+
       
       <div class="input-group">
         <label>담당 부서</label>

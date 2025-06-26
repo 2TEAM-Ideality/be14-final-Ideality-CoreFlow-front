@@ -1,5 +1,5 @@
 <template>
-    <div class="login-modal">
+    <form class="login-modal" @submit.prevent="login">
         <!-- 로고 -->
         <div class="logo">
             <img src="@/assets/logo.png" />
@@ -36,7 +36,7 @@
         </div>
 
         <!-- 로그인 버튼 -->
-        <button @click="login" class="text-white py-2 box login-btn">
+        <button type="submit" class="text-white py-2 box login-btn">
             로그인
         </button>
 
@@ -50,7 +50,7 @@
         <!-- 모달창 -->
         <FindPwdModal v-if="showModal" @close="showModal = false" />
         <LoadingModal v-if="isLoading" :today="new Date()" message="로그인 중..." />
-    </div>
+    </form>
 </template>
 
 <script setup>
@@ -139,9 +139,6 @@ async function login() {
 
         await userStore.login(responseLogin);
 
-        if (responseLogin.temp) [
-            // 임시 비번 변경 모달창
-        ]
         await nextTick();
         if (localStorage.getItem("schemaName") !== 'master') {
             router.push('/');
