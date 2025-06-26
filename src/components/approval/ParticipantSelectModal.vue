@@ -127,6 +127,9 @@ function toggleGroup(dept) {
 
 
 function confirmSelection() {
+  if(props.type === 'leader') {
+      console.log('리더')
+  }
   const selected = isApprover.value
     ? props.userList.filter(u => u.id === selectedUserId.value)
     : props.userList.filter(u => selectedUserIds.value.includes(u.id))
