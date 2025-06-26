@@ -7,9 +7,19 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  selectedApprover: Array,
-  selectedViewers: Array,
+  selectedApprover: {
+    type: Array,
+    default: () => []
+  },
+  selectedViewers:{
+    type: Array,
+    default: () => []
+  },
   selectedLeaders: {
+    type: Array,
+    default: () => []
+  },
+  selectedMembers: {
     type: Array,
     default: () => []
   }

@@ -26,7 +26,8 @@
         :type="inviteType"
         :user-list="inviteList"
         :selected-approver=null
-        :selected-viewers="selectedViewers"
+        :selectedLeaders = "selectedLeaders"
+        :selectedMembers = "selectedMembers"
         @close="showInviteModal = false"
         @select="handleUserSelect"
     />
@@ -77,6 +78,10 @@ const showInviteModal = ref(false)
 const activeTab = ref('leader') // leader, member
 const inviteList = ref([])
 const inviteType = ref('leader')
+
+const selectedLeaders = ref(null)
+const selectedMembers = ref([])
+
 
 const customHeaders = [
     { title: '부서', key: 'deptName' },
@@ -154,7 +159,12 @@ const fetchInviteLeaderList = async () => {
 }
 // 초대 가능 유저 
 function handleUserSelect(selectedUsers){
-  
+  if(inviteType.value === 'leader'){
+    selectedLeaders.value = selectedUsers || []
+  }else{
+    selectedMembers.value = selectedUsers || []
+  }
+  showInviteModal = false
 }
 
 onMounted(async () => {
