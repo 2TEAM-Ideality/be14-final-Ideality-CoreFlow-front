@@ -151,7 +151,7 @@ try {
 
 const fetchDetailList = async (keyword) => {
 try {
-  const res = await api.get(`/mention/detail`, {
+  const res = await api.get(`/api/mention/detail`, {
       params: { projectId: props.projectId, taskId: taskId, mentionTarget: keyword }
   });
   const details = res.data.data || []
@@ -300,6 +300,11 @@ const removeFile = () => {
 
 // 댓글 등록
 const handleSubmit = async () => {
+  // if (!input.value.trim()) {
+  //   alert('댓글 내용을 입력해주세요.')
+  //   return
+  // }
+
   const formData = new FormData()
 
   formData.append('content', input.value)
