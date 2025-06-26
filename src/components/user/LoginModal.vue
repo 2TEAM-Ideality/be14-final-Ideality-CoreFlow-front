@@ -176,8 +176,6 @@ async function login() {
 .logo-text {
     font-family: 'Audiowide', cursive;
     font-size: 25px;
-    /*font-weight: normal; /* Audiowide는 대부분 단일 굵기 */
-    /* font-family: 'Playfair Display', serif;  원하는 폰트로 변경 */
     font-weight: bold;
 }
 
