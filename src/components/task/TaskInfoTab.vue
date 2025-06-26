@@ -152,8 +152,10 @@
                   <!-- :model-value="props.taskData?.prevTasks.map(t => t.prevWorkName)" -->
 
                 <v-select
-                  v-model="selectedPrevNames"
-                  :items="taskList.map(t=>t.label)"
+                  v-model="selectedPrevIds"
+                  :items="taskList"
+                  item-title="label"
+                  item-value="id"
                   label="선행 태스크"
                   multiple
                   chips
@@ -162,12 +164,13 @@
                   hide-details
                 />
                 </div>
-                    <!-- :model-value="props.taskData?.nextTasks.map(t => t.nextWorkName)" -->
 
                 <div style="width: 50%;">
                   <v-select
-                    v-model="selectedNextNames"
-                    :items="taskList.map(t=>t.label)"
+                    v-model="selectedNextIds"
+                    :items="taskList"
+                    item-title="label"
+                    item-value="id"
                     label="후행 태스크"
                     multiple
                     chips
@@ -291,8 +294,6 @@ const taskId = route.params.taskId
 
 const isEdit = ref(false);
 
-const warningDeadline = ref(null)
-const warningDeadlineCount = ref(0)
 
 // 태스크 수정 ? 을 위한 깊은 복사
 const originalTask = ref({});
@@ -319,38 +320,13 @@ const activeDetailList = computed(() => {
   return props.detailList.filter(d => d.status !== 'DELETED')
 })
 
-// 마감 임박 정보 가져오기 
-const fetchWarningDeadline = async () => {
-  try {
-    const res = await api.get(`/api/projects/mainPage`)
-    warningDeadline.value = res.data.data
-
-    const taskIdNum = Number(taskId)  // taskId는 문자열일 수 있으니 숫자 변환
-
-    const taskMatches = warningDeadline.value.tasks.filter(t => t.workId === taskIdNum)
-    const subtaskMatches = warningDeadline.value.subtasks.filter(s => s.parentTaskId === taskIdNum)
-
-    warningDeadlineCount.value = taskMatches.length + subtaskMatches.length
-
-    console.log('✅ 마감임박 개수:', warningDeadlineCount.value)
-  } catch (err) {
-    console.error('❌ 마감 임박 일정 조회 실패', err)
-  }
-}
-
-
 
 onMounted(() => {
   console.log(props.taskData.prevTaskList)
   handleDeptDropdown()
   fetchTaskList() // 태스크 목록 조회 
 
-  fetchWarningDeadline() 
   window.addEventListener('click', handleClickOutside);
-
-
-
-
 });
 
 onUnmounted(() => {
@@ -372,40 +348,45 @@ const deptList = ref([])
 const taskList = ref([])
 
 // 선행 후행 수정
-const selectedPrevNames = computed({
-  get: () => task.value.prevTasks.map(t => t.prevWorkName),
-  set: (newNames) => {
-    const nextNames = task.value.nextTasks.map(t => t.nextWorkName)
-
-    // 교집합 체크
-    const overlap = newNames.filter(name => nextNames.includes(name))
+const selectedPrevIds = computed({
+  get: () => task.value.prevTasks.map(t => t.prevWorkId),
+  set: (newIds) => {
+    const nextIds = task.value.nextTasks.map(t => t.nextWorkId)
+    const overlap = newIds.filter(id => nextIds.includes(id))
     if (overlap.length > 0) {
-      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlap.join(', ')}`)
+      const overlapNames = overlap
+        .map(id => taskList.value.find(t => t.id === id)?.label || id)
+      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlapNames.join(', ')}`)
       return
     }
-
-    task.value.prevTasks = newNames.map(name => {
-      const match = taskList.value.find(t => t.label === name)
-      return { prevWorkId: match?.id || null, prevWorkName: name }
-    }).filter(t => t.prevWorkId !== null)
+    task.value.prevTasks = newIds.map(id => {
+      const taskItem = taskList.value.find(t => t.id === id)
+      return {
+        prevWorkId: id,
+        prevWorkName: taskItem?.label || ''
+      }
+    })
   }
 })
 
-const selectedNextNames = computed({
-  get: () => task.value.nextTasks.map(t => t.nextWorkName),
-  set: (newNames) => {
-    const prevNames = task.value.prevTasks.map(t => t.prevWorkName)
-
-    const overlap = newNames.filter(name => prevNames.includes(name))
+const selectedNextIds = computed({
+  get: () => task.value.nextTasks.map(t => t.nextWorkId),
+  set: (newIds) => {
+    const prevIds = task.value.prevTasks.map(t => t.prevWorkId)
+    const overlap = newIds.filter(id => prevIds.includes(id))
     if (overlap.length > 0) {
-      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlap.join(', ')}`)
+      const overlapNames = overlap
+        .map(id => taskList.value.find(t => t.id === id)?.label || id)
+      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlapNames.join(', ')}`)
       return
     }
-
-    task.value.nextTasks = newNames.map(name => {
-      const match = taskList.value.find(t => t.label === name)
-      return { nextWorkId: match?.id || null, nextWorkName: name }
-    }).filter(t => t.nextWorkId !== null)
+    task.value.nextTasks = newIds.map(id => {
+      const taskItem = taskList.value.find(t => t.id === id)
+      return {
+        nextWorkId: id,
+        nextWorkName: taskItem?.label || ''
+      }
+    })
   }
 })
 

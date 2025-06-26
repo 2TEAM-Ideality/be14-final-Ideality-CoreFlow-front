@@ -36,8 +36,31 @@
             <v-textarea label="세부 일정 설명" v-model="form.description" required></v-textarea>
 
             <div class="inline-fields-baseline">
-              <v-text-field label="시작 베이스라인" v-model="form.startDate" type="date" required />
-              <v-text-field label="마감 베이스라인" v-model="form.endDate" type="date" required />
+              <!-- 주말 & 공휴일 예외 처리 반영 -->
+              <v-text-field
+                label="시작 베이스라인"
+                v-model="form.startDate"
+                type="date"
+                @change="handleStartDateChange"
+                :error="!!startDateError"
+                :error-messages="startDateError"
+                required
+                style="width: 50%;"
+              />
+
+              <v-text-field
+                label="마감 베이스라인"
+                v-model="form.endDate"
+                type="date"
+                @change="handleEndDateChange"
+                :error="!!endDateError"
+                :error-messages="endDateError"
+                required
+                :min="form.startDate"
+                style="width: 50%;"
+              />
+              <!-- <v-text-field label="시작 베이스라인" v-model="form.startDate" type="date" required />
+              <v-text-field label="마감 베이스라인" v-model="form.endDate" type="date" required /> -->
             </div>
             <div class="inline-fields">
               <div class="field-container">
@@ -68,7 +91,8 @@
             <v-checkbox v-for="user in users" :key="user.id" v-model="form.participants" :label="user.name"
               :value="user.id" density="compact" />
 
-            <v-btn type="submit" class="mt-4" color="primary" :loading="isSubmitting">추가</v-btn>
+
+            <v-btn type="submit" class="mt-4" color="#7578ee" :loading="isSubmitting">추가</v-btn>
           </v-form>
         </v-card-text>
       </v-card>
@@ -89,13 +113,45 @@ import { defineEmits } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import api from '@/api';
+import { useHolidayStore } from '@/stores/holidayStore'
+import dayjs from 'dayjs'
+
+// 주말/공휴일 예외 처리 목적
+const holidayStore = useHolidayStore()
+const startDateError = ref('')
+const endDateError = ref('')
+
+onMounted(() => {
+  if (holidayStore.holidaySet.size === 0) {
+    holidayStore.fetchHolidays()
+  }
+})
 
 
 const route = useRoute()
 
 const emit = defineEmits()
+
+const resetForm = () => {
+  form.value = {
+    title: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    department: '',
+    precedingTasks: [],
+    followingTasks: [],
+    responsible: '',
+    participants: []
+  }
+  startDateError.value = ''
+  endDateError.value = ''
+  users.value = []
+}
+
 const openModal = () => {
   console.log("버튼 클릭됨!")
+  resetForm()
   showModal.value = true // 모달을 열기 위해 상태값을 true로 설정
 }
 
@@ -145,6 +201,16 @@ const submitForm = async () => {
     alert('참여자를 입력해주세요.');
     isSubmitting.value = false;
     return;
+  }
+  if (holidayStore.isHoliday(form.value.startDate) || holidayStore.isHoliday(form.value.endDate)) {
+    alert('주말이나 공휴일은 시작일 또는 마감일로 사용할 수 없습니다.')
+    isSubmitting.value = false
+    return
+  }
+  if (dayjs(form.value.endDate).isBefore(form.value.startDate)) {
+    alert('마감일은 시작일보다 빠를 수 없습니다.')
+    isSubmitting.value = false
+    return
   }
 
   console.log(form.value.precedingTasks);
@@ -198,6 +264,46 @@ const submitForm = async () => {
 
   isSubmitting.value = false;
 };
+
+// 주말/공휴일 예외 처리
+const handleStartDateChange = (e) => {
+  const date = e.target.value
+
+  if (holidayStore.isHoliday(date)) {
+    startDateError.value = '시작일로 주말이나 공휴일은 선택할 수 없습니다.'
+    form.value.startDate = ''
+    return
+  }
+
+  if (form.value.endDate && dayjs(date).isAfter(form.value.endDate)) {
+    endDateError.value = '마감일은 시작일보다 빠를 수 없습니다.'
+    form.value.endDate = ''
+  }
+
+  startDateError.value = ''
+  form.value.startDate = date
+}
+
+const handleEndDateChange = (e) => {
+  const date = e.target.value
+
+  if (holidayStore.isHoliday(date)) {
+    endDateError.value = '마감일로 주말이나 공휴일은 선택할 수 없습니다.'
+    form.value.endDate = ''
+    return
+  }
+
+  if (form.value.startDate && dayjs(date).isBefore(form.value.startDate)) {
+    endDateError.value = '마감일은 시작일보다 빠를 수 없습니다.'
+    form.value.endDate = ''
+    return
+  }
+
+  endDateError.value = ''
+  form.value.endDate = date
+}
+
+
 
 const addPrecedingTask = () => form.value.precedingTasks.push("") // 선행 일정 추가
 const addFollowingTask = () => form.value.followingTasks.push("") // 후행 일정 추가
@@ -449,6 +555,8 @@ hr {
 .inline-fields-baseline {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
+  flex-direction: row;
 }
 
 .baseline-group {
