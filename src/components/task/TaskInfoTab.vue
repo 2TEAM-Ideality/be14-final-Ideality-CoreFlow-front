@@ -40,7 +40,9 @@
       <div style="width: 250px; height: 250px;">
         <TaskDonutChart 
         :taskInfo="props.taskData" 
-        :detailList="props.detailList"/>
+        :detailList="props.detailList"
+        :taskDeadlineWarning="warningDeadlineCount"
+        />
       </div>
      
       <!-- 차트 오른편 -->
@@ -289,7 +291,8 @@ const taskId = route.params.taskId
 
 const isEdit = ref(false);
 
-
+const warningDeadline = ref(null)
+const warningDeadlineCount = ref(0)
 
 // 태스크 수정 ? 을 위한 깊은 복사
 const originalTask = ref({});
@@ -316,11 +319,33 @@ const activeDetailList = computed(() => {
   return props.detailList.filter(d => d.status !== 'DELETED')
 })
 
+// 마감 임박 정보 가져오기 
+const fetchWarningDeadline = async () => {
+  try {
+    const res = await api.get(`/api/projects/mainPage`)
+    warningDeadline.value = res.data.data
+
+    const taskIdNum = Number(taskId)  // taskId는 문자열일 수 있으니 숫자 변환
+
+    const taskMatches = warningDeadline.value.tasks.filter(t => t.workId === taskIdNum)
+    const subtaskMatches = warningDeadline.value.subtasks.filter(s => s.parentTaskId === taskIdNum)
+
+    warningDeadlineCount.value = taskMatches.length + subtaskMatches.length
+
+    console.log('✅ 마감임박 개수:', warningDeadlineCount.value)
+  } catch (err) {
+    console.error('❌ 마감 임박 일정 조회 실패', err)
+  }
+}
+
+
+
 onMounted(() => {
   console.log(props.taskData.prevTaskList)
   handleDeptDropdown()
   fetchTaskList() // 태스크 목록 조회 
 
+  fetchWarningDeadline() 
   window.addEventListener('click', handleClickOutside);
 
 

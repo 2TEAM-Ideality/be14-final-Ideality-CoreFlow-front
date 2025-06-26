@@ -186,12 +186,21 @@ watch(groupedUsers, (val) => {
                       <v-checkbox
                         v-else
                         v-model="selectedUserIds"
-                        :value="user.id"
+                        :value="user.id || user.userId"
                         density="compact"
                         hide-details
+                        @update:modelValue="checked => {
+                          if (checked) {
+                            selectedUserIds.push(user.userId)
+                            console.log('✅ 선택됨:', user.userId)
+                          } else {
+                            selectedUserIds = selectedUserIds.filter(id => id !== user.userId)
+                            console.log('❌ 해제됨:', user.name, user.id)
+                          }
+                        }"
                       >
                         <template #label>
-                          <div style="margin-left: 8px;">{{ user.name }} {{ user.jobRoleName }}</div>
+                          <div style="margin-left: 8px;">{{ user.name }} {{ user.jobRoleName || user.jobRank}} </div>
                         </template>
                       </v-checkbox>
                     </v-col>
