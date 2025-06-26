@@ -53,6 +53,8 @@
               v-model="task.deptNames"
               :items="deptList"
               label="담당 부서"
+              item-title="name"
+              item-value="name" 
               multiple
               chips
               clearable
@@ -317,6 +319,8 @@ onMounted(() => {
   window.addEventListener('click', handleClickOutside);
 
 
+
+
 });
 
 onUnmounted(() => {
@@ -347,6 +351,7 @@ const handleDeptDropdown = async () => {
     }
     const res = await api.get(`/api/projects/${projectId}/participants/leaderDept`);
     deptList.value = res.data.data.map(d => d.name);
+    // deptList.value = res.data.data.map(d => ({ name: d.name }));
     console.log('부서 목록 확인', deptList.value)
     showDeptDropdown.value = !showDeptDropdown.value;
   } catch (error) {

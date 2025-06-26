@@ -68,15 +68,18 @@ watch(
       localNode.endBase = dayjs(val.data.endBase).format('YYYY-MM-DD') || ''
 
       // ✅ 부서명 → 부서 ID로 변환
-      const nameToIdMap = Object.fromEntries(
-        props.deptList.map(d => [d.deptName, d.deptId])
-      )
-      localNode.deptList = (val.data.deptList || [])
-        .map(name => nameToIdMap[name])
-        .filter(Boolean)
+      // const nameToIdMap = Object.fromEntries(
+      //   props.deptList.map(d => [d.deptName, d.deptId])
+      // )
+      // localNode.deptList = (val.data.deptList || [])
+      //   .map(name => nameToIdMap[name])
+      //   .filter(Boolean)
 
+      localNode.deptList = val.data.deptList
       localNode.parentIds = val.data.parentIds || []
       localNode.childIds = val.data.childIds || []
+
+      console.log('✅수정할 노드', localNode)
     }
   },
   { immediate: true, deep: true }
@@ -126,6 +129,8 @@ watch(() => localNode.endBase, (val) => {
 })
 
 onMounted(() => {
+  console.log(localNode.deptList)
+  console.log("부서 목록 확인", props.deptList)
   if (holidayStore.holidaySet.size === 0) {
     holidayStore.fetchHolidays()
   }
@@ -292,7 +297,7 @@ const getNodeLabel = (item) => {
 <template>
   <div v-if="show" class="modal-backdrop">
     <div class="modal">
-      <h3 >📌 태스크 생성</h3>
+      <h3 >📌 태스크 {{initialData ? '수정' : '생성'}}</h3>
       <div class="divider"></div>
 
       <div class="input-group">
@@ -337,13 +342,13 @@ const getNodeLabel = (item) => {
       <div class="input-group">
         <label>담당 부서</label>
         <v-select
-          v-model="localNode.deptList"
-          :items="props.deptList"
-          item-title="deptName"
-          item-value="deptId"
+          v-model="localNode.deptList"          
+          :items="props.deptList"               
+          item-title="name"
+          item-value="name"
           multiple
-          density="compact"
           chips
+          density="compact"
         />
       </div>
       <div style="display:flex; flex-direction: row; justify-content: space-between; gap: 10px;">

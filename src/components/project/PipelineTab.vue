@@ -150,7 +150,7 @@ async function fetchPipeline() {
 // 부서 목록 조회
 const fetchDeptList = async () => {
   const res = await api.get(`/api/projects/${projectId}/participants/leaderDept`)
-  deptList.value = res.data.data.map(d => d.name);
+  deptList.value = res.data.data;
   console.log('✅ 부서 목록', res)
 }
 
@@ -208,7 +208,7 @@ async function handleCreateNewNode(nodeData) {
       startBaseLine: nodeData.startBase,
       endBaseLine: nodeData.endBase,
       projectId: Number(projectId),
-      deptList: nodeData.deptList,
+      deptList: nodeData.deptList.map(d => d.id),
       source: nodeData.parentIds,
       target: nodeData.childIds
     }
@@ -279,6 +279,8 @@ function onEditNode(nodeId) {
       const idToNameMap = Object.fromEntries(deptList.value.map(d => [d.deptId, d.deptName]))
       deptNames = deptNames.map(id => idToNameMap[id]).filter(Boolean)
     }
+
+    console.log('편집 시 전달할 부서목록', deptNames)
 
     editingNode.value = {
       ...node,
