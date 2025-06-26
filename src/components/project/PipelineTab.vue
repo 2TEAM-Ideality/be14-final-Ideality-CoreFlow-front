@@ -336,7 +336,7 @@ async function handleUpdateTask(updatedData) {
     endBase: updatedData.endBase,
     deptList: deptNames
   })
-
+  console.log('✅ 업데이트 요청 확인', updatedData)
   try {
     const requestBody = {
       taskName: updatedData.label,
@@ -344,8 +344,8 @@ async function handleUpdateTask(updatedData) {
       projectId: Number(projectId),
       description: updatedData.description,
       deptLists: deptNames,  // ✅ 부서명 문자열 리스트
-      prevTaskList: getParentIds(updatedData.id),
-      nextTaskList: getChildIds(updatedData.id),
+      prevTaskList: updatedData.parentIds,
+      nextTaskList: updatedData.childIds,
       startExpect: updatedData.startBase,
       endExpect: updatedData.endBase
     }
@@ -360,6 +360,9 @@ async function handleUpdateTask(updatedData) {
   // 모달 상태 초기화 및 정렬
   showEditModal.value = false
   editingNode.value = null
+
+  // ✅ 수정 직후 파이프라인 최신화
+  await fetchPipeline()
   await nextTick()
   layoutGraph('LR')
 }
@@ -476,8 +479,8 @@ async function onSaveTasks() {
     // ✅
     for (const node of nodes.value) {
       if (!idMap.has(node.id)) {
-        const parentIds = getParentIds(node.id).map(Number)
-        const childIds = getChildIds(node.id).map(Number)
+        const parentIds = node.data.parentIds || getParentIds(node.id)
+        const childIds = node.data.childIds || getChildIds(node.id)
 
         let deptData = node.data.deptList
 
@@ -488,6 +491,7 @@ async function onSaveTasks() {
           )
           deptData = deptData.map(id => idToNameMap[id]).filter(Boolean)
         }
+        console.log('✅모든 태스크 편집 반영 확인', node)
 
         const requestBody = {
           taskName: node.data.label,
@@ -500,6 +504,7 @@ async function onSaveTasks() {
           startExpect: node.data.startBase,
           endExpect: node.data.endBase
         }
+        console.log('✅모든 태스크 편집 반영 확인',  requestBody )
 
         console.log(`📌 태스크 수정 요청: ${node.id}`, requestBody)
         await api.patch(`/api/task/modify/${node.id}`, requestBody)

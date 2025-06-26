@@ -1,5 +1,5 @@
 <script setup>
-import { watch, computed, reactive, onMounted } from 'vue'
+import { watch, computed, reactive, onMounted, toRaw } from 'vue'
 import cloneDeep from 'lodash/cloneDeep'
 import api from '@/api'
 import { useHolidayStore } from '@/stores/holidayStore'
@@ -20,13 +20,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'create', 'update:show', 'update'])
 
-const dialogVisible = computed({
-  get: () => props.show,
-  set: (val) => emit('update:show', val)
-})
-
-
-
 // ✅ reactive 사용
 const localNode = reactive({
   id: '',
@@ -39,19 +32,11 @@ const localNode = reactive({
   childIds: [] 
 })
 
-
-// 시작 날짜 문자열 ↔ Date 객체 변환
-const startBaseModel = computed({
-  get: () => localNode.startBase,
-  set: (val) => {
-    localNode.startBase = dayjs(val).format('YYYY-MM-DD')
-  }
-})
-
-const endBaseModel = computed({
-  get: () => localNode.endBase,
-  set: (val) => {
-    localNode.endBase = dayjs(val).format('YYYY-MM-DD')
+onMounted(() => {
+  console.log(localNode.deptList)
+  console.log("부서 목록 확인", props.deptList)
+  if (holidayStore.holidaySet.size === 0) {
+    holidayStore.fetchHolidays()
   }
 })
 
@@ -67,14 +52,6 @@ watch(
       localNode.startBase = dayjs(val.data.startBase).format('YYYY-MM-DD') || ''
       localNode.endBase = dayjs(val.data.endBase).format('YYYY-MM-DD') || ''
 
-      // ✅ 부서명 → 부서 ID로 변환
-      // const nameToIdMap = Object.fromEntries(
-      //   props.deptList.map(d => [d.deptName, d.deptId])
-      // )
-      // localNode.deptList = (val.data.deptList || [])
-      //   .map(name => nameToIdMap[name])
-      //   .filter(Boolean)
-
       localNode.deptList = val.data.deptList
       localNode.parentIds = val.data.parentIds || []
       localNode.childIds = val.data.childIds || []
@@ -84,8 +61,6 @@ watch(
   },
   { immediate: true, deep: true }
 )
-
-
 
 watch(() => props.show, (val) => {
   console.log("체크", props.initialData)
@@ -115,7 +90,6 @@ watch(() => props.show, (val) => {
   }
 })
 
-
 watch(() => localNode.startBase, (val) => {
   if (val instanceof Date || typeof val === 'string') {
     localNode.startBase = dayjs(val).format('YYYY-MM-DD')
@@ -128,37 +102,20 @@ watch(() => localNode.endBase, (val) => {
   }
 })
 
-onMounted(() => {
-  console.log(localNode.deptList)
-  console.log("부서 목록 확인", props.deptList)
-  if (holidayStore.holidaySet.size === 0) {
-    holidayStore.fetchHolidays()
-  }
-})
-
-
 // 선행 태스크 목록
 const filteredParentOptions = computed(() => {
-  if (!localNode.startBase) return props.existingNodes
-
   const startDate = new Date(localNode.startBase)
-
   return props.existingNodes.filter(node => {
-    const endBase = node.data?.endBase
-    if (!endBase) return false
-    return new Date(endBase) < startDate
+    const isSelf = String(node.id) === String(localNode.id) // 자기 자신 제외
+    return !isSelf
   })
 })
 
 // 후행 태스크 목록
 const filteredChildOptions = computed(() => {
-  if (!localNode.endBase) return []
-
-  const endDate = new Date(localNode.endBase)
-
   return props.existingNodes.filter(node => {
-    if (!node.data?.startBase) return false
-    return new Date(node.data.startBase) > endDate
+    const isSelf = String(node.id) === String(localNode.id) // 자기 자신 제외
+    return !isSelf
   })
 })
 
@@ -184,8 +141,6 @@ const handleEndDateChange = (e) => {
     localNode.endBase = dayjs(date).format('YYYY-MM-DD')
   }
 }
-
-
 
 // 총 소요일 계산 메서드
 const totalDuration = computed(() => {
@@ -226,29 +181,13 @@ const handleCreate = async () => {
   }
 
   try {
-    
-    // const payload = {
-    //   label: localNode.label,
-    //   description: localNode.description,
-    //   startBaseLine: localNode.startBase,
-    //   endBaseLine: localNode.endBase,
-    //   projectId: props.projectId, 
-    //   deptList: localNode.deptList,
-    //   source: localNode.parentIds,  // 선행 태스크
-    //   target: localNode.childIds   // 후행 태스크
-    // }
+    localNode.parentIds = parentIds.value
+    localNode.childIds = childIds.value
+    console.log('✅ 태스크 생성 요청 전달', localNode)
+
 
     emit('create', cloneDeep(localNode))
     emit('close')
-
-    // const res = await api.post(`/api/task`, payload)
-    // console.log('태스크 생성 성공', res.data)
-
-    // const result = res.data.data
-
-    // // 생성 성공 후 emit으로 닫기 및 외부로 전달
-    // emit('create', result)  // 생성된 데이터 필요 시 전달
-    // emit('close')           // 모달 닫기
 
   } catch (err) {
     console.error('태스크 생성 실패', err)
@@ -268,23 +207,62 @@ const handleUpdate = () => {
     alert('종료일은 시작일보다 빠를 수 없습니다.')
     return
   }
+  // 부서 ID → 이름으로 
+   console.log('전달할 부서 목록',  localNode.deptList)
+  // const deptNames = localNode.deptList
+  //   .map(id => {
+  //     const found = props.deptList.find(d => d.deptId === id)
+  //     return found?.deptName
+  //   })
+  //   .filter(Boolean)
 
-  // 부서 ID → 이름으로 변환
-  const deptNames = localNode.deptList
-    .map(id => {
-      const found = props.deptList.find(d => d.deptId === id)
-      return found?.deptName
-    })
-    .filter(Boolean)
+  console.log('전달할 부서 목록', localNode.deptList)
+    console.log('✅수정 요청 전달할 때 보낼 선행 태스크', parentIds.value)
+    console.log('✅수정 요청 전달할 때 보낼 후행 태스크', childIds.value)
+    localNode.parentIds = parentIds.value
+    localNode.childIds = childIds.value
 
-  // ✅ 즉시 수정 emit
-  emit('update', {
-    ...cloneDeep(localNode),
-    deptList: deptNames  // ✅ 부서 이름 리스트로 수정
-  })
+    console.log("✅ raw 전달 직전", toRaw(localNode))
 
-  emit('close')
-}
+    console.log("✅수정 요청 전달", localNode)
+
+    const updatePayload = {
+      ...toRaw(localNode),
+      parentIds: parentIds.value,
+      childIds: childIds.value,
+      deptList: localNode.deptList
+    }
+
+    console.log("✅최종 전달", updatePayload)
+
+    emit('update', cloneDeep(updatePayload))
+    emit('close')
+  }
+
+// 선행 후행 태스크 예외처리
+const parentIds = computed({
+  get: () => localNode.parentIds.map(id => String(id)),
+  set: (newIds) => {
+    const overlap = newIds.filter(id => localNode.childIds.includes(id))
+    if (overlap.length > 0) {
+      alert(`⛔ 동일한 태스크를 선행/후행에 중복 지정할 수 없습니다: ${overlap.join(', ')}`)
+      return
+    }
+    localNode.parentIds = newIds.map(id => String(id))
+  }
+})
+
+const childIds = computed({
+  get: () => localNode.childIds.map(id => String(id)),
+  set: (newIds) => {
+    const overlap = newIds.filter(id => localNode.parentIds.includes(id))
+    if (overlap.length > 0) {
+      alert(`⛔ 동일한 태스크를 선행/후행에 중복 지정할 수 없습니다: ${overlap.join(', ')}`)
+      return
+    }
+    localNode.childIds = newIds.map(id => String(id))
+  }
+})
 
 
 const getNodeLabel = (item) => {
@@ -345,7 +323,7 @@ const getNodeLabel = (item) => {
           v-model="localNode.deptList"          
           :items="props.deptList"               
           item-title="name"
-          item-value="name"
+          item-value="name" 
           multiple
           chips
           density="compact"
@@ -355,9 +333,8 @@ const getNodeLabel = (item) => {
         <div class="input-group" style="width: 100%;">
         <label>선행 태스크</label>
         <v-select
-          v-model="localNode.parentIds"
+          v-model="parentIds"
           :items="filteredParentOptions"
-          :disabled="!localNode.startBase"
           item-title="data.label"
           item-value="id"
           multiple
@@ -379,9 +356,8 @@ const getNodeLabel = (item) => {
         <div class="input-group" style="width: 100%;">
           <label>후행 태스크</label>
           <v-select
-            v-model="localNode.childIds"
+            v-model="childIds"
             :items="filteredChildOptions"
-            :disabled="!localNode.endBase"
             item-title="data.label"
             item-value="id"
             density="compact"
