@@ -12,12 +12,8 @@
       </v-btn>
     </div>
 
-    <component 
-      :is="selectedComponent"
-      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
-      :task-id="taskData.selectTask.taskId" 
-      :work-id="openWorkId"  
-      />
+    <component :is="selectedComponent" v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
+      :task-id="taskData.selectTask.taskId" :work-id="openWorkId" />
 
     <v-dialog v-model="showModal" max-width="700">
       <v-card>
@@ -58,8 +54,9 @@
               </div>
             </div>
             <!-- 담당 부서 & 책임자 & 참여자 -->
-            <v-select label="담당 부서" v-model="form.department" :items="departments" item-title="deptName.deptName.deptName"
-              item-value="deptName.deptName.deptId" return-object @update:modelValue="fetchUsersForDepartment" required />
+            <v-select label="담당 부서" v-model="form.department" :items="departments"
+              item-title="deptName.deptName.deptName" item-value="deptName.deptName.deptId" return-object
+              @update:modelValue="fetchUsersForDepartment" required />
 
             <v-select label="책임자" v-model="form.responsible" :items="users" item-title="name" item-value="id"
               required />
@@ -151,7 +148,7 @@ const submitForm = async () => {
   console.log(form.value.followingTasks);
   console.log('End Date:', form.value.endDate);  // 추가해서 값을 확인
 
-    // 선행 일정과 후행 일정이 비어 있으면 빈 배열로 설정하고, 빈 문자열이 포함되면 빈 배열로 처리
+  // 선행 일정과 후행 일정이 비어 있으면 빈 배열로 설정하고, 빈 문자열이 포함되면 빈 배열로 처리
   const precedingTasks = form.value.precedingTasks && form.value.precedingTasks.length > 0
     ? form.value.precedingTasks.filter(task => task !== "") // 빈 문자열 제외
     : [];
@@ -255,8 +252,8 @@ const fetchTasks = async () => {
 
 
 
-const taskStore= useTaskStore();
-const departments = computed(() => taskStore.deptNames); 
+const taskStore = useTaskStore();
+const departments = computed(() => taskStore.deptNames);
 
 
 const users = ref([]) // task 목록을 저장할 배열
@@ -266,7 +263,6 @@ const fetchUsersForDepartment = async () => {
   if (!selectedDept || !selectedDept.deptName) return;
 
   const deptName = selectedDept.deptName.deptName.deptName;
-  const userStore = useUserStore();
 
   try {
     const response = await api.get(`/api/users/dept`, {
@@ -289,9 +285,9 @@ const openWorkId = ref(null)
 // 컴포넌트가 마운트된 후 API 호출
 onMounted(() => {
   fetchTasks()
-taskStore.fetchDepartments();
+  taskStore.fetchDepartments();
   // 👉 쿼리 파라미터로 전달된 tab과 openModal 처리
-  
+
   // tab 전환
   const tabFromQuery = route.query.tab
   if (tabFromQuery && tabs.find(t => t.name === tabFromQuery)) {

@@ -28,17 +28,6 @@
               <td colspan="2" v-if="localEditMode"><textarea v-model="taskDetails.taskDescription"
                   class="input-field"></textarea></td>
             </tr>
-            <tr>
-              <td colspan="2"><strong>담당 부서</strong></td>
-              <td colspan="2" v-if="!localEditMode">{{ taskDetails.deptName }}</td>
-              <td colspan="2" v-if="localEditMode">
-                <!-- 부서 선택 드롭다운 -->
-                <select v-model="taskDetails.deptId" @change="onDeptChange" class="input-field">
-                  <option v-for="dept in departments" :key="dept.deptId" :value="dept.deptId">{{ dept.deptName }}
-                  </option>
-                </select>
-              </td>
-            </tr>
 
             <!-- 시작 베이스라인과 마감 베이스라인을 한 행에 표시 -->
             <tr>
@@ -94,6 +83,20 @@
               <td colspan="2"><strong>지연일</strong></td>
               <td colspan="2">{{ taskDetails.delayDays }}일</td>
             </tr>
+
+            <tr>
+              <td colspan="2"><strong>담당 부서</strong></td>
+              <td colspan="2" v-if="!localEditMode">{{ taskDetails.deptName }}</td>
+              <td colspan="2" v-if="localEditMode">
+                <!-- 부서 선택 드롭다운 -->
+                <select v-model="taskDetails.deptId" @change="onDeptChange" class="input-field">
+                  <option v-for="dept in departments" :key="dept.deptName.deptName.deptId" :value="dept.deptName.deptName.deptId">{{ dept.deptName.deptName.deptName }}
+                  </option>
+                </select>
+              </td>
+            </tr>
+            
+
             <tr v-if="taskDetails && taskDetails.assignees">
               <td colspan="2"><strong>책임자</strong></td>
               <td colspan="2" v-if="!localEditMode">{{taskDetails.assignees.map(a => a.name).join(', ')}}</td>
@@ -156,11 +159,15 @@ export default {
       errorMessage: "",  // 오류 메시지를 저장하는 변수
     };
   },
+    mounted() {
+    const taskStore = useTaskStore();
+    taskStore.fetchDepartments();
+    this.departments = taskStore.deptNames; // 부서 목록을 가져옴
+  },
   watch: {
     workId(newWorkId) {
       if (newWorkId) {
         this.fetchTaskDetails(newWorkId);
-        this.fetchDepartments(); // 부서 목록을 가져옴
       }
     },
     // 부모 컴포넌트에서 전달된 `isEditMode` 값이 변경되면 반영
@@ -263,27 +270,7 @@ export default {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
       }
     },
-    async fetchDepartments() {
-      const userStore = useUserStore();
-      const token = userStore.accessToken;
-
-      if (!token) {
-        console.error("토큰이 없습니다.");
-        return;
-      }
-
-      try {
-        const response = await api.get('/api/dept/all');
-
-        if (response.status === 200) {
-          this.departments = response.data.data; // 부서 데이터를 departments에 저장
-        } else {
-          console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status);
-        }
-      } catch (error) {
-        console.error("부서 데이터를 불러오는 데 실패했습니다:", error);
-      }
-    },
+   
     async fetchUsersByDept(deptName) {
       if (!deptName) {
         this.errorMessage = "담당 부서를 먼저 선택해주세요.";
@@ -312,12 +299,18 @@ export default {
         console.error("사용자 데이터를 불러오는 데 실패했습니다:", error);
       }
     },
-    async onDeptChange() {
-      const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
-      if (selectedDept) {
-        this.fetchUsersByDept(selectedDept.deptName); // 부서 이름을 바탕으로 사용자 목록을 가져옴
-      }
-    }
+async onDeptChange() {
+  // deptId로 해당 부서를 찾기
+  const selectedDept = this.departments.find(dept => dept.deptName.deptName.deptId === this.taskDetails.deptId);
+console.log(selectedDept);
+
+  if (selectedDept) {
+    // 부서명이 중첩된 구조이므로 deptName의 deptName을 사용
+    const deptName = selectedDept.deptName.deptName.deptName;
+    this.fetchUsersByDept(deptName);  // 부서명으로 사용자 목록을 가져옴
+  }
+}
+
     ,
     ///////////// 수정하는 모달
     async saveChanges() {
