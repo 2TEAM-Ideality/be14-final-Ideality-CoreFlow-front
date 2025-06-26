@@ -1,0 +1,88 @@
+[33mcommit cd61f1c1d68b5fb5e73ebe408baa4814fcb50600[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/details[m[33m, [m[1;31morigin/feature/details[m[33m)[m
+Merge: 89234fc ab05fe8
+Author: Hailyee <a11roundworld@naver.com>
+Date:   Thu Jun 26 21:04:02 2025 +0900
+
+    충돌해결
+
+[33mcommit 89234fc7407b28097edbdce2110012843975765f[m
+Author: Hailyee <a11roundworld@naver.com>
+Date:   Thu Jun 26 20:02:06 2025 +0900
+
+    조회 모달 여백 문제 해결
+
+[33mcommit 32691e3083b4d7020fa26d4157bb6b247b902f76[m
+Author: Hailyee <a11roundworld@naver.com>
+Date:   Thu Jun 26 19:54:45 2025 +0900
+
+    다시되돌림
+
+[33mcommit 01f365d30cfb6297cf8c4c53d7bbe9697606493a[m
+Author: Hailyee <a11roundworld@naver.com>
+Date:   Thu Jun 26 19:52:38 2025 +0900
+
+    조회모달UI수정
+
+[33mcommit f6943241dac39c00efba82e2f3dc573ee62656f3[m
+Author: Hailyee <a11roundworld@naver.com>
+Date:   Thu Jun 26 19:38:59 2025 +0900
+
+    태스크 부서정보 불러오기
+
+[33mcommit ab05fe88ac837949dac08ca945e65daa596f9844[m[33m ([m[1;31morigin/develop[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 99db213 6f02063
+Author: minsun24 <jms49526@gmail.com>
+Date:   Thu Jun 26 19:24:18 2025 +0900
+
+    Merge pull request #84 from 2TEAM-Ideality/fix/sw/pipe
+    
+    [REFACTOR] 파이프라인 뷰 누락된 값 수정
+
+[33mcommit 6f020630be87883b0aac5ef6e240503f893d09a4[m
+Author: swjang7269 <azamiyuko7269@gmail.com>
+Date:   Thu Jun 26 19:09:13 2025 +0900
+
+    refactor node 데이터에 누락된 경과율 추가
+
+[33mcommit 2a02a6678d3f1cf5fa7f115a6a29f1c97698b3ae[m
+Author: swjang7269 <azamiyuko7269@gmail.com>
+Date:   Thu Jun 26 18:57:55 2025 +0900
+
+    fix pending 상태 날짜 출력 값 수정
+
+[33mcommit 7ad009f6c6761b8057530a35b789f0b6a5d0c2d3[m
+Author: Hailyee <a11roundworld@naver.com>
+Date:   Thu Jun 26 17:19:06 2025 +0900
+
+    세부일정생성 부서명수정
+
+[33mcommit 99db213c9e2f837589083b3d4f7dd2489c149511[m
+Merge: 0c4b139 a9f3c34
+Author: Minsoo Kwon <51394149+mins00kwon@users.noreply.github.com>
+Date:   Thu Jun 26 17:13:50 2025 +0900
+
+    Merge pull request #81 from 2TEAM-Ideality/refactor/comment
+    
+    [REFACTOR] comment에 멘션 조회 안되던 거 조회되게 수정 완료
+
+[33mcommit 0c4b139431c266dc9da335f7daf7c564e99f507d[m
+Merge: 7fce6e6 818ecb5
+Author: Donghan <98398484+rainyday1367@users.noreply.github.com>
+Date:   Thu Jun 26 16:19:03 2025 +0900
+
+    Merge pull request #83 from 2TEAM-Ideality/feature/home
+    
+    [FIX] 태스크 작동 문제 해결 완료
+
+[33mcommit a9f3c3440755323bc66aa12c935a651877a8087b[m[33m ([m[1;31morigin/refactor/comment[m[33m)[m
+Author: rainyday1367 <rainyday1367@naver.com>
+Date:   Thu Jun 26 15:37:00 2025 +0900
+
+    refactor api 안뜨던거 추가
+
+[33mcommit 818ecb54df77074e9d6ac4aaacecefeb0eb3b4ba[m[33m ([m[1;31morigin/feature/home[m[33m)[m
+Merge: db05071 7fce6e6
+Author: minsun24 <jms49526@gmail.com>
+Date:   Thu Jun 26 15:17:46 2025 +0900
+
+    merged
