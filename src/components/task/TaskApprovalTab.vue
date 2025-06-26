@@ -38,7 +38,7 @@ const taskId = ref(route.params.taskId);
 // 승인된 결재 서류 조회
 const fetchApproval = async() => {
     try {
-        const res = await api.get(`/approval/task-approval/${taskId.value}`)
+        const res = await api.get(`/api/approval/task-approval/${taskId.value}`)
         approvalList.value = res.data.data;
         console.log(approvalList.value);
     } catch (error) {

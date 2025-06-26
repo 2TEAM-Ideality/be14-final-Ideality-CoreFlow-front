@@ -39,7 +39,8 @@ onNodesChange(async (changes) => {
 
   applyNodeChanges(nextChanges)
 })
-// 삭제 시점에 모달 띄우기  
+
+// 엣지 삭제 시점에 모달 띄우기  
 onEdgesChange(async (changes) => {
   const nextChanges = []
 
@@ -230,6 +231,7 @@ async function fetchPipeline() {
         startReal : node.startReal,
         endReal : node.endReal,
         progressRate : node.progressRate,
+        passedRate : node.passedRate,
         delayDays : node.delayDays,
         status: node.status,
         deptList: Array.from(new Set(node.deptList.map(d => d.name))), // 중복 부서 제거

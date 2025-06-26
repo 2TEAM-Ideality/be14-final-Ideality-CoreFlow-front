@@ -1,6 +1,6 @@
 <script setup>
 import { nextTick, ref , watch, onMounted } from 'vue'
-import { Panel, VueFlow, useVueFlow } from '@vue-flow/core'
+import { Panel, VueFlow, useVueFlow, Position } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import CustomNode from './CustomNode.vue'
 import '@/assets/vue-flow-style.css'
@@ -11,19 +11,16 @@ import api from '@/api.js'
 import { nanoid } from 'nanoid' 
 
 const props = defineProps({
-  nodes: {
-    type: Array,
-    required: true
-  },
-  edges: {
-    type: Array,
-    required: true
-  }
+  nodes: Array,
+  edges: Array,
+  templateName: String,
+  templateDescription: String,
+  updatedBy: String
 })
 
-const emit = defineEmits(['save']) // 
+const emit = defineEmits(['save']) 
 
-const { zoomTo, fitView, onPaneReady } = useVueFlow()
+const { fitView, zoomTo, onPaneReady, setCenter, addEdges, onNodesChange, onEdgesChange, applyNodeChanges, applyEdgeChanges } = useVueFlow()
 
 onPaneReady(() => {
   zoomTo(0.8)
@@ -33,213 +30,145 @@ const router = useRouter()
 const { layout } = useLayout()
 const nodeTypes = { custom: CustomNode }
 
-const nodes = ref(props.nodes.map(n => ({
+const localNodes = ref(props.nodes.map(n => ({
   ...n,
   position: n.position ?? { x: 0, y: 0 }
 })))
 
-const edges = ref([...props.edges])
+const localEdges = ref([...props.edges])
 const selectedNode = ref(null)
 const showModal = ref(false)
-const duration = ref(0)  // 총 소요일
-const taskCount = ref(0)  // 전체 태스크 개수 
-
 const deptList = ref([])
 
 onMounted(() => {
   fetchDeptList()
-  
 })
 
-// 부서 목록 가져오기
 const fetchDeptList = async () => {
   const res = await api.get('/api/dept/all')
-  deptList.value = res.data.data;
-  console.log('부서 목록', res)
+  deptList.value = res.data.data
 }
-
 
 function onConnect({ source, target }) {
   if (!source || !target) return
-
   const id = `e-${source}-${target}-${Date.now()}`
-  edges.value.push({ id, source, target, type: 'default' })
+  localEdges.value.push({ id, source, target, type: 'default' })
 }
 
 async function layoutGraph(direction) {
-  nodes.value = layout(nodes.value, edges.value, direction)
+  localNodes.value = layout(localNodes.value, localEdges.value, direction)
   nextTick(() => fitView())
 }
 
-function onAddNode(parentId) {
-  const parent = nodes.value.find(n => n.id === parentId)
-  if (!parent) return
+onNodesChange(async (changes) => {
+  const nextChanges = []
+  for (const change of changes) {
+    if (change.type === 'remove') {
+      const confirmed = confirm(`노드 ${change.id} 삭제할까요?`)
+      if (!confirmed) continue
 
+      // 삭제 반영
+      const idsToRemove = [change.id]
+      localNodes.value = localNodes.value.filter(n => !idsToRemove.includes(n.id))
+      localEdges.value = localEdges.value.filter(
+        e => !idsToRemove.includes(e.source) && !idsToRemove.includes(e.target)
+      )
+    } else {
+      nextChanges.push(change)
+    }
+  }
+  applyNodeChanges(nextChanges)
+})
+
+onEdgesChange(async (changes) => {
+  const nextChanges = []
+  for (const change of changes) {
+    if (change.type === 'remove') {
+      const confirmed = confirm(`엣지 ${change.id} 삭제할까요?`)
+      if (!confirmed) continue
+      localEdges.value = localEdges.value.filter(e => e.id !== change.id)
+    } else {
+      nextChanges.push(change)
+    }
+  }
+  applyEdgeChanges(nextChanges)
+})
+
+function onAddNode(parentId) {
+  const parent = localNodes.value.find(n => n.id === parentId)
+  if (!parent) return
   const newId = nanoid(6)
   const newNode = {
     id: newId,
     type: 'custom',
-    position: {
-      x: parent.position.x + 250,
-      y: parent.position.y + 100,
-    },
-    data: {
-      label: `새 태스크`,
-      description: '',
-      deptList: [],
-      duration: null,
-      slackTime: null
-    }
+    position: { x: parent.position.x + 250, y: parent.position.y + 100 },
+    data: { label: '새 태스크', description: '', deptList: [], duration: null, slackTime: null }
   }
-
-  nodes.value.push(newNode)
-  edges.value.push({
-    id: `e-${parentId}-${newId}`,
-    source: parentId,
-    target: newId,
-    type: 'default'
-  })
+  localNodes.value.push(newNode)
+  localEdges.value.push({ id: `e-${parentId}-${newId}`, source: parentId, target: newId, type: 'default' })
 }
-
 
 function onCreateNewNode() {
   const newId = nanoid(6)
   const newNode = {
     id: newId,
     type: 'custom',
-    position: { x: 100, y: 100 + nodes.value.length * 120 },
-    data: {
-      label: `새 태스크`,
-      description: '',
-      deptList: [],
-      duration: null,
-      slackTime: null
-    }
+    position: { x: 100, y: 100 + localNodes.value.length * 120 },
+    data: { label: '새 태스크', description: '', deptList: [], duration: null, slackTime: null }
   }
-  nodes.value.push(newNode)
+  localNodes.value.push(newNode)
 }
 
 function onNodeClick(nodeId) {
-  const node = nodes.value.find(n => n.id === nodeId)
+  const node = localNodes.value.find(n => n.id === nodeId)
   if (node) {
     selectedNode.value = JSON.parse(JSON.stringify(node))
     showModal.value = true
   }
 }
 
-
 function saveNodeDataFromChild(updatedNode) {
-  const index = nodes.value.findIndex(n => n.id === updatedNode.id)
+  const index = localNodes.value.findIndex(n => n.id === updatedNode.id)
   if (index !== -1) {
-    const updatedData = {
-      ...updatedNode.data
-    }
+    const updatedData = { ...updatedNode.data }
     delete updatedData.deptListString
-
-    const newNode = {
-      ...nodes.value[index],
-      data: { ...updatedData }
-    }
-
-    nodes.value = [
-      ...nodes.value.slice(0, index),
-      newNode,
-      ...nodes.value.slice(index + 1)
-    ]
+    const newNode = { ...localNodes.value[index], data: { ...updatedData } }
+    localNodes.value.splice(index, 1, newNode)
   }
-
   showModal.value = false
 }
 
-
-
-// 소요일 계산
 function calculateTotalDuration(nodeList, edgeList) {
   const nodeMap = new Map(nodeList.map(n => [n.id, n]))
   const adj = new Map()
   const inDegree = new Map()
-
-  nodeList.forEach(n => {
-    adj.set(n.id, [])
-    inDegree.set(n.id, 0)
-  })
-
-  edgeList.forEach(edge => {
-    adj.get(edge.source).push(edge.target)
-    inDegree.set(edge.target, inDegree.get(edge.target) + 1)
-  })
-
-  const queue = []
-  const durationMap = new Map()
-
-  // 초기 노드 설정
+  nodeList.forEach(n => { adj.set(n.id, []); inDegree.set(n.id, 0) })
+  edgeList.forEach(edge => { adj.get(edge.source).push(edge.target); inDegree.set(edge.target, inDegree.get(edge.target) + 1) })
+  const queue = [], durationMap = new Map()
   nodeList.forEach(node => {
-    const id = node.id
-    const baseDuration = Number(node.data.duration || 0)
-    const slack = Number(node.data.slackTime || 0)
-    if (inDegree.get(id) === 0) {
-      queue.push(id)
-      durationMap.set(id, baseDuration + slack)
-    } else {
-      durationMap.set(id, 0)
-    }
+    const id = node.id, base = +node.data.duration || 0, slack = +node.data.slackTime || 0
+    if (inDegree.get(id) === 0) { queue.push(id); durationMap.set(id, base + slack) }
+    else durationMap.set(id, 0)
   })
-
-  // 위상 정렬 + 경로 누적 시간 계산
-  while (queue.length > 0) {
-    const current = queue.shift()
-    const currentDuration = durationMap.get(current)
-
+  while (queue.length) {
+    const current = queue.shift(), currentDuration = durationMap.get(current)
     adj.get(current).forEach(next => {
-      const nextNode = nodeMap.get(next)
-      const base = Number(nextNode.data.duration || 0)
-      const slack = Number(nextNode.data.slackTime || 0)
-      const newDuration = currentDuration + base + slack
-
-      durationMap.set(next, Math.max(durationMap.get(next), newDuration))
-
+      const nextNode = nodeMap.get(next), base = +nextNode.data.duration || 0, slack = +nextNode.data.slackTime || 0
+      durationMap.set(next, Math.max(durationMap.get(next), currentDuration + base + slack))
       inDegree.set(next, inDegree.get(next) - 1)
-      if (inDegree.get(next) === 0) {
-        queue.push(next)
-      }
+      if (inDegree.get(next) === 0) queue.push(next)
     })
   }
-
   return Math.max(...durationMap.values())
 }
 
-
-
 function exportTemplateData() {
-  const nodeList = nodes.value.map(({ data, id, type, position }) => ({
-    id,
-    type,
-    position,
-    data: { ...data }
-  }))
-
-  const edgeList = edges.value
+  const nodeList = localNodes.value.map(n => ({ ...n }))
+  const edgeList = localEdges.value.map(e => ({ ...e }))
   const duration = calculateTotalDuration(nodeList, edgeList)
   const taskCount = nodeList.length
-
-  // 🔍 콘솔에 출력
-  console.log('📦 Exported Template Data')
-  console.log('노드 목록:', nodeList)
-  console.log('간선 목록:', edgeList)
-  console.log('총 소요일:', duration)
-  console.log('태스크 수:', taskCount)
-
-  // 유효성 검사
-  if (taskCount === 0) {
-    alert('최소 하나 이상의 태스크가 필요합니다.')
-    return
-  }
-
-  if (nodeList.some(n => !n.data.duration)) {
-    alert('모든 태스크에 소요일(duration)을 입력해주세요.')
-    return
-  }
-
+  if (taskCount === 0) return alert('최소 하나 이상의 태스크가 필요합니다.')
+  if (nodeList.some(n => !n.data.duration)) return alert('모든 태스크에 소요일(duration)을 입력해주세요.')
   const payload = {
     name: props.templateName,
     description: props.templateDescription,
@@ -249,31 +178,18 @@ function exportTemplateData() {
     nodeList,
     edgeList
   }
-
   emit('save', payload)
 }
 
-
-
-async function handleNodesInitialized() {
-  await nextTick()
-  requestAnimationFrame(() => {
-    layoutGraph('LR')
-  })
-}
-
 watch(() => props.nodes, (newVal) => {
-  nodes.value = newVal.map(n => ({
-    ...n,
-    position: n.position ?? { x: 0, y: 0 }
-  }))
+  localNodes.value = newVal.map(n => ({ ...n, position: n.position ?? { x: 0, y: 0 } }))
 }, { immediate: true })
 
 watch(() => props.edges, (newVal) => {
-  edges.value = [...newVal]
+  localEdges.value = [...newVal]
 }, { immediate: true })
-
 </script>
+
 
 <template>
   <div class="layout-flow">
@@ -281,12 +197,20 @@ watch(() => props.edges, (newVal) => {
       :nodes="nodes"
       :edges="edges"
       :node-types="nodeTypes"
-      :connectable="true"
+      :connectable="false"
       @connect="onConnect"
       @nodes-initialized="handleNodesInitialized"
+      @nodes-delete="handleNodesDelete"
+      @edges-delete="handleEdgesDelete"
+      @selection-change="(s) => console.log('선택 변경:', s)"
     >
       <template #node-custom="{ id, data }">
-        <CustomNode :id="id" :data="data" @addNode="onAddNode" @click="() => onNodeClick(id)" />
+        <CustomNode :id="id" 
+          :data="data" 
+          @addNode="onAddNode" 
+          @click="() => onNodeClick(id)" 
+          @nodes-change="onNodesChange"
+          />
       </template>
 
       <Background />

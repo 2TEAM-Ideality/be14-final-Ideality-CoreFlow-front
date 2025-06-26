@@ -238,9 +238,7 @@ const cancelEdit = () => {
           <div class="d-flex justify-space-between align-center mb-4">
             <h3 class="text-h6">프로세스 편집</h3>
             <div class="d-flex align-center gap-2">
-              <!-- <v-btn icon @click="fitToView">
-                <v-icon>mdi-sort</v-icon>
-              </v-btn> -->
+
               <v-btn icon @click="showFullScreen = false">
                 <v-icon>mdi-close</v-icon>
               </v-btn>
