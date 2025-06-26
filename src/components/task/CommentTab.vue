@@ -35,7 +35,9 @@
             </div>
 
                 <div class="comment-box">
-                  <span class="comment-content">{{ comment.content }}</span>
+                  <!-- <span class="comment-content">{{ comment.content }}</span> -->
+                  <!-- 수정 -->
+                  <span class="comment-content" v-html="convertContentToHTML(comment.content)"></span>
 
                 <!-- 아이콘들 공통 스타일 icon 적용 -->
                 <div class="comment-icons">
@@ -288,7 +290,17 @@ const updateNoticeComment = async (id) => {
   }
 };
 
+function convertContentToHTML(content) {
+  // 파일 경로 기본 경로 (실제 서버 파일 경로에 맞게 수정)
+  const BASE_URL = 'https://your-server.com/uploads/'; // 또는 /static/, /file/ 등
 
+  // 파일 이름만 감지
+  const fileNamePattern = /([\w\-]+\.(pdf|docx?|xlsx?|zip|png|jpg|jpeg|txt))/gi;
+
+  return content.replace(fileNamePattern, (match) => {
+    return `<a href="${BASE_URL + match}" download style="color:#3d5afe; text-decoration:underline;">${match}</a>`;
+  });
+}
 onMounted(() => {
   window.addEventListener('click', handleClickOutside)
 
