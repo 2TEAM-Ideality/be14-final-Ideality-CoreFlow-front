@@ -21,8 +21,100 @@ const nodeTypes = {
 }
 
 const { layout } = useLayout()
-const { fitView, zoomTo } = useVueFlow()
-const { setCenter } = useVueFlow()
+
+const { fitView, zoomTo, setCenter, addEdges, onNodesChange, onEdgesChange, applyNodeChanges, applyEdgeChanges } = useVueFlow()
+// TEST
+onNodesChange(async (changes) => {
+  const nextChanges = []
+
+  for (const change of changes) {
+    if (change.type === 'remove') {
+      console.log('REMOVE')
+
+      const confirmed = confirm(`노드 ${change.id} 삭제할까요?`)
+    } else {
+      nextChanges.push(change)
+    }
+  }
+
+  applyNodeChanges(nextChanges)
+})
+// 삭제 시점에 모달 띄우기  
+onEdgesChange(async (changes) => {
+  const nextChanges = []
+
+  for (const change of changes) {
+    if (change.type === 'remove') {
+      const confirmed = await showEdgeDeleteConfirm(change.id)
+      if (!confirmed) continue
+
+      const edge = edges.value.find(e => e.id === change.id)
+      if (edge) {
+        await updateNextPrevTasksAfterEdgeDelete(edge.source, edge.target)
+        edges.value = edges.value.filter(e => e.id !== change.id)
+        console.log(`✅ 엣지 ${change.id} 삭제 및 백엔드 반영 완료`)
+      }
+    } else {
+      nextChanges.push(change)
+    }
+  }
+
+  applyEdgeChanges(nextChanges)
+})
+// 모달 띄우는 함수
+function showEdgeDeleteConfirm(id) {
+  return new Promise((resolve) => {
+    const confirmed = window.confirm(`엣지 ${id}를 삭제하시겠습니까?`)
+    resolve(confirmed)
+  })
+}
+
+async function updateNextPrevTasksAfterEdgeDelete(sourceId, targetId) {
+  const sid = Number(sourceId)
+  const tid = Number(targetId)
+
+  // ⛳ 변경된 관계 계산
+  const sourceNewNext = getChildIds(sid).filter(id => id !== tid)
+  const targetNewPrev = getParentIds(tid).filter(id => id !== sid)
+
+  const sourceNode = nodes.value.find(n => Number(n.id) === sid)
+  const targetNode = nodes.value.find(n => Number(n.id) === tid)
+
+  const idToNameMap = Object.fromEntries(deptList.value.map(d => [d.deptId, d.deptName]))
+
+  try {
+    // ✅ source 노드 갱신 요청
+    await api.patch(`/api/task/modify/${sid}`, {
+      taskName: sourceNode.data.label,
+      taskId: sid,
+      projectId: Number(projectId),
+      description: sourceNode.data.description,
+      deptLists: (sourceNode.data.deptList || []).map(d => typeof d === 'number' ? idToNameMap[d] : d),
+      prevTaskList: getParentIds(sid),
+      nextTaskList: sourceNewNext,
+      startExpect: sourceNode.data.startBase,
+      endExpect: sourceNode.data.endBase
+    })
+
+    // ✅ target 노드 갱신 요청
+    await api.patch(`/api/task/modify/${tid}`, {
+      taskName: targetNode.data.label,
+      taskId: tid,
+      projectId: Number(projectId),
+      description: targetNode.data.description,
+      deptLists: (targetNode.data.deptList || []).map(d => typeof d === 'number' ? idToNameMap[d] : d),
+      prevTaskList: targetNewPrev,
+      nextTaskList: getChildIds(tid),
+      startExpect: targetNode.data.startBase,
+      endExpect: targetNode.data.endBase
+    })
+  } catch (err) {
+    console.error('❌ 엣지 삭제 반영 실패:', err)
+    alert('엣지 삭제 중 오류가 발생했습니다.')
+  }
+}
+
+
 
 const route = useRoute()
 
@@ -157,6 +249,7 @@ const fetchDeptList = async () => {
 onMounted(() => {
   fetchPipeline()
   fetchDeptList() 
+  
 })
 
 
@@ -476,7 +569,37 @@ async function onSaveTasks() {
       }
     })
     
-    // ✅
+
+    // for (const node of nodes.value) {
+    //   const parentIds = getParentIds(node.id)
+    //   const childIds = getChildIds(node.id)
+
+    //   let deptData = node.data.deptList
+
+    //   // 숫자일 경우 부서명으로 변환
+    //   if (typeof deptData?.[0] === 'number') {
+    //     const idToNameMap = Object.fromEntries(
+    //       deptList.value.map(d => [d.deptId, d.deptName])
+    //     )
+    //     deptData = deptData.map(id => idToNameMap[id]).filter(Boolean)
+    //   }
+
+    //   const requestBody = {
+    //     taskName: node.data.label,
+    //     taskId: Number(node.id),
+    //     projectId: Number(projectId),
+    //     description: node.data.description,
+    //     deptLists: deptData,
+    //     prevTaskList: parentIds,
+    //     nextTaskList: childIds,
+    //     startExpect: node.data.startBase,
+    //     endExpect: node.data.endBase
+    //   }
+
+    //   console.log(`📌 엣지 기반 갱신 - 태스크 ${node.id}`, requestBody)
+    //   await api.patch(`/api/task/modify/${node.id}`, requestBody)
+    // }
+    // ✅ 엣지만 수정되기 전
     for (const node of nodes.value) {
       if (!idMap.has(node.id)) {
         const parentIds = node.data.parentIds || getParentIds(node.id)
@@ -525,7 +648,75 @@ async function onSaveTasks() {
     }
 
 
+// 노드 삭제
+async function handleNodesDelete(deletedNodes) {
+  console.log('🧨 삭제된 노드:', deletedNodes)
 
+  for (const node of deletedNodes) {
+    const nodeId = Number(node.id)
+
+    try {
+      // 서버에 소프트 삭제 요청
+      await api.patch(`/api/task/delete/${nodeId}`)
+
+      // 엣지에서도 해당 노드와 연결된 것 제거
+      edges.value = edges.value.filter(
+        e => e.source !== node.id && e.target !== node.id
+      )
+
+      console.log(`✅ 노드 삭제 반영 완료: ${nodeId}`)
+    } catch (err) {
+      console.error(`❌ 노드 삭제 실패: ${nodeId}`, err)
+    }
+  }
+
+  await nextTick()
+  layoutGraph('LR')
+}
+
+
+
+// 엣지 삭제 
+async function handleEdgesDelete(deletedEdges) {
+  console.log('🧨 삭제된 엣지:', deletedEdges)
+
+  for (const edge of deletedEdges) {
+    const sourceId = Number(edge.source)
+    const targetId = Number(edge.target)
+
+    try {
+      // 🔁 source → nextTaskList 에서 target 제거
+      const sourceParentIds = getParentIds(sourceId)
+      const sourceChildIds = getChildIds(sourceId).filter(id => id !== targetId)
+
+      await api.patch(`/api/task/modify/${sourceId}`, {
+        taskId: sourceId,
+        projectId: Number(projectId),
+        prevTaskList: sourceParentIds,
+        nextTaskList: sourceChildIds
+      })
+
+      // 🔁 target → prevTaskList 에서 source 제거
+      const targetParentIds = getParentIds(targetId).filter(id => id !== sourceId)
+      const targetChildIds = getChildIds(targetId)
+
+      await api.patch(`/api/task/modify/${targetId}`, {
+        taskId: targetId,
+        projectId: Number(projectId),
+        prevTaskList: targetParentIds,
+        nextTaskList: targetChildIds
+      })
+
+      console.log(`✅ 엣지 삭제 반영 완료: ${sourceId} → ${targetId}`)
+    } catch (err) {
+      console.error('❌ 엣지 삭제 반영 실패:', err)
+    }
+  }
+
+  // 💡 UI 재정렬 (선택)
+  await nextTick()
+  layoutGraph('LR')
+}
 
 watch(showFullscreenView, async (isOpen) => {
   if (!isOpen) {
@@ -543,6 +734,10 @@ function handleCloseModal() {
   editingNode.value = null  
 }
 
+
+
+
+
 </script>
 
 
@@ -559,6 +754,7 @@ function handleCloseModal() {
   <div class="layout-flow" style="position: relative; overflow: visible">
     
     <VueFlow
+      fit-view-on-init
       ref="vueFlowRef"
       :nodes="nodes"
       :edges="edges"
@@ -567,6 +763,8 @@ function handleCloseModal() {
       :default-edge-options="{ type: 'smoothstep', animated: true }"
       @connect="onConnect"
       @nodes-initialized="handleNodesInitialized"
+      @nodes-delete="handleNodesDelete"
+      @edges-delete="handleEdgesDelete"
     >
       <template #node-task="{ id, data }">
         <TaskNode
@@ -602,6 +800,7 @@ function handleCloseModal() {
         @create="handleCreateNewNode" 
         @update="handleUpdateTask"
         @close="handleCloseModal"
+
       />
       <v-card class="pa-4">
         <!-- 상단 메뉴 -->
@@ -629,6 +828,10 @@ function handleCloseModal() {
         :connectable="false"
         fit-view
         style="height: calc(100vh - 100px);"
+        @nodes-initialized="handleNodesInitialized"
+        @nodes-delete="handleNodesDelete"
+        @edges-delete="handleEdgesDelete"
+        @selection-change="(s) => console.log('선택 변경:', s)"
       >
         <template #node-task="{ id, data }">
           <TaskNode
@@ -639,6 +842,7 @@ function handleCloseModal() {
             @edit="onEditNode"
             @delete="handleDeleteTask"
             @start="handleStartTask"
+            @nodes-change="onNodesChange"
           />
             <!-- @complete="handleCompleteTask" -->
 

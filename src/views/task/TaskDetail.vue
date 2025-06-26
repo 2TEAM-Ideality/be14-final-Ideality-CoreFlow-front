@@ -15,6 +15,7 @@
                 <TaskHeaderSection 
                 v-if="originTaskValue.selectTask?.taskId" 
                 :task="originTaskValue.selectTask" 
+                :detailList = "detailList"
                 />
 
                 <TaskMainTab 
