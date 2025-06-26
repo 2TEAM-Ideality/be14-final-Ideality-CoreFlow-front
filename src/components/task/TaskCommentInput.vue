@@ -300,65 +300,60 @@ const removeFile = () => {
 
 // 댓글 등록
 const handleSubmit = async () => {
-  // if (!input.value.trim()) {
-  //   alert('댓글 내용을 입력해주세요.')
-  //   return
-  // }
-
   const formData = new FormData()
 
-  formData.append('content', input.value)
+  // 1. 파일 있는지 확인 후 파일 추가
+  if (fileInput.value?.files?.[0]) {
+    formData.append('attachmentFile', fileInput.value.files[0])
+  }
+
+  // 2. content 작성 (파일이 있을 경우 파일명 포함)
+  let contentText = input.value.trim()
+  if (fileInput.value?.files?.[0]) {
+    contentText += `\n${fileInput.value.files[0].name}`
+  }
+  formData.append('content', contentText)
+
+  // 3. 공지 여부 추가
   formData.append('isNotice', isNotice.value.toString())
 
-  if (fileInput.value?.files?.[0]) {
-      formData.append('attachmentFile', fileInput.value.files[0])
-  }
-
-  console.log(editingCommentId.value);
-  // ✅ 등록일 때만 mentions / details 추가
+  // 4. mentions, details 추가
   if (!editingCommentId.value) {
-      for (const mention of selectedMentions.value) {
+    for (const mention of selectedMentions.value) {
       formData.append('mentions', mention)
-      }
-
-      for (const detail of selectedDetails.value) {
+    }
+    for (const detail of selectedDetails.value) {
       formData.append('details', detail)
-      }
-
-      if (props.replyTargetId) {
+    }
+    if (props.replyTargetId) {
       formData.append('parentCommentId', props.replyTargetId.toString())
-      }
+    }
   }
 
+  // 5. 등록/수정 요청
   try {
-      if (editingCommentId.value) {
-      // ✏️ 수정 요청
-          await api.patch(`/api/comment/${editingCommentId.value}`, formData, {
-              headers: {
-              Authorization: `Bearer ${userStore.accessToken}`,
-              },
-          })
-      } else {
-          // ✅ 등록 요청
-          await api.post(`/api/comment/write/${taskId}`, formData)
-  }
+    if (editingCommentId.value) {
+      await api.patch(`/api/comment/${editingCommentId.value}`, formData, {
+        headers: { Authorization: `Bearer ${userStore.accessToken}` },
+      })
+    } else {
+      await api.post(`/api/comment/write/${taskId}`, formData)
+    }
 
-      // 초기화
-      // 댓글 등록 or 수정 후
-      input.value = ''
-      isNotice.value = false
-      editingCommentId.value = null
-      selectedMentions.value.clear()
-      selectedDetails.value.clear()
-      selectedFileName.value = null 
-      if (fileInput.value) fileInput.value.value = ''
-      resizeTextarea()
+    // 6. 초기화
+    input.value = ''
+    isNotice.value = false
+    editingCommentId.value = null
+    selectedMentions.value.clear()
+    selectedDetails.value.clear()
+    selectedFileName.value = null
+    if (fileInput.value) fileInput.value.value = ''
+    resizeTextarea()
 
-      // 초기화 후 emit
-      emit('comment-updated')
-      emit('reset-reply')
+    emit('comment-updated')
+    emit('reset-reply')
   } catch (err) {
-      console.error('댓글 등록/수정 실패:', err)
+    console.error('댓글 등록/수정 실패:', err)
   }
 }
 
