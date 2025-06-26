@@ -55,17 +55,26 @@ const endBaseModel = computed({
   }
 })
 
-
 watch(
   () => props.initialData,
   (val) => {
+    console.log(props.initialData)
+
     if (val && val.data) {
       localNode.id = val.id || ''
       localNode.label = val.data.label || ''
       localNode.description = val.data.description || ''
       localNode.startBase = dayjs(val.data.startBase).format('YYYY-MM-DD') || ''
       localNode.endBase = dayjs(val.data.endBase).format('YYYY-MM-DD') || ''
-      localNode.deptList = val.data.deptList || []
+
+      // ✅ 부서명 → 부서 ID로 변환
+      const nameToIdMap = Object.fromEntries(
+        props.deptList.map(d => [d.deptName, d.deptId])
+      )
+      localNode.deptList = (val.data.deptList || [])
+        .map(name => nameToIdMap[name])
+        .filter(Boolean)
+
       localNode.parentIds = val.data.parentIds || []
       localNode.childIds = val.data.childIds || []
     }
@@ -74,9 +83,24 @@ watch(
 )
 
 
+
 watch(() => props.show, (val) => {
-  // 모달이 닫힐 때 (false로 변경될 때)
-  if (!val) {
+  console.log("체크", props.initialData)
+  if (val) {
+    // ✅ 모달 열릴 때
+    if (!props.initialData || !props.initialData.id) {
+      // 생성 모드일 경우 초기화
+      localNode.id = ''
+      localNode.label = ''
+      localNode.description = ''
+      localNode.startBase = ''
+      localNode.endBase = ''
+      localNode.deptList = []
+      localNode.parentIds = []
+      localNode.childIds = []
+    }
+  } else {
+    // ✅ 모달 닫힐 때에도 초기화해줌 (예방적)
     localNode.id = ''
     localNode.label = ''
     localNode.description = ''
@@ -87,6 +111,7 @@ watch(() => props.show, (val) => {
     localNode.childIds = []
   }
 })
+
 
 watch(() => localNode.startBase, (val) => {
   if (val instanceof Date || typeof val === 'string') {

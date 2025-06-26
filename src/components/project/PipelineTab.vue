@@ -277,12 +277,20 @@ function onEditNode(nodeId) {
     const parentIds = getParentIds(nodeId)
     const childIds = getChildIds(nodeId)
 
+    // ✅ 부서 ID → 부서명으로 변환
+    let deptNames = node.data.deptList
+    if (typeof deptNames?.[0] === 'number') {
+      const idToNameMap = Object.fromEntries(deptList.value.map(d => [d.deptId, d.deptName]))
+      deptNames = deptNames.map(id => idToNameMap[id]).filter(Boolean)
+    }
+
     editingNode.value = {
       ...node,
       data: {
         ...node.data,
-        parentIds: getParentIds(nodeId),
-        childIds: getChildIds(nodeId)
+        deptList: deptNames,  // ✅ 정확하게 'deptList' 키로 전달
+        parentIds,
+        childIds
       }
     }
 
@@ -586,6 +594,10 @@ watch(showFullscreenView, async (isOpen) => {
   }
 })
 
+function handleCloseModal() {
+  showNewTask.value = false
+  editingNode.value = null  
+}
 
 </script>
 
@@ -645,7 +657,7 @@ watch(showFullscreenView, async (isOpen) => {
         :initialData="editingNode"
         @create="handleCreateNewNode" 
         @update="handleUpdateTask"
-        @close="showNewTask = false"
+        @close="handleCloseModal"
       />
       <v-card class="pa-4">
         <!-- 상단 메뉴 -->
