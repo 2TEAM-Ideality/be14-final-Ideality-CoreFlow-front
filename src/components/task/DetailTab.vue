@@ -83,11 +83,9 @@
 </template>
 
 <script>
-import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import TaskModal from "@/components/task/DetailModal.vue"; // 모달 컴포넌트 import
-import { mdiPlayCircle, mdiPauseCircle, mdiCheckCircle } from '@mdi/js'; // MDI 아이콘 import
 import { ref } from 'vue'; // ref 추가 (경고창 처리)
 
 
@@ -120,6 +118,7 @@ export default {
       dialogMessage: ref(''), // 확인 메시지 내용
       itemToUpdate: null, // 확인을 위한 임시 아이템
       newStatus: null, // 새로운 상태값
+      taskId: this.$route.params.taskId,  // route.params에서 taskId를 받음
     };
   },
   computed: {
@@ -132,10 +131,11 @@ export default {
       const taskStore = useTaskStore();
       return taskStore.totalProgress;
     }
-  },
-  async mounted() {
-    const route = useRoute();
-    const parentTaskId = route.params.taskId;
+  }
+,
+async mounted() {
+    console.log('Task ID from URL:', this.taskId);
+    const parentTaskId = this.taskId;
     const userStore = useUserStore();
     const token = userStore.accessToken;
 
@@ -150,7 +150,8 @@ export default {
     if (this.workId) {
       this.openModal(this.workId);
     }
-  },
+  
+},
   methods: {
 confirmAndUpdateStatus(item, newStatus) {
   if (item.status === "COMPLETED") {
@@ -200,9 +201,7 @@ confirmAndUpdateStatus(item, newStatus) {
       // 수정된 항목을 배열에서 업데이트
       this.items.splice(index, 1, updatedTask);
     }
-          // 수정 후 totalProgress 갱신
-      const route = useRoute();
-      const parentTaskId = route.params.taskId;
+    const parentTaskId = this.taskId;
       const userStore = useUserStore();
       const token = userStore.accessToken;
       const taskStore = useTaskStore();

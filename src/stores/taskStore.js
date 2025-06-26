@@ -76,7 +76,7 @@ async fetchTaskDetails(workId) {
       if (this.taskDetails && this.taskDetails.deptId) {
 
       // 부서 정보 및 사용자 목록 업데이트
-      const selectedDept = this.departments.find(dept => dept.deptId === this.taskDetails.deptId);
+      const selectedDept = this.departments?.find(dept => dept.deptId === this.taskDetails.deptId);
       if (selectedDept) {
         this.taskDetails.deptName = selectedDept.deptName;
         this.fetchUsersByDept(selectedDept.deptName);
