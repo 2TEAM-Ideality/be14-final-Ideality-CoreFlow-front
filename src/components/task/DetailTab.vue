@@ -115,7 +115,8 @@ export default {
       const taskStore = useTaskStore();
       return taskStore.totalProgress;
     }
-  },
+  }
+,
 async mounted() {
     console.log('Task ID from URL:', this.taskId);
     const parentTaskId = this.taskId;

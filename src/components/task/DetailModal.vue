@@ -388,11 +388,13 @@ export default {
           await this.fetchTaskDetails(this.workId);
           // 완료 후 바로 조회 모달 갱신을 위한 데이터 다시 불러오기
 
+          if(this.taskDetails.progressRate>0){
           // 상태가 PENDING일 때, PROGRESS로 상태 변경
       if (this.taskDetails.taskStatus === 'PENDING') {
         const taskStore = useTaskStore();
         await taskStore.startTask(this.workId); // 상태를 'PROGRESS'로 변경하는 API 호출
       }
+    }
         } else {
           console.error('세부일정 업데이트 오류:', response.status);
         }
