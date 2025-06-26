@@ -1,4 +1,5 @@
 <script setup>
+import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
@@ -24,9 +25,12 @@ const props = defineProps({
     default: () => []
   }
 })
-
+const route = useRoute()
+const router = useRouter()
 const emit = defineEmits(['close', 'select'])
 
+
+const projectId = route.params.id
 const dialog = ref(true)
 const search = ref('')
 const selectedUserId = ref(null)
@@ -127,20 +131,32 @@ function toggleGroup(dept) {
 
 
 function confirmSelection() {
-  if(props.type === 'leader') {
-      console.log('리더')
+  if (props.type === 'leader') {
+    console.log('리더')
   }
+
   const selected = isApprover.value
-    ? props.userList.filter(u => u.id === selectedUserId.value)
-    : props.userList.filter(u => selectedUserIds.value.includes(u.id))
+    ? props.userList.filter(u => (u.id ?? u.userId) === selectedUserId.value)
+    : props.userList.filter(u =>
+        selectedUserIds.value.includes(u.userId ?? u.id)
+      )
 
   emit('select', selected)
   dialog.value = false
   emit('close')
 }
+
+
+
 // 결재자 토글
 function toggleRadio(userId) {
   selectedUserId.value = selectedUserId.value === userId ? null : userId
+}
+
+// 태스크 탭으로 이동 
+const goToCreateTask = () => {
+  dialog.value = false
+  router.push(`/project/${projectId}/pipeline`)
 }
 
 watch(groupedUsers, (val) => {
@@ -150,7 +166,9 @@ watch(groupedUsers, (val) => {
   openedPanels.value = panelList
 })
 
-console.log('그룹!!!!!!!!!!!!!', groupedUsers)
+
+
+
 </script>
 
 <template>
@@ -175,6 +193,13 @@ console.log('그룹!!!!!!!!!!!!!', groupedUsers)
             append-inner-icon="mdi-magnify"
             class="mb-4"
           />
+          <div v-if="(props.type === 'leader' || props.type==='member') &&  props.userList.length === 0" class="empty-msg">
+            프로젝트에 참여 중인 부서가 모두 초대되어 있습니다. <br/>
+            새로운 팀장 / 팀원을 초대하시려면 태스크를 먼저 생성해주세요.<br/>
+            <br>
+            <v-btn @click="goToCreateTask" variant="tonal" color="#7578ee" append-icon="mdi-arrow-right">
+              태스크 생성하러 가기</v-btn>
+          </div>
 
           <div class="group-scroll">
             <v-expansion-panels multiple v-model="openedPanels">
@@ -257,7 +282,7 @@ console.log('그룹!!!!!!!!!!!!!', groupedUsers)
 
       <v-card-actions class="justify-end">
         <v-btn color="gray" variant="tonal" @click="$emit('close')">취소</v-btn>
-        <v-btn color="purple" @click="confirmSelection">확인</v-btn>
+        <v-btn color="#7578ee" variant="flat" @click="confirmSelection" :disabled="userList.length === 0">확인</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

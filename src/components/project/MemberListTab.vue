@@ -21,6 +21,7 @@
     
     <ListForm :headers="customHeaders" :items="memberItems" />
 
+    <!-- 팀장 & 팀원 초대 선택 모달 -->
     <ParticipantSelectModal
         v-if="showInviteModal"
         :type="inviteType"
@@ -147,25 +148,72 @@ const fetchParticipants = async () => {
 
 // 초대 가능한 팀원 조회 
 const fetchInviteLeaderList = async () => {
-  try{
+  try {
     const res = await api.get(`/api/projects/${projectId}/invitable-user`)
 
-    inviteList.value = res.data.data;
-    console.log('✅ 초대 대상 리스트 확인', inviteList.value)
-  }catch( err){
+    // 참여중이지 않은 사용자만 초대 가능 대상
+    inviteList.value = res.data.data.filter(user => user.participation === false)
+
+    console.log('✅ 초대 대상 리스트 (참여 X)', inviteList.value)
+  } catch (err) {
     console.error('초대 목록 로딩 실패:', err)
   }
-  
 }
-// 초대 가능 유저 
-function handleUserSelect(selectedUsers){
-  if(inviteType.value === 'leader'){
+
+
+
+// 팀원 & 팀장 초대 요청 처리 
+async function handleUserSelect(selectedUsers) {
+  if (inviteType.value === 'leader') {
     selectedLeaders.value = selectedUsers || []
-  }else{
+
+    console.log(projectId, '✅ 프로젝트 팀장 초대 요청', selectedUsers)
+
+    try {
+      // 서버가 요구하는 형식: List<RequestInviteUserDTO>
+      const payload = selectedUsers.map(user => ({
+        userId: user.userId ?? user.id,
+        deptName: user.deptName
+      }))
+
+      await api.post(`/api/projects/${projectId}/participants/team-leader`, payload)
+
+      alert('팀장 초대가 완료되었습니다.')
+      await fetchParticipants() // 초대 후 목록 새로고침
+      await fetchInviteLeaderList() // 초대 후 초대 대상 새로고침
+
+    } catch (error) {
+      console.error('❌ 팀장 초대 실패', error)
+      alert('팀장 초대에 실패했습니다.')
+    }
+
+  } else {
     selectedMembers.value = selectedUsers || []
+    console.log(projectId, '✅ 프로젝트 팀원 초대 요청', selectedUsers)
+    // /api/porjects/{projectId}/participants/team-member
+    try {
+      const payload = selectedUsers.map(user => ({
+        userId: user.userId ?? user.id,
+        deptName: user.deptName
+      }))
+
+      await api.post(`/api/projects/${projectId}/participants/team-member`, payload)
+
+      alert('팀원 초대가 완료되었습니다.')
+      await fetchParticipants() // 초대 후 목록 새로고침
+      await fetchInviteLeaderList() // 초대 후 초대 대상 새로고침
+
+    } catch (error) {
+      console.error('❌ 팀원 초대 실패', error)
+      alert('팀원 초대에 실패했습니다.')
+    }
   }
-  showInviteModal = false
+
+  showInviteModal.value = false
 }
+
+
+
 
 onMounted(async () => {
   if (!userStore.accessToken) {
