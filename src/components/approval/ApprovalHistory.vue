@@ -46,6 +46,7 @@
         total-visible="7"
         class="mt-4"
         @update:modelValue="goToPage"
+        color="#7578ee"
         />
     </v-container>
   

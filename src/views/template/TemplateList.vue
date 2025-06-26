@@ -40,7 +40,7 @@
           v-model="currentPage"
           :length="pageCount"
           total-visible="5"
-          color="primary"
+          color="#7578ee"
         />
       </v-row>
     </div>

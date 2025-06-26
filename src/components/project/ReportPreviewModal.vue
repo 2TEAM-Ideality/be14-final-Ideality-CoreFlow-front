@@ -1,20 +1,27 @@
 <template>
-  <v-dialog v-model="dialogVisible" max-width="850px" persistent>
+  <v-dialog v-model="dialogVisible" max-width="900px" persistent>
     <v-card>
       <v-card-title>
         📄 PDF 미리 보기
         <v-spacer />
-        <div>{{ currentPage }} / {{ totalPages }}</div>
+        <div>{{ totalPages }} 페이지</div>
       </v-card-title>
 
-      <v-card-text class="d-flex justify-center">
-        <v-progress-circular v-if="isLoading" indeterminate color="primary" />
-        <canvas v-else ref="canvasRef" style="border: 1px solid #ccc;" />
+      <v-card-text class="pdf-container">
+        <v-progress-circular
+          v-if="isLoading"
+          indeterminate
+          color="primary"
+          class="mx-auto"
+        />
+        <div v-else>
+          <div v-for="(page, index) in totalPages" :key="index">
+            <canvas :ref="el => canvasRefs[index] = el" style="margin-bottom: 16px; border: 1px solid #ccc;" />
+          </div>
+        </div>
       </v-card-text>
 
       <v-card-actions>
-        <v-btn text :disabled="currentPage <= 1" @click="prevPage">이전</v-btn>
-        <v-btn text :disabled="currentPage >= totalPages" @click="nextPage">다음</v-btn>
         <v-spacer />
         <v-btn text @click="emit('update:modelValue', false)">닫기</v-btn>
         <v-btn color="primary" @click="download">다운로드</v-btn>
@@ -24,95 +31,76 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
-import workerSrc from 'pdfjs-dist/legacy/build/pdf.worker.min?url'
+import pdfWorker from 'pdfjs-dist/legacy/build/pdf.worker.min?url'
 
-// ✅ 워커 설정
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc
+// 설정
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
-// Props & Emits
+// props 및 emit
 const props = defineProps({
   modelValue: Boolean,
   blob: Blob
 })
 const emit = defineEmits(['update:modelValue'])
 
-// 상태
+// 다이얼로그 표시 여부
 const dialogVisible = computed({
   get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
+  set: val => emit('update:modelValue', val)
 })
 
+// 상태값
 const pdfUrl = ref('')
 const pdfDoc = ref(null)
-const currentPage = ref(1)
 const totalPages = ref(0)
-const isLoading = ref(true)
-const canvasRef = ref(null)
+const isLoading = ref(false)
+const canvasRefs = ref([])
 
-// blob 변경 감지 → PDF 로딩
-watch(
-  () => props.blob,
-  async (blob) => {
-    if (!blob) return
-    isLoading.value = true
-
-    try {
-      pdfUrl.value = URL.createObjectURL(blob)
-      const loadingTask = pdfjsLib.getDocument({ url: pdfUrl.value })
-      const doc = await loadingTask.promise
-
-      pdfDoc.value = doc
-      totalPages.value = doc.numPages
-      currentPage.value = 1
-
-      await renderPage()
-    } catch (err) {
-      console.error('PDF 로드 실패 ❌:', err)
-    } finally {
-      isLoading.value = false
-    }
-  },
-  { immediate: true }
-)
-
-// 페이지 렌더링
-const renderPage = async () => {
+// PDF 렌더링 함수
+const renderPdf = async () => {
   try {
-    const page = await pdfDoc.value.getPage(currentPage.value)
-    const canvas = canvasRef.value
-    const context = canvas.getContext('2d')
-    const viewport = page.getViewport({ scale: 1.5 })
+    isLoading.value = true
+    canvasRefs.value = []
 
-    canvas.width = viewport.width
-    canvas.height = viewport.height
+    if (!props.blob) return
 
-    const renderContext = {
-      canvasContext: context,
-      viewport
+    pdfUrl.value = URL.createObjectURL(props.blob)
+    const loadingTask = pdfjsLib.getDocument({ url: pdfUrl.value })
+    const doc = await loadingTask.promise
+    pdfDoc.value = doc
+    totalPages.value = doc.numPages
+
+    await nextTick()
+
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i)
+      const viewport = page.getViewport({ scale: 1.2 })
+      const canvas = canvasRefs.value[i - 1]
+      const context = canvas?.getContext('2d')
+
+      if (!canvas || !context) continue
+
+      canvas.width = viewport.width
+      canvas.height = viewport.height
+
+      await page.render({
+        canvasContext: context,
+        viewport: viewport
+      }).promise
     }
-
-    await page.render(renderContext).promise
   } catch (err) {
-    console.error('❌ PDF 렌더링 중 오류 발생:', err)
+    console.error('PDF 렌더링 실패 ❌', err)
+  } finally {
+    isLoading.value = false
   }
 }
 
-// 페이지 전환
-const prevPage = async () => {
-  if (currentPage.value > 1) {
-    currentPage.value--
-    await renderPage()
-  }
-}
-
-const nextPage = async () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-    await renderPage()
-  }
-}
+// blob 값이 바뀌면 PDF 렌더링
+watch(() => props.blob, () => {
+  if (props.blob) renderPdf()
+}, { immediate: true })
 
 // 다운로드
 const download = () => {
@@ -123,3 +111,11 @@ const download = () => {
   URL.revokeObjectURL(pdfUrl.value)
 }
 </script>
+
+<style scoped>
+.pdf-container {
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 8px;
+}
+</style>

@@ -201,14 +201,21 @@ const delayDays = computed(() => props.project.delayDays || 0)
 .project-meta {
     display: flex;
     flex-direction: column;
+    flex-grow: 1; /* ✅ 이름 칸이 더 넓게 확장되도록 */
+    min-width: 0; /* ✅ 줄임말 처리를 위해 필요 */
 }
 
 .project-name {
+    text-align: left;
     font-size: 18px;
     font-weight: bold;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 300px; 
 }
 
 .date-range {
+    text-align: left;
     font-size: 13px;
     color: #666;
 }
