@@ -7,9 +7,46 @@ export const useTaskStore = defineStore('taskStore', {
   state: () => ({
     items: [],  // 세부일정 목록
     totalProgress: 0, // 추가된 상태
+    deptNames: []  // 태스크의 담당부서
   }),
 
   actions: {
+        // deptNames를 업데이트하는 액션
+    setDeptNames(newDeptNames) {
+      this.deptNames = newDeptNames;
+    },
+async fetchDepartments() {
+  const userStore = useUserStore();
+  const token = userStore.accessToken;
+
+  if (!token) {
+    console.error("토큰이 없습니다.");
+    return;
+  }
+
+  try {
+    const response = await api.get(`/api/dept/all`);
+    if (response.status === 200) {
+      const departmentsFromApi = response.data.data;
+
+      // deptName에 해당하는 deptId만 추가
+      const updatedDeptNames = this.deptNames.map(dept => {
+        const matchedDept = departmentsFromApi.find(d => d.deptName === dept);  // 부서 이름만 찾음
+        if (matchedDept) {
+          return { deptName: dept, deptId: matchedDept.deptId };  // deptId 추가
+        }
+        return { deptName: dept };  // 부서 이름만 있을 경우 그대로 반환
+      });
+
+      this.setDeptNames(updatedDeptNames);  // 업데이트된 deptNames 저장
+    } else {
+      console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status);
+    }
+  } catch (error) {
+    console.error("부서 데이터를 불러오는 데 실패했습니다:", error);
+  }
+}
+,
             // 항목 상태 업데이트
     updateItemStatus(updatedItem) {
       const index = this.items.findIndex(item => item.workId === updatedItem.workId);

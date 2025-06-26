@@ -193,7 +193,7 @@
 import { ref, watch, onMounted, computed, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
-import axios from 'axios' 
+import { useTaskStore } from '@/stores/taskStore';  // Pinia 스토어 불러오기
 import TaskDonutChart from '@/components/task/TaskDonutChart.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import api from '@/api';
@@ -217,7 +217,18 @@ const props = defineProps({
 const taskId = route.params.taskId
 
 const isEdit = ref(false);
+const taskStore = useTaskStore();  // Pinia 스토어 인스턴스
 
+watch(() => task.value.deptNames, async (newDeptNames) => {
+  console.log('taskStore.deptNames가 변경되었습니다:', newDeptNames);
+
+  // taskStore의 deptNames에 있는 부서 이름을 업데이트
+  taskStore.setDeptNames(newDeptNames);
+
+  // 부서 목록을 API에서 불러와 deptId를 추가한 후, taskStore에 업데이트
+  await taskStore.fetchDepartments();  // fetchDepartments 먼저 호출
+  console.log('업데이트된 taskStore.deptNames:', taskStore.deptNames);  // 부서 목록 출력
+}, { immediate: true });  // 초기값도 동기화하도록 immediate 사용
 
 
 // 태스크 수정 ? 을 위한 깊은 복사

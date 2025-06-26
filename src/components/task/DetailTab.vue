@@ -206,7 +206,6 @@ confirmAndUpdateStatus(item, newStatus) {
       const token = userStore.accessToken;
       const taskStore = useTaskStore();
       await taskStore.fetchTotalProgress(parentTaskId, token); // 수정 후 totalProgress 갱신
-       // 리스트를 다시 불러와서 상태 반영
     await taskStore.fetchItems(parentTaskId, token);
   },
 

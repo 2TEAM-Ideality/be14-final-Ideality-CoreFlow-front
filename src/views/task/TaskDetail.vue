@@ -23,7 +23,7 @@
                 :detailList = "detailList"
                 />
 
-                <DetailTab v-show="false" :taskData="originTaskValue" />
+              
 
              </div>
         </template>

@@ -58,8 +58,8 @@
               </div>
             </div>
             <!-- 담당 부서 & 책임자 & 참여자 -->
-            <v-select label="담당 부서" v-model="form.department" :items="departments" item-title="deptName"
-              item-value="deptId" return-object @update:modelValue="fetchUsersForDepartment" required />
+            <v-select label="담당 부서" v-model="form.department" :items="departments" item-title="deptName.deptName.deptName"
+              item-value="deptName.deptName.deptId" return-object @update:modelValue="fetchUsersForDepartment" required />
 
             <v-select label="책임자" v-model="form.responsible" :items="users" item-title="name" item-value="id"
               required />
@@ -168,7 +168,7 @@ const submitForm = async () => {
     description: form.value.description, // 설명
     startBase: form.value.startDate, // 시작 베이스라인
     endBase: form.value.endDate, // 마감 베이스라인
-    deptId: form.value.department.deptId, // 부서 ID
+    deptId: form.value.department.deptName.deptName.deptId, // 부서 ID
     source: Array.from(precedingTasks), // Proxy 객체를 배열로 변환
     target: Array.from(followingTasks), // Proxy 객체를 배열로 변환
     assigneeId: form.value.responsible, // 책임자 ID
@@ -254,28 +254,9 @@ const fetchTasks = async () => {
 }
 
 
-const departments = ref([])
 
-const fetchDepartments = async () => {
-  const userStore = useUserStore()
-  const token = userStore.accessToken
-
-  if (!token) {
-    console.error("토큰이 없습니다.")
-    return
-  }
-
-  try {
-    const response = await api.get(`/api/dept/all`)
-    if (response.status === 200) {
-      departments.value = response.data.data; // 부서 데이터를 departments에 저장
-    } else {
-      console.error("부서 데이터를 가져오는 데 실패했습니다:", response.status);
-    }
-  } catch (error) {
-    console.error("부서 데이터를 불러오는 데 실패했습니다:", error);
-  }
-}
+const taskStore= useTaskStore();
+const departments = computed(() => taskStore.deptNames); 
 
 
 const users = ref([]) // task 목록을 저장할 배열
@@ -284,9 +265,8 @@ const fetchUsersForDepartment = async () => {
   const selectedDept = form.value.department; // 이미 객체임
   if (!selectedDept || !selectedDept.deptName) return;
 
-  const deptName = selectedDept.deptName;
+  const deptName = selectedDept.deptName.deptName.deptName;
   const userStore = useUserStore();
-  const token = userStore.accessToken;
 
   try {
     const response = await api.get(`/api/users/dept`, {
@@ -306,12 +286,10 @@ const fetchUsersForDepartment = async () => {
 
 
 const openWorkId = ref(null)
-
 // 컴포넌트가 마운트된 후 API 호출
 onMounted(() => {
-  fetchDepartments()
   fetchTasks()
-
+taskStore.fetchDepartments();
   // 👉 쿼리 파라미터로 전달된 tab과 openModal 처리
   
   // tab 전환
