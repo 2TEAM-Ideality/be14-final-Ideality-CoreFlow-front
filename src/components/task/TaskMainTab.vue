@@ -42,7 +42,7 @@
                   <v-btn icon @click="addPrecedingTask"><v-icon>mdi-plus</v-icon></v-btn>
                 </div>
                 <v-select v-for="(task, i) in form.precedingTasks" :key="i" v-model="form.precedingTasks[i]"
-                  :items="tasks" item-title="name" item-value="id" label="선행 일정 선택" />
+                  :items="filteredTasks('preceding', i)" item-title="name" item-value="id" label="선행 일정 선택" />
               </div>
               <div class="field-container">
                 <div class="label-container">
@@ -50,7 +50,7 @@
                   <v-btn icon @click="addFollowingTask"><v-icon>mdi-plus</v-icon></v-btn>
                 </div>
                 <v-select v-for="(task, i) in form.followingTasks" :key="i" v-model="form.followingTasks[i]"
-                  :items="tasks" item-title="name" item-value="id" label="후행 일정 선택" />
+                  :items="filteredTasks('following', i)" item-title="name" item-value="id" label="후행 일정 선택" />
               </div>
             </div>
             <!-- 담당 부서 & 책임자 & 참여자 -->
@@ -250,6 +250,27 @@ const fetchTasks = async () => {
   }
 }
 
+const filteredTasks = (type) => {
+  // 선행 일정과 후행 일정에서 선택된 항목을 제외한 배열을 만들어야 함
+  const selectedPrecedingTasks = form.value.precedingTasks.map(task => task.id);
+  const selectedFollowingTasks = form.value.followingTasks.map(task => task.id);
+
+  // 선행 일정과 후행 일정은 서로 겹칠 수 없으므로 이를 필터링
+  let excludedTasks = [...selectedPrecedingTasks, ...selectedFollowingTasks];
+
+  // 선행 일정 또는 후행 일정에 대한 필터링
+  if (type === 'preceding') {
+    // 선행 일정에서 선택된 일정을 제외한 항목 반환
+    return tasks.value.filter(task => !excludedTasks.includes(task.id));
+  }
+
+  if (type === 'following') {
+    // 후행 일정에서 선택된 일정을 제외한 항목 반환
+    return tasks.value.filter(task => !excludedTasks.includes(task.id));
+  }
+
+  return [];
+};
 
 
 const taskStore = useTaskStore();

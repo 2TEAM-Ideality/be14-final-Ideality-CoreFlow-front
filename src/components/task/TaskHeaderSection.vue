@@ -4,8 +4,12 @@
 
         <div class="task-header-box">
         <h1 class="task-title">
-            <v-icon :color="statusMeta.color" size="32" class="mr-1">{{ statusMeta.icon }}</v-icon>
-            TASK {{ task.taskId }} : {{ task.taskName }}
+            <TaskButton 
+            :status="props.task.status"
+            :id="props.task.id"
+            />
+            <!-- <v-icon :color="statusMeta.color" size="32" class="mr-1">{{ statusMeta.icon }}</v-icon> -->
+            {{ task.taskName }}
             <span :class="['status-badge', statusClass]">
                 {{ statusText }}
             </span>
@@ -17,6 +21,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import TaskButton from '@/components/project/TaskButton.vue'
 const route = useRoute()
 
 const props = defineProps({
