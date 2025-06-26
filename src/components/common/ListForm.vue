@@ -32,12 +32,9 @@
           <!-- 파일 다운로드 버튼 -->
           <template v-if="header.key === 'link'">
             <v-btn
-              :href="item.link || undefined"
               icon
               variant="text"
-              target="_blank"
-              download
-              :disabled="!item.link"
+              @click="handleDownload(item.attachmentId, item.name)"
             >
               <v-icon>mdi-download</v-icon>
             </v-btn>
@@ -75,6 +72,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import api from '@/api';
 
 const props = defineProps({
   headers: {
@@ -103,6 +101,25 @@ const pageCount = computed(() => Math.ceil(props.items.length / itemsPerPage))
 
 function toggleAll(value) {
   paginatedItems.value.forEach(item => (item.selected = value))
+}
+
+function handleDownload(attachmentId, fileName) {
+  api.get(`/api/attachment/${attachmentId}/download`, {
+    responseType: 'blob' // 서버에서 byte[]로 내려주기 때문에 blob으로 받아야 함
+  })
+    .then(res => {
+      const blob = new Blob([res.data])
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.setAttribute('download', fileName || 'download')
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(link.href)
+    })
+    .catch(err => {
+      console.error('다운로드 실패:', err)
+    })
 }
 
 watch(currentPage, () => {
