@@ -47,18 +47,34 @@
       <div style="display: flex; flex-direction: column; width: 100%; gap: 20px;">
         <!-- 부서 선택 -->
         <div class="form-row">
-          <v-combobox
-            v-model="task.deptNames"
-            :items="deptList"
-            label="담당 부서"
-            multiple
-            chips
-            :readonly="!isEdit"
-            variant="outlined"
-            hide-details
-          />
-            <!-- closable-chips -->
+          <template v-if="isEdit">
+            <!-- 수정 모드: 드롭다운 -->
+            <v-select
+              v-model="task.deptNames"
+              :items="deptList"
+              label="담당 부서"
+              multiple
+              chips
+              clearable
+              variant="outlined"
+              hide-details
+            />
+          </template>
+          <template v-else>
+            <!-- 읽기 모드: 읽기 전용 콤보박스 형태로 표시 -->
+            <v-combobox
+              v-model="task.deptNames"
+              :items="deptList"
+              label="담당 부서"
+              multiple
+              chips
+              variant="outlined"
+              hide-details
+              readonly
+            />
+          </template>
         </div>
+
 
         <!-- 태스크 설명 -->
         <div class="form-row">
@@ -123,6 +139,36 @@
             </v-col>
           </v-row>
         </div>
+
+        <!-- 선행 후행 일정 수정 -->
+        <div class="form-row">
+          <template v-if="isEdit">
+            <!-- 수정 모드: 드롭다운 -->
+            <v-select
+              v-model="task.deptNames"
+              :items="deptList"
+              label="담당 부서"
+              multiple
+              chips
+              clearable
+              variant="outlined"
+              hide-details
+            />
+          </template>
+          <template v-else>
+            <!-- 읽기 모드: 읽기 전용 콤보박스 형태로 표시 -->
+            <v-combobox
+              v-model="task.deptNames"
+              :items="deptList"
+              label="담당 부서"
+              multiple
+              chips
+              variant="outlined"
+              hide-details
+              readonly
+            />
+          </template>
+        </div>
       </div>
       
     </div>
@@ -138,19 +184,7 @@
           </div>
         </div>
         <div class="data">
-          <template v-if="isEdit">
-            <input
-              type="number"
-              min="0"
-              max="150"
-              class="input"
-              v-model.number="task.selectTask.passedRate"
-              style="width: 80px;"
-            /> %
-          </template>
-          <template v-else>
-            {{ task.selectTask.passedRate }}%
-          </template>
+          {{ task.selectTask.passedRate }}%
         </div>
       </div>
 
@@ -246,8 +280,11 @@ const activeDetailList = computed(() => {
 })
 
 onMounted(() => {
-  console.log(props.taskData)
+  handleDeptDropdown()
+
   window.addEventListener('click', handleClickOutside);
+
+
 });
 
 onUnmounted(() => {
@@ -271,14 +308,18 @@ const taskList = ref([])
 console.log(deptList)
 // 부서 드롭다운
 const handleDeptDropdown = async () => {
-  // 프로젝트 id 필히 수정 필요
   try {
-    const res = await api.get(`/api/projects/${task.value.selectTask.projectId}/participants/department`);
-    // 이름만 추출
+    const projectId = props.taskData?.selectTask?.projectId
+    if (!projectId) {
+      console.warn('⚠️ 프로젝트 ID 없음');
+      return;
+    }
+
+    const res = await api.get(`/api/projects/${projectId}/participants/department`);
     deptList.value = res.data.data.map(d => d.deptName);
     showDeptDropdown.value = !showDeptDropdown.value;
   } catch (error) {
-    console.log(error);
+    console.error('❌ 부서 목록 불러오기 실패:', error);
   }
 }
 
@@ -398,6 +439,9 @@ watch(() => props.taskData, (newData) => {
 }, { immediate: true });
 
 
+
+
+
 const hasChanges = computed(() => {
   return JSON.stringify(task.value) !== JSON.stringify(originalTask.value);
 });
@@ -407,6 +451,7 @@ const fetchModify = async () => {
   try {
     const dto = {
       taskId: task.value.selectTask.taskId,
+      taskName: task.value.selectTask.taskName, 
       projectId: task.value.selectTask.projectId,
       description: task.value.selectTask.description,
       deptLists: task.value.deptNames,
@@ -430,20 +475,6 @@ const fetchModify = async () => {
   }     
 }
 
-// ✅ PATCH: 경과율
-const updatePassedRate = async () => {
-  try {
-    console.log('✅ PATCH: 경과율', taskId)
-    await api.patch(
-      `/api/task/${taskId}/passed-rate`,
-      { passedRate: task.value.selectTask.passedRate },
-
-    );
-  } catch (err) {
-    console.error("경과율 수정 실패:", err);
-    throw err;
-  }
-};
 
 
 
@@ -465,8 +496,6 @@ const submitEdit = async () => {
   try {
     await fetchModify();
     console.log("✅태스크 상세정보 수정 완료")
-    await updatePassedRate();
-    console.log("✅ 경과율 수정 완료")
 
     alert("수정되었습니다.");
   } catch (err) {
