@@ -147,8 +147,10 @@
             <!-- 수정 모드: 드롭다운 -->
              <div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%; gap: 12px;">
                 <div style="width: 50%;">
+                  <!-- :model-value="props.taskData?.prevTasks.map(t => t.prevWorkName)" -->
+
                 <v-select
-                  :model-value="props.taskData?.prevTasks.map(t => t.prevWorkName)"
+                  v-model="selectedPrevNames"
                   :items="taskList.map(t=>t.label)"
                   label="선행 태스크"
                   multiple
@@ -158,9 +160,11 @@
                   hide-details
                 />
                 </div>
+                    <!-- :model-value="props.taskData?.nextTasks.map(t => t.nextWorkName)" -->
+
                 <div style="width: 50%;">
                   <v-select
-                    :model-value="props.taskData?.nextTasks.map(t => t.nextWorkName)"
+                    v-model="selectedNextNames"
                     :items="taskList.map(t=>t.label)"
                     label="후행 태스크"
                     multiple
@@ -341,6 +345,45 @@ const nextDropdownRef = ref(null)
 const deptList = ref([])
 const taskList = ref([])
 
+// 선행 후행 수정
+const selectedPrevNames = computed({
+  get: () => task.value.prevTasks.map(t => t.prevWorkName),
+  set: (newNames) => {
+    const nextNames = task.value.nextTasks.map(t => t.nextWorkName)
+
+    // 교집합 체크
+    const overlap = newNames.filter(name => nextNames.includes(name))
+    if (overlap.length > 0) {
+      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlap.join(', ')}`)
+      return
+    }
+
+    task.value.prevTasks = newNames.map(name => {
+      const match = taskList.value.find(t => t.label === name)
+      return { prevWorkId: match?.id || null, prevWorkName: name }
+    }).filter(t => t.prevWorkId !== null)
+  }
+})
+
+const selectedNextNames = computed({
+  get: () => task.value.nextTasks.map(t => t.nextWorkName),
+  set: (newNames) => {
+    const prevNames = task.value.prevTasks.map(t => t.prevWorkName)
+
+    const overlap = newNames.filter(name => prevNames.includes(name))
+    if (overlap.length > 0) {
+      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlap.join(', ')}`)
+      return
+    }
+
+    task.value.nextTasks = newNames.map(name => {
+      const match = taskList.value.find(t => t.label === name)
+      return { nextWorkId: match?.id || null, nextWorkName: name }
+    }).filter(t => t.nextWorkId !== null)
+  }
+})
+
+
 // 부서 목록 조회 
 const handleDeptDropdown = async () => {
   try {
@@ -473,6 +516,8 @@ const hasChanges = computed(() => {
 // 태스크 상세 정보 수정
 const fetchModify = async () => {
   try {
+    console.log('수정 요청', task.value.prevTasks)
+
     const dto = {
       taskId: task.value.selectTask.taskId,
       taskName: task.value.selectTask.taskName, 
