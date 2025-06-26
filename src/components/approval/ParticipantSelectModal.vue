@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
-  type: String, // 'approver' | 'viewer | project'
+  type: String, // 'approver' | 'viewer | project | leader | member '
   userList: {
     type: Array,
     default: () => []
@@ -24,7 +24,7 @@ const selectedUserIds = ref([])
 const openedPanels = ref([])
 
 const isApprover = computed(() => props.type === 'approver')
-const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project')
+const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project' || props.type === 'leader' || props.type === 'member')
 
 onMounted(() => {
   console.log(props.userList)
@@ -122,6 +122,8 @@ watch(groupedUsers, (val) => {
         <div v-if="props.type === 'approver'">결재자 선택</div>
         <div v-if="props.type === 'viewers'">참조자 선택</div>
         <div v-if="props.type === 'project'">팀장 초대</div>
+        <div v-if="props.type === 'leader'">팀장 초대</div>
+        <div v-if="props.type === 'member'">팀원 초대</div>
     </v-card-title>
 
       <v-card-text class="main-area">
@@ -146,7 +148,7 @@ watch(groupedUsers, (val) => {
                 <v-expansion-panel-title class="expansion-title">
                   <v-checkbox
                   class="panel-checkbox"
-                     v-if="isMultiSelect"
+                    v-if="isMultiSelect"
                     :indeterminate="isIndeterminate(dept)"
                     :model-value="isAllSelected(dept)"
                     @update:modelValue="toggleGroup(dept)"

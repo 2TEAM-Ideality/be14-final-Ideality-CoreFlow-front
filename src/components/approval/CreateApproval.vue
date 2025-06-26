@@ -33,7 +33,7 @@
     <div class="d-flex align-center mb-1">
       <span class="text-subtitle-2 font-weight-bold">결재자</span>
       <span class="not-null">*</span>
-       <v-btn  v-if="selectedApprover === null" @click="openModal('approver')" :disabled="selectedProjectId === null" size="small" color="white" style="margin-right:10px;">
+      <v-btn  v-if="selectedApprover === null" @click="openModal('approver')" :disabled="selectedProjectId === null" size="small" color="white" style="margin-right:10px;">
         <span>조회</span>
       </v-btn>
       <div v-if="selectedProjectId === null" class="text-grey text-body-2">프로젝트를 선택해주세요.</div>
