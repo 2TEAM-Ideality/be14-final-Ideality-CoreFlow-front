@@ -47,18 +47,35 @@
       <div style="display: flex; flex-direction: column; width: 100%; gap: 20px;">
         <!-- 부서 선택 -->
         <div class="form-row">
-          <v-combobox
-            v-model="task.deptNames"
-            :items="deptList"
-            label="담당 부서"
-            multiple
-            chips
-            :readonly="!isEdit"
-            variant="outlined"
-            hide-details
-          />
-            <!-- closable-chips -->
+          <template v-if="isEdit">
+            <!-- 수정 모드: 드롭다운 -->
+            <v-select
+              v-model="task.deptNames"
+              :items="deptList"
+              label="담당 부서"
+              item-title="name"
+              item-value="name" 
+              multiple
+              chips
+              clearable
+              variant="outlined"
+              hide-details
+            />
+          </template>
+          <template v-else>
+            <!-- 읽기 모드: 읽기 전용 콤보박스 형태로 표시 -->
+            <v-combobox
+              v-model="task.deptNames"
+              label="담당 부서"
+              multiple
+              chips
+              variant="outlined"
+              hide-details
+              readonly
+            />
+          </template>
         </div>
+
 
         <!-- 태스크 설명 -->
         <div class="form-row">
@@ -76,8 +93,8 @@
 
         <!-- 베이스라인 (읽기전용) -->
         <div class="form-row">
-          <v-row no-gutters>
-            <v-col cols="6">
+          <div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%; gap: 12px;">
+              <div style="width: 50%;">
               <v-text-field
                 :model-value="task.selectTask.startBaseLine"
                 label="시작 베이스라인"
@@ -85,8 +102,8 @@
                 variant="outlined"
                 density="compact"
               />
-            </v-col>
-            <v-col cols="6" class="pl-2">
+              </div>
+              <div style="width: 50%;">
               <v-text-field
                 :model-value="task.selectTask.endBaseLine"
                 label="마감 베이스라인"
@@ -94,14 +111,14 @@
                 variant="outlined"
                 density="compact"
               />
-            </v-col>
-          </v-row>
+            </div>  
+          </div>
         </div>
 
         <!-- 예상 시작/종료 -->
         <div class="form-row">
-          <v-row no-gutters>
-            <v-col cols="6">
+          <div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%; gap: 12px;">
+              <div style="width: 50%;">
               <v-text-field
                 type="date"
                 v-model="task.selectTask.expectStartDate"
@@ -110,8 +127,8 @@
                 variant="outlined"
                 density="compact"
               />
-            </v-col>
-            <v-col cols="6" class="pl-2">
+              </div>
+              <div style="width: 50%;">
               <v-text-field
                 type="date"
                 v-model="task.selectTask.expectEndDate"
@@ -120,8 +137,73 @@
                 variant="outlined"
                 density="compact"
               />
-            </v-col>
-          </v-row>
+            </div>  
+          </div>
+        </div>
+
+        <!-- 선행 후행 태스크 수정 -->
+        <div class="form-row">
+          <template v-if="isEdit">
+            <!-- 수정 모드: 드롭다운 -->
+             <div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%; gap: 12px;">
+                <div style="width: 50%;">
+                  <!-- :model-value="props.taskData?.prevTasks.map(t => t.prevWorkName)" -->
+
+                <v-select
+                  v-model="selectedPrevNames"
+                  :items="taskList.map(t=>t.label)"
+                  label="선행 태스크"
+                  multiple
+                  chips
+                  clearable
+                  variant="outlined"
+                  hide-details
+                />
+                </div>
+                    <!-- :model-value="props.taskData?.nextTasks.map(t => t.nextWorkName)" -->
+
+                <div style="width: 50%;">
+                  <v-select
+                    v-model="selectedNextNames"
+                    :items="taskList.map(t=>t.label)"
+                    label="후행 태스크"
+                    multiple
+                    chips
+                    clearable
+                    variant="outlined"
+                    hide-details
+                  />
+                </div>
+                </div>
+          </template>
+          <template v-else>
+            <!-- 읽기 모드: 읽기 전용 콤보박스 형태로 표시 -->
+             <div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%; gap: 12px;">
+                <div style="width: 50%;">
+                  <v-combobox
+                    :model-value="props.taskData?.prevTasks.map(t => t.prevWorkName)"
+                    label="선행 태스크"
+                    multiple
+                    chips
+                    variant="outlined"
+                    hide-details
+                    readonly
+                  />
+                </div>
+                <div style="width: 50%;">
+                <v-combobox
+                  :model-value="props.taskData?.nextTasks.map(t => t.nextWorkName)"
+                  label="후행 태스크"
+                  multiple
+                  chips
+                  variant="outlined"
+                  hide-details
+                  readonly
+                />
+                </div>  
+             </div>
+           
+          </template>
         </div>
       </div>
       
@@ -138,19 +220,7 @@
           </div>
         </div>
         <div class="data">
-          <template v-if="isEdit">
-            <input
-              type="number"
-              min="0"
-              max="150"
-              class="input"
-              v-model.number="task.selectTask.passedRate"
-              style="width: 80px;"
-            /> %
-          </template>
-          <template v-else>
-            {{ task.selectTask.passedRate }}%
-          </template>
+          {{ task.selectTask.passedRate }}%
         </div>
       </div>
 
@@ -246,8 +316,15 @@ const activeDetailList = computed(() => {
 })
 
 onMounted(() => {
-  console.log(props.taskData)
+  console.log(props.taskData.prevTaskList)
+  handleDeptDropdown()
+  fetchTaskList() // 태스크 목록 조회 
+
   window.addEventListener('click', handleClickOutside);
+
+
+
+
 });
 
 onUnmounted(() => {
@@ -268,17 +345,60 @@ const nextDropdownRef = ref(null)
 const deptList = ref([])
 const taskList = ref([])
 
-console.log(deptList)
-// 부서 드롭다운
+// 선행 후행 수정
+const selectedPrevNames = computed({
+  get: () => task.value.prevTasks.map(t => t.prevWorkName),
+  set: (newNames) => {
+    const nextNames = task.value.nextTasks.map(t => t.nextWorkName)
+
+    // 교집합 체크
+    const overlap = newNames.filter(name => nextNames.includes(name))
+    if (overlap.length > 0) {
+      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlap.join(', ')}`)
+      return
+    }
+
+    task.value.prevTasks = newNames.map(name => {
+      const match = taskList.value.find(t => t.label === name)
+      return { prevWorkId: match?.id || null, prevWorkName: name }
+    }).filter(t => t.prevWorkId !== null)
+  }
+})
+
+const selectedNextNames = computed({
+  get: () => task.value.nextTasks.map(t => t.nextWorkName),
+  set: (newNames) => {
+    const prevNames = task.value.prevTasks.map(t => t.prevWorkName)
+
+    const overlap = newNames.filter(name => prevNames.includes(name))
+    if (overlap.length > 0) {
+      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlap.join(', ')}`)
+      return
+    }
+
+    task.value.nextTasks = newNames.map(name => {
+      const match = taskList.value.find(t => t.label === name)
+      return { nextWorkId: match?.id || null, nextWorkName: name }
+    }).filter(t => t.nextWorkId !== null)
+  }
+})
+
+
+// 부서 목록 조회 
 const handleDeptDropdown = async () => {
-  // 프로젝트 id 필히 수정 필요
   try {
-    const res = await api.get(`/api/projects/${task.value.selectTask.projectId}/participants/department`);
-    // 이름만 추출
-    deptList.value = res.data.data.map(d => d.deptName);
+    const projectId = props.taskData?.selectTask?.projectId
+    if (!projectId) {
+      console.warn('⚠️ 프로젝트 ID 없음');
+      return;
+    }
+    const res = await api.get(`/api/projects/${projectId}/participants/leaderDept`);
+    deptList.value = res.data.data.map(d => d.name);
+    // deptList.value = res.data.data.map(d => ({ name: d.name }));
+    console.log('부서 목록 확인', deptList.value)
     showDeptDropdown.value = !showDeptDropdown.value;
   } catch (error) {
-    console.log(error);
+    console.error('❌ 부서 목록 불러오기 실패:', error);
   }
 }
 
@@ -297,7 +417,7 @@ const selectDept = (dept) => {
 };
 
 // 태스크 목록 조회
-const TaskList = async () => {
+const fetchTaskList = async () => {
   // 프로젝트 id는 바로 수정 필요
   try {
     const res = await api.get(`/api/task/${task.value.selectTask.projectId}`);
@@ -325,18 +445,6 @@ const filteredNextTasks = computed(() =>
   )
 );
 
-// 드롭다운 오픈 함수
-const handlePrevTaskDropdown = async () => {
-  await TaskList();
-  showPrevDropdown.value = !showPrevDropdown.value;
-  showNextDropdown.value = false;
-};
-
-const handleNextTaskDropdown = async () => {
-  await TaskList();
-  showNextDropdown.value = !showNextDropdown.value;
-  showPrevDropdown.value = false;
-};
 
 // 이전 태스크 선택
 const selectPrevTask = (t) => {
@@ -398,6 +506,9 @@ watch(() => props.taskData, (newData) => {
 }, { immediate: true });
 
 
+
+
+
 const hasChanges = computed(() => {
   return JSON.stringify(task.value) !== JSON.stringify(originalTask.value);
 });
@@ -405,8 +516,11 @@ const hasChanges = computed(() => {
 // 태스크 상세 정보 수정
 const fetchModify = async () => {
   try {
+    console.log('수정 요청', task.value.prevTasks)
+
     const dto = {
       taskId: task.value.selectTask.taskId,
+      taskName: task.value.selectTask.taskName, 
       projectId: task.value.selectTask.projectId,
       description: task.value.selectTask.description,
       deptLists: task.value.deptNames,
@@ -430,20 +544,6 @@ const fetchModify = async () => {
   }     
 }
 
-// ✅ PATCH: 경과율
-const updatePassedRate = async () => {
-  try {
-    console.log('✅ PATCH: 경과율', taskId)
-    await api.patch(
-      `/api/task/${taskId}/passed-rate`,
-      { passedRate: task.value.selectTask.passedRate },
-
-    );
-  } catch (err) {
-    console.error("경과율 수정 실패:", err);
-    throw err;
-  }
-};
 
 
 
@@ -465,8 +565,6 @@ const submitEdit = async () => {
   try {
     await fetchModify();
     console.log("✅태스크 상세정보 수정 완료")
-    await updatePassedRate();
-    console.log("✅ 경과율 수정 완료")
 
     alert("수정되었습니다.");
   } catch (err) {

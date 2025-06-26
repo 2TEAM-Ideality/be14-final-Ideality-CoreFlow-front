@@ -102,6 +102,7 @@ const iconColorMap = {
   pending: '#B2B2B2',
   progress: '#307CFF',
   completed: '#34C759',
+  warning: '',
   deleted: '#9CA3AF',
   cancelled: '#EF4444'
 }
@@ -111,11 +112,13 @@ const iconColor = computed(() => iconColorMap[props.status] || '#ccc')
 
 const actions = computed(() => {
   switch (props.status) {
-    case 'pending':
+    case 'PENDING':
       return ['태스크 시작', '삭제']
-    case 'progress':
+    case 'PROGRESS':
       return ['태스크 중단', '삭제']
-    case 'completed':
+    case 'COMPLETED':
+      return ['상세 보기']
+    case 'WARNING':
       return ['상세 보기']
     default:
       return ['상세 보기']

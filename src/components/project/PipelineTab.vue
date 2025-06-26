@@ -33,7 +33,6 @@ const nodes = ref([])   // 원본 노드 데이터
 const edges = ref([])   // 원본 엣지 데이터 
 
 const deptList = ref([])    // 부서 목록 
-
 const showFullscreenView = ref(false)   // 전체 보기 
 const vueFlowRef = ref(null)    // 
 
@@ -43,7 +42,6 @@ const editingNode = ref(null)       // 수정 대상 태스크
 
 const newTasks = ref([])        // 생성할 태스크 목록 
 
-console.log(projectInfo.value)
 
 
 // 프로젝트 파이프라인 데이터 가져오기
@@ -53,8 +51,7 @@ async function fetchPipeline() {
       params: { projectId }
     })
     const data = res.data.data
-    console.log(data)
-    // projectInfo.value = data
+    console.log('✅ 파이프라인 데이터 조회', data)
    
     projectName.value = data.name
     
@@ -150,12 +147,11 @@ async function fetchPipeline() {
   }
 }
 
-// 부서 목록 가져오기
+// 부서 목록 조회
 const fetchDeptList = async () => {
-  // const res = await api.get('/api/dept/all')
-  const res = await api.get(`/api/projects/${projectId}/participants/department`)
+  const res = await api.get(`/api/projects/${projectId}/participants/leaderDept`)
   deptList.value = res.data.data;
-  console.log('부서 목록', res)
+  console.log('✅ 부서 목록', res)
 }
 
 onMounted(() => {
@@ -185,7 +181,7 @@ async function handleNodesInitialized() {
 
 function handleStartTask(taskId) {
   // 태스크 시작 로직
-  console.log('Started task', taskId)
+  console.log('✅ Started task', taskId)
 }
 
 // source/target task에 null 들어가는 것 방지
@@ -212,7 +208,7 @@ async function handleCreateNewNode(nodeData) {
       startBaseLine: nodeData.startBase,
       endBaseLine: nodeData.endBase,
       projectId: Number(projectId),
-      deptList: nodeData.deptList,
+      deptList: nodeData.deptList.map(d => d.id),
       source: nodeData.parentIds,
       target: nodeData.childIds
     }
@@ -277,12 +273,22 @@ function onEditNode(nodeId) {
     const parentIds = getParentIds(nodeId)
     const childIds = getChildIds(nodeId)
 
+    // ✅ 부서 ID → 부서명으로 변환
+    let deptNames = node.data.deptList
+    if (typeof deptNames?.[0] === 'number') {
+      const idToNameMap = Object.fromEntries(deptList.value.map(d => [d.deptId, d.deptName]))
+      deptNames = deptNames.map(id => idToNameMap[id]).filter(Boolean)
+    }
+
+    console.log('편집 시 전달할 부서목록', deptNames)
+
     editingNode.value = {
       ...node,
       data: {
         ...node.data,
-        parentIds: getParentIds(nodeId),
-        childIds: getChildIds(nodeId)
+        deptList: deptNames,  // ✅ 정확하게 'deptList' 키로 전달
+        parentIds,
+        childIds
       }
     }
 
@@ -292,7 +298,7 @@ function onEditNode(nodeId) {
 
 // 태스크 삭제 연결
 async function handleDeleteTask(nodeId) {
-  console.log("태스크 삭제하러 옴")
+  console.log("✅ 태스크 삭제 요청")
   try {
     // 서버에 삭제 요청 (실제로는 soft-delete 처리)
     await api.patch(`/api/task/delete/${nodeId}`)
@@ -315,42 +321,48 @@ async function handleUpdateTask(updatedData) {
   const node = nodes.value.find(n => n.id === updatedData.id)
   if (!node) return
 
-  // 1. 로컬 데이터 수정
+  // ✅ 부서 ID → 부서명 변환
+  let deptNames = updatedData.deptList
+  if (typeof deptNames?.[0] === 'number') {
+    const idToNameMap = Object.fromEntries(deptList.value.map(d => [d.deptId, d.deptName]))
+    deptNames = updatedData.deptList.map(id => idToNameMap[id]).filter(Boolean)
+  }
+
+  // 로컬 노드 데이터 반영
   Object.assign(node.data, {
     label: updatedData.label,
     description: updatedData.description,
     startBase: updatedData.startBase,
     endBase: updatedData.endBase,
-    deptList: updatedData.deptList
+    deptList: deptNames
   })
-
-  // 2. 서버에 수정 요청 전송
+  console.log('✅ 업데이트 요청 확인', updatedData)
   try {
     const requestBody = {
-      taskName: updatedData.label,    
+      taskName: updatedData.label,
       taskId: Number(updatedData.id),
       projectId: Number(projectId),
       description: updatedData.description,
-      deptLists: updatedData.deptList,  // 이미 부서명 문자열 리스트
-      prevTaskList: getParentIds(updatedData.id),
-      nextTaskList: getChildIds(updatedData.id),
+      deptLists: deptNames,  // ✅ 부서명 문자열 리스트
+      prevTaskList: updatedData.parentIds,
+      nextTaskList: updatedData.childIds,
       startExpect: updatedData.startBase,
       endExpect: updatedData.endBase
     }
 
     await api.patch(`/api/task/modify/${updatedData.id}`, requestBody)
     console.log('✅ 태스크 수정 성공')
-
-    // 선택적으로 다시 불러오기 (동기화)
-    // await fetchPipeline()
   } catch (err) {
     console.error('태스크 수정 실패:', err)
     alert('태스크 수정 요청에 실패했습니다.')
   }
 
-  // 3. 상태 초기화 및 레이아웃 재정렬
+  // 모달 상태 초기화 및 정렬
   showEditModal.value = false
   editingNode.value = null
+
+  // ✅ 수정 직후 파이프라인 최신화
+  await fetchPipeline()
   await nextTick()
   layoutGraph('LR')
 }
@@ -428,45 +440,6 @@ async function onAddNode(parentId = null) {
   }
 }
 
-// function onAddNode(parentId = null) {
-//   const newId = nanoid(6)
-//   const newNode = {
-//     id: newId,
-//     type: 'task',
-//     position: { x: 200, y: 200 + nodes.value.length * 100 },
-//     data: {
-//       label: `새 태스크`,
-//       description: '',
-//       deptList: [],
-//       duration: null,
-//       slackTime: null,
-//       status: 'pending',
-//       progressRate: 0,
-//       passedRate: 0,
-//       delayDays: 0,
-//       toolbarVisible: false
-//     }
-//   }
-
-//   nodes.value.push(newNode)
-//   newTasks.value.push(newNode) // 🔥 저장 대상에 추가
-
-//   if (parentId) {
-//     edges.value.push({
-//       id: `e-${parentId}-${newId}`,
-//       source: parentId,
-//       target: newId,
-//       type: 'bezier',
-//       animated: true,
-//       sourcePosition: Position.Right,
-//       targetPosition: Position.Left
-//     })
-//   }
-
-//   nextTick(() => {
-//     layoutGraph('LR')
-//   })
-// }
 
 
 async function onSaveTasks() {
@@ -475,27 +448,7 @@ async function onSaveTasks() {
     showFullscreenView.value = false
     const idMap = new Map()
 
-    // 1. 새 태스크 저장
-    // for (const node of newTasks.value) {
-    //   const payload = {
-    //     label: node.data.label,
-    //     description: node.data.description,
-    //     startBaseLine: node.data.startBase,
-    //     endBaseLine: node.data.endBase,
-    //     projectId: Number(projectId),
-    //     deptList: node.data.deptList || [],
-    //     source: getParentIds(node.id).filter(Boolean),
-    //     target: getChildIds(node.id).filter(Boolean)
-    //     // source: getParentIds(node.id),  // 기존 엣지로부터 부모 추출
-    //     // target: getChildIds(node.id)
-    //   }
-
-    //   const res = await api.post('/api/task', payload)
-    //   const realId = res.data.data.taskId
-    //   idMap.set(node.id, realId)
-    // }
-
-    // ✅ 2. 엣지 먼저 갱신
+    // ✅ 엣지 먼저 갱신
     edges.value = edges.value.map(e => {
       const newSource = idMap.get(e.source) || e.source
       const newTarget = idMap.get(e.target) || e.target
@@ -512,7 +465,7 @@ async function onSaveTasks() {
         target: String(newTarget)
       }
     })
-    // ✅ 3. 노드 ID 갱신
+    // ✅ 노드 ID 갱신
     nodes.value = nodes.value.map(n => {
       const newId = idMap.get(n.id)
       if (!newId) return n
@@ -523,23 +476,35 @@ async function onSaveTasks() {
       }
     })
     
-    // ✅ 4. 이제 getParentIds / getChildIds 안전하게 사용 가능
+    // ✅
     for (const node of nodes.value) {
       if (!idMap.has(node.id)) {
-        const parentIds = getParentIds(node.id).map(Number)
-        const childIds = getChildIds(node.id).map(Number)
+        const parentIds = node.data.parentIds || getParentIds(node.id)
+        const childIds = node.data.childIds || getChildIds(node.id)
+
+        let deptData = node.data.deptList
+
+        // ✅ deptList 값이 숫자일 경우 → 수정용 deptName 변환 필요
+        if (typeof deptData?.[0] === 'number') {
+          const idToNameMap = Object.fromEntries(
+            deptList.value.map(d => [d.deptId, d.deptName])
+          )
+          deptData = deptData.map(id => idToNameMap[id]).filter(Boolean)
+        }
+        console.log('✅모든 태스크 편집 반영 확인', node)
 
         const requestBody = {
           taskName: node.data.label,
           taskId: Number(node.id),
           projectId: Number(projectId),
           description: node.data.description,
-          deptLists: node.data.deptList,
+          deptLists: deptData, // ✅ 변환된 부서명 목록
           prevTaskList: parentIds,
           nextTaskList: childIds,
           startExpect: node.data.startBase,
           endExpect: node.data.endBase
         }
+        console.log('✅모든 태스크 편집 반영 확인',  requestBody )
 
         console.log(`📌 태스크 수정 요청: ${node.id}`, requestBody)
         await api.patch(`/api/task/modify/${node.id}`, requestBody)
@@ -573,6 +538,10 @@ watch(showFullscreenView, async (isOpen) => {
   }
 })
 
+function handleCloseModal() {
+  showNewTask.value = false
+  editingNode.value = null  
+}
 
 </script>
 
@@ -632,7 +601,7 @@ watch(showFullscreenView, async (isOpen) => {
         :initialData="editingNode"
         @create="handleCreateNewNode" 
         @update="handleUpdateTask"
-        @close="showNewTask = false"
+        @close="handleCloseModal"
       />
       <v-card class="pa-4">
         <!-- 상단 메뉴 -->
