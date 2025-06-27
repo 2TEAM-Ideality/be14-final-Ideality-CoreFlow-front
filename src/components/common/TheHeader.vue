@@ -3,9 +3,7 @@
     <div class="logo">
       <router-link to="/">
         <img src="@/assets/black-logo.png" alt="Coreflow Logo" />
-         <!-- TEST -->
-        <!-- <img src="@/assets/square-logo.png" alt="Coreflow Logo" />
-        <span class="logo-text">CoreFlow</span> -->
+        <!-- <img src="/logo-favicon.png" alt="Coreflow Logo" /> -->
       </router-link>
     </div>
 
@@ -221,38 +219,10 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-}
-
-/* router-link 내부 스타일 초기화 */
-.logo a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none; /* ✅ 밑줄 제거 */
-  color: inherit;
-}
-
 .logo img {
   height: 32px;
-  /* width: 32px; */ 
   object-fit: contain;
 }
-
-.logo-text {
-  font-family: 'Audiowide', cursive;
-  /* font-weight: bold; */
-  font-size: 17px;
-  margin-top: 3px;
-  color: black;
-  user-select: text;
-  pointer-events: auto;
-  cursor: default;
-  text-decoration: none;
-}
-
 
 .nav {
   display: flex;
