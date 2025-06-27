@@ -162,7 +162,7 @@ const submitForm = async () => {
 
   // 요청 데이터 구성
   const requestData = {
-    projectId: sessionStorage.getItem('projectId'), // 세션에서 프로젝트 ID
+    projectId: localStorage.getItem('projectId'), // 세션에서 프로젝트 ID
     parentTaskId: props.taskData.selectTask.taskId, // 부모 작업 ID
     name: form.value.title, // 제목
     description: form.value.description, // 설명
