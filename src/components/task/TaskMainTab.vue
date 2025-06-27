@@ -20,25 +20,53 @@
       />
 
     <v-dialog v-model="showModal" max-width="700">
-      <v-card>
-        <v-card-title class="d-flex justify-space-between align-center">
+      <v-card style="padding: 5%; ">
+        <v-card-title class="text-h6 font-weight-bold d-flex justify-space-between align-center">
           <span>세부 일정 생성</span>
           <v-btn icon @click="closeModal">
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
-
-        <v-divider></v-divider>
-
         <v-card-text>
           <v-form @submit.prevent="submitForm">
             <v-text-field label="세부 일정 제목" v-model="form.title" required></v-text-field>
             <v-textarea label="세부 일정 설명" v-model="form.description" required></v-textarea>
 
             <div class="inline-fields-baseline">
-              <v-text-field label="시작 베이스라인" v-model="form.startDate" type="date" required />
-              <v-text-field label="마감 베이스라인" v-model="form.endDate" type="date" required />
+              <!-- 주말 & 공휴일 예외 처리 반영 -->
+              <v-text-field
+                label="시작 베이스라인"
+                v-model="form.startDate"
+                type="date"
+                @change="handleStartDateChange"
+                :error="!!startDateError"
+                :error-messages="startDateError"
+                required
+                style="width: 50%;"
+              />
+
+              <v-text-field
+                label="마감 베이스라인"
+                v-model="form.endDate"
+                type="date"
+                @change="handleEndDateChange"
+                :error="!!endDateError"
+                :error-messages="endDateError"
+                required
+                :min="form.startDate"
+                style="width: 50%;"
+              />
+              <!-- <v-text-field label="시작 베이스라인" v-model="form.startDate" type="date" required />
+              <v-text-field label="마감 베이스라인" v-model="form.endDate" type="date" required /> -->
             </div>
+            
+            <!-- 워크데이 소요일 표시 -->
+            <div v-if="workingDuration !== null" class="mt-2">
+              <v-alert type="info" density="compact" variant="tonal">
+                워크데이 기준 소요일: <strong>{{ workingDuration }}일</strong>
+              </v-alert>
+            </div>
+
             <div class="inline-fields">
               <div class="field-container">
                 <div class="label-container">
@@ -68,7 +96,8 @@
             <v-checkbox v-for="user in users" :key="user.id" v-model="form.participants" :label="user.name"
               :value="user.id" density="compact" />
 
-            <v-btn type="submit" class="mt-4" color="primary" :loading="isSubmitting">추가</v-btn>
+
+            <v-btn type="submit" class="mt-4" color="#7578ee" :loading="isSubmitting">추가</v-btn>
           </v-form>
         </v-card-text>
       </v-card>
@@ -89,13 +118,73 @@ import { defineEmits } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import api from '@/api';
+import { useHolidayStore } from '@/stores/holidayStore'
+import dayjs from 'dayjs'
+
+// 주말/공휴일 예외 처리 목적
+const holidayStore = useHolidayStore()
+const startDateError = ref('')
+const endDateError = ref('')
+const holidaySet = computed(() => holidayStore.holidaySet)
+
+// 워크 데이 기반 소요일
+const workingDuration = computed(() => {
+  if (!form.value.startDate || !form.value.endDate) return null;
+
+  const start = new Date(form.value.startDate);
+  const end = new Date(form.value.endDate);
+  let count = 0;
+  const date = new Date(start);
+
+  const holidays = holidaySet.value; // Set<string>
+
+  while (date <= end) {
+    const iso = date.toISOString().slice(0, 10);
+    const day = date.getDay(); // 일(0), 토(6)
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidays.has(iso);
+
+    if (!isWeekend && !isHoliday) {
+      count++;
+    }
+    date.setDate(date.getDate() + 1);
+  }
+
+  return count;
+});
+
+
+onMounted(() => {
+  if (holidayStore.holidaySet.size === 0) {
+    holidayStore.fetchHolidays()
+  }
+})
 
 
 const route = useRoute()
 
 const emit = defineEmits()
+
+const resetForm = () => {
+  form.value = {
+    title: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    department: '',
+    precedingTasks: [],
+    followingTasks: [],
+    responsible: '',
+    participants: []
+  }
+  startDateError.value = ''
+  endDateError.value = ''
+  users.value = []
+}
+
 const openModal = () => {
   console.log("버튼 클릭됨!")
+  resetForm()
   showModal.value = true // 모달을 열기 위해 상태값을 true로 설정
 }
 
@@ -145,6 +234,16 @@ const submitForm = async () => {
     alert('참여자를 입력해주세요.');
     isSubmitting.value = false;
     return;
+  }
+  if (holidayStore.isHoliday(form.value.startDate) || holidayStore.isHoliday(form.value.endDate)) {
+    alert('주말이나 공휴일은 시작일 또는 마감일로 사용할 수 없습니다.')
+    isSubmitting.value = false
+    return
+  }
+  if (dayjs(form.value.endDate).isBefore(form.value.startDate)) {
+    alert('마감일은 시작일보다 빠를 수 없습니다.')
+    isSubmitting.value = false
+    return
   }
 
   console.log(form.value.precedingTasks);
@@ -198,6 +297,46 @@ const submitForm = async () => {
 
   isSubmitting.value = false;
 };
+
+// 주말/공휴일 예외 처리
+const handleStartDateChange = (e) => {
+  const date = e.target.value
+
+  if (holidayStore.isHoliday(date)) {
+    startDateError.value = '시작일로 주말이나 공휴일은 선택할 수 없습니다.'
+    form.value.startDate = ''
+    return
+  }
+
+  if (form.value.endDate && dayjs(date).isAfter(form.value.endDate)) {
+    endDateError.value = '마감일은 시작일보다 빠를 수 없습니다.'
+    form.value.endDate = ''
+  }
+
+  startDateError.value = ''
+  form.value.startDate = date
+}
+
+const handleEndDateChange = (e) => {
+  const date = e.target.value
+
+  if (holidayStore.isHoliday(date)) {
+    endDateError.value = '마감일로 주말이나 공휴일은 선택할 수 없습니다.'
+    form.value.endDate = ''
+    return
+  }
+
+  if (form.value.startDate && dayjs(date).isBefore(form.value.startDate)) {
+    endDateError.value = '마감일은 시작일보다 빠를 수 없습니다.'
+    form.value.endDate = ''
+    return
+  }
+
+  endDateError.value = ''
+  form.value.endDate = date
+}
+
+
 
 const addPrecedingTask = () => form.value.precedingTasks.push("") // 선행 일정 추가
 const addFollowingTask = () => form.value.followingTasks.push("") // 후행 일정 추가
@@ -449,6 +588,8 @@ hr {
 .inline-fields-baseline {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
+  flex-direction: row;
 }
 
 .baseline-group {

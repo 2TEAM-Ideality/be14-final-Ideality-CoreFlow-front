@@ -1,22 +1,36 @@
 <script setup>
+import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
-  type: String, // 'approver' | 'viewer | project'
+  type: String, // 'approver' | 'viewer | project | leader | member '
   userList: {
     type: Array,
     default: () => []
   },
-  selectedApprover: Array,
-  selectedViewers: Array,
+  selectedApprover: {
+    type: Array,
+    default: () => []
+  },
+  selectedViewers:{
+    type: Array,
+    default: () => []
+  },
   selectedLeaders: {
+    type: Array,
+    default: () => []
+  },
+  selectedMembers: {
     type: Array,
     default: () => []
   }
 })
-
+const route = useRoute()
+const router = useRouter()
 const emit = defineEmits(['close', 'select'])
 
+
+const projectId = route.params.id
 const dialog = ref(true)
 const search = ref('')
 const selectedUserId = ref(null)
@@ -24,10 +38,11 @@ const selectedUserIds = ref([])
 const openedPanels = ref([])
 
 const isApprover = computed(() => props.type === 'approver')
-const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project')
+const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project' || props.type === 'leader' || props.type === 'member')
 
 onMounted(() => {
-  console.log(props.userList)
+  console.log('선택 대상들', props.userList)
+  console.log('선택 리더들', props.selectedLeaders)
   if (isApprover.value) {
     selectedUserId.value = (props.selectedApprover?.[0]?.id) ?? null
   } else {
@@ -53,10 +68,18 @@ const groupedUsers = computed(() => {
   return filtered
 })
 
+// const selectedUsers = computed(() => {
+//   return isApprover.value
+//     ? props.userList.filter(user => user.id === selectedUserId.value)
+//     : props.userList.filter(user => selectedUserIds.value.includes(user.id))
+// })
+
 const selectedUsers = computed(() => {
   return isApprover.value
-    ? props.userList.filter(user => user.id === selectedUserId.value)
-    : props.userList.filter(user => selectedUserIds.value.includes(user.id))
+    ? props.userList.filter(user => (user.id ?? user.userId) === selectedUserId.value)
+    : props.userList.filter(user =>
+        selectedUserIds.value.includes(user.userId ?? user.id)
+      )
 })
 
 function removeUser(id) {
@@ -82,9 +105,22 @@ function isIndeterminate(dept) {
   return selected.length > 0 && selected.length < users.length
 }
 
+// function toggleGroup(dept) {
+//   const users = groupedUsers.value[dept]
+//   const userIds = users.map(u => u.id)
+//   if (isAllSelected(dept)) {
+//     selectedUserIds.value = selectedUserIds.value.filter(id => !userIds.includes(id))
+//   } else {
+//     const toAdd = userIds.filter(id => !selectedUserIds.value.includes(id))
+//     selectedUserIds.value.push(...toAdd)
+//   }
+// }
+
+
 function toggleGroup(dept) {
   const users = groupedUsers.value[dept]
-  const userIds = users.map(u => u.id)
+  const userIds = users.map(u => u.userId ?? u.id)
+
   if (isAllSelected(dept)) {
     selectedUserIds.value = selectedUserIds.value.filter(id => !userIds.includes(id))
   } else {
@@ -93,18 +129,34 @@ function toggleGroup(dept) {
   }
 }
 
+
 function confirmSelection() {
+  if (props.type === 'leader') {
+    console.log('리더')
+  }
+
   const selected = isApprover.value
-    ? props.userList.filter(u => u.id === selectedUserId.value)
-    : props.userList.filter(u => selectedUserIds.value.includes(u.id))
+    ? props.userList.filter(u => (u.id ?? u.userId) === selectedUserId.value)
+    : props.userList.filter(u =>
+        selectedUserIds.value.includes(u.userId ?? u.id)
+      )
 
   emit('select', selected)
   dialog.value = false
   emit('close')
 }
+
+
+
 // 결재자 토글
 function toggleRadio(userId) {
   selectedUserId.value = selectedUserId.value === userId ? null : userId
+}
+
+// 태스크 탭으로 이동 
+const goToCreateTask = () => {
+  dialog.value = false
+  router.push(`/project/${projectId}/pipeline`)
 }
 
 watch(groupedUsers, (val) => {
@@ -113,6 +165,10 @@ watch(groupedUsers, (val) => {
     .filter(index => index !== null)
   openedPanels.value = panelList
 })
+
+
+
+
 </script>
 
 <template>
@@ -122,6 +178,8 @@ watch(groupedUsers, (val) => {
         <div v-if="props.type === 'approver'">결재자 선택</div>
         <div v-if="props.type === 'viewers'">참조자 선택</div>
         <div v-if="props.type === 'project'">팀장 초대</div>
+        <div v-if="props.type === 'leader'">팀장 초대</div>
+        <div v-if="props.type === 'member'">팀원 초대</div>
     </v-card-title>
 
       <v-card-text class="main-area">
@@ -135,6 +193,13 @@ watch(groupedUsers, (val) => {
             append-inner-icon="mdi-magnify"
             class="mb-4"
           />
+          <div v-if="(props.type === 'leader' || props.type==='member') &&  props.userList.length === 0" class="empty-msg">
+            프로젝트에 참여 중인 부서가 모두 초대되어 있습니다. <br/>
+            새로운 팀장 / 팀원을 초대하시려면 태스크를 먼저 생성해주세요.<br/>
+            <br>
+            <v-btn @click="goToCreateTask" variant="tonal" color="#7578ee" append-icon="mdi-arrow-right">
+              태스크 생성하러 가기</v-btn>
+          </div>
 
           <div class="group-scroll">
             <v-expansion-panels multiple v-model="openedPanels">
@@ -146,7 +211,7 @@ watch(groupedUsers, (val) => {
                 <v-expansion-panel-title class="expansion-title">
                   <v-checkbox
                   class="panel-checkbox"
-                     v-if="isMultiSelect"
+                    v-if="isMultiSelect"
                     :indeterminate="isIndeterminate(dept)"
                     :model-value="isAllSelected(dept)"
                     @update:modelValue="toggleGroup(dept)"
@@ -174,12 +239,16 @@ watch(groupedUsers, (val) => {
                       <v-checkbox
                         v-else
                         v-model="selectedUserIds"
-                        :value="user.id"
+                        :value="user.userId ?? user.id"
                         density="compact"
                         hide-details
+                        @update:modelValue="() => {
+                          console.log('📌 현재 선택된 ID:', [...selectedUserIds])
+                          
+                        }"
                       >
                         <template #label>
-                          <div style="margin-left: 8px;">{{ user.name }} {{ user.jobRoleName }}</div>
+                          <div style="margin-left: 8px;">{{ user.name }} {{ user.jobRoleName || user.jobRank}} </div>
                         </template>
                       </v-checkbox>
                     </v-col>
@@ -213,7 +282,7 @@ watch(groupedUsers, (val) => {
 
       <v-card-actions class="justify-end">
         <v-btn color="gray" variant="tonal" @click="$emit('close')">취소</v-btn>
-        <v-btn color="purple" @click="confirmSelection">확인</v-btn>
+        <v-btn color="#7578ee" variant="flat" @click="confirmSelection" :disabled="userList.length === 0">확인</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

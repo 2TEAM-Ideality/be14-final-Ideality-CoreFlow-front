@@ -167,7 +167,6 @@ const fetchScheduleToday = async (year, month) => {
 }
 
 // ✅ 마감 임박 태스크 & 세부일정 수 조회
-
 const fetchWarningDeadline = async () => {
   try {
     const res = await api.get(`/api/projects/mainPage`)
