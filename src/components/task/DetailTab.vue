@@ -78,6 +78,7 @@
     </v-dialog>
     
     <div class="total-progress">
+      
       <p class="right-align">총 진척률: {{ totalProgress }}%</p>
     </div>
   </div>
