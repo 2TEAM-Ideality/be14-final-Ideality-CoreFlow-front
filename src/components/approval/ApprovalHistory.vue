@@ -86,11 +86,21 @@
             :key="item.id"
             @click.stop="selectApproval(item.id)"
             >
-            <td>{{ convertedType(item.approvalType) }}</td>
+            <td>
+              <v-chip
+                :color="typeChipColor(item.approvalType)"
+                :text-color="typeTextColor(item.approvalType)"
+                variant="flat"
+                size="small"
+                class="font-weight-medium"
+              >
+                {{ convertedType(item.approvalType) }}
+              </v-chip>
+            </td>
             <td>{{ currentTab === 'received' ? item.requesterName : item.approverName }}</td>
             <td>{{ item.title }}</td>
             <td>{{ item.createdAt.split('T')[0] }}</td>  
-            <td>{{ item.title }}</td>
+            <td>{{ item.projectName }}</td>
              <td class="status-cell">
                 <v-chip
                 :color="chipColor(item.approvalStatus)"
@@ -168,10 +178,36 @@ const statusFilterLabel = computed(() => {
 const convertedType = (type) => {
   if(type === 'GENERAL'){
     return '일반'
-  }else if(type === 'DELAYED'){
+  }else if(type === 'DELAY'){
     return '지연'
   }else{
     return '산출물'
+  }
+}
+
+function typeChipColor(type) {
+  switch (type) {
+    case 'GENERAL':
+      return '#E0F7FA' // 연한 청록 (일반)
+    case 'OUTPUT':
+      return '#FFF3E0' // 연한 주황 (산출물)
+    case 'DELAYED':
+      return '#FCE4EC' // 연한 핑크 (지연)
+    default:
+      return '#E0E0E0'
+  }
+}
+
+function typeTextColor(type) {
+  switch (type) {
+    case 'GENERAL':
+      return '#00796B'
+    case 'OUTPUT':
+      return '#EF6C00'
+    case 'DELAYED':
+      return '#C2185B'
+    default:
+      return '#424242'
   }
 }
 

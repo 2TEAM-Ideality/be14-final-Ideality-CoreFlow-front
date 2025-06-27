@@ -507,7 +507,6 @@ const fetchUserList = async () => {
 
   // 'admin' 팀은 제외
   const filteredUsers = allUsers.filter(user => user.deptName?.toLowerCase() !== 'admin');
-
   console.log("초대 가능 유저 (admin 제외):", filteredUsers);
   return filteredUsers;
 }
