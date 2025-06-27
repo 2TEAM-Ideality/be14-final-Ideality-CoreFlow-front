@@ -145,7 +145,8 @@
     </template>
     <template #sidebar>
         <InfoField label="기안자" icon="mdi-account-arrow-up" :value="createdBy" />
-        <InfoField label="결재자" icon="mdi-account-check" :value="selectedApprover" />
+        <InfoField label="결재자" icon="mdi-account-check" 
+        :value="selectedApprover ? `${selectedApprover.deptName} ${selectedApprover.name} ${selectedApprover.jobRankName}` : ''" />
         
         <div class="sidebar-section-label">
           <span class="icon-wrapper">
@@ -154,6 +155,11 @@
           <span>참조자</span>
         </div>
 
+        <!-- 참조자 없을 때 문구 -->
+        <div v-if="!selectedViewers || selectedViewers.length === 0" class="text-grey text-body-2 ml-1 mb-3"
+        style="text-align:left;">
+          참조자 선택되지 않음
+        </div>
         <!-- Chip 목록 -->
         <div class="chip-container" v-if="selectedViewers && selectedViewers.length">
           <v-chip
@@ -256,7 +262,9 @@ const formatDate = (date) => {
 
 
 // 자동 입력 정보
-const createdBy = ref(user?.deptName +" "+ user?.name +" "+ user?.jobRankName)
+const createdBy = computed(() => {
+  return `${user.deptName} ${user.name} ${user.jobRankName}`
+})
 const createdAt = ref(formatDate(new Date()))
 
 
