@@ -80,6 +80,7 @@ export const useUserStore = defineStore('user', () => {
             console.log(response.data.data)
             alert(response.data.message);
         } catch (e) {
+            forceLogout()
             console.warn("로그아웃 실패 무시")
         }
         clearState()

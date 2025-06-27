@@ -57,12 +57,12 @@
 
     <!-- 수정 가능한 모달 컴포넌트 추가 -->
     <TaskModal
-      v-if="isModalVisible"
       :workId="selectedWorkId"
       :isVisible="isModalVisible"
       :isEditMode="isEditMode"
       @close-modal="closeModal"
       @open-edit-modal="openEditModal"
+      @close-edit-modal="closeEditModal"
       @update-task="updateTaskInList"
     />
     
@@ -223,6 +223,9 @@ confirmAndUpdateStatus(item, newStatus) {
     openEditModal() {
       this.isEditMode = true; // 수정 모드로 설정
     },
+    closeEditModal() {
+      this.isEditMode = false; // 수정 모드 취소
+    }
   },
 };
 
