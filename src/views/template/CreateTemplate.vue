@@ -405,7 +405,6 @@ watch(loadProject, (newVal) => {
           />
         </v-card>
       </v-dialog>
-
     </template>
 
     <!-- 오른쪽 영역 -->

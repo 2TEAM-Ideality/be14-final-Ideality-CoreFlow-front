@@ -1,5 +1,4 @@
 <template>
-  
   <div v-if="isVisible" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -149,21 +148,13 @@ export default {
     return {
       taskDetails: {
         assignees: [], // 여기서 빈 배열로 초기화
-        participants: [],
+        participants: []
       },
-      internalVisible: this.isVisible,
       departments: [], // 부서 목록을 저장하는 변수
       users: [], // 사용자 목록을 저장하는 변수
       localEditMode: this.isEditMode, // `isEditMode` 상태를 local로 관리
       errorMessage: "",  // 오류 메시지를 저장하는 변수
     };
-  },watch: {
-    isVisible(val) {
-      this.internalVisible = val;
-    },
-    internalVisible(val) {
-      if (!val) this.$emit('close-modal');
-    },
   },
   watch: {
     workId(newWorkId) {

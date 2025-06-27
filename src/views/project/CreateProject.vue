@@ -216,7 +216,6 @@
                   <div class="check-item" style="width: 50%;">{{ startDate }} </div> 
                   <div class="check-item" style="width: 50%;">{{ endDate }}</div>
                 </div>
-                <!-- <div>{{ startDate }} ~ {{ endDate }}</div> -->
               </div>
 
               <div class="mb-3">
@@ -281,12 +280,13 @@
         <ParticipantSelectModal
           v-if="showLeaderModal"
           :type="modalType"
-          :userList="availableLeaderCandidates" 
+          :userList="userList"
           :selectedLeaders="selectedLeaders"
           @close="showLeaderModal = false"
           @select="handleLeaderSelect"
         />
-                    
+                 
+        <!-- :userList="availableLeaderCandidates"  -->
             
     
     </template>
@@ -777,11 +777,11 @@ const handleSelectTemplate = async (template) => {
     console.log('템플릿 상세 정보 가져옴', data)
 
     await convertToFlowData()
-    autoSelectLeadersFromTemplate()
   } catch (err) {
     console.error(`템플릿 정보 가져오기 실패!`, err)
   }
 }
+    // autoSelectLeadersFromTemplate()
 
 
 // 템플릿 데이터 파싱

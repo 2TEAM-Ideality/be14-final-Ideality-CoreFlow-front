@@ -1,13 +1,19 @@
 <template>
     <v-container @click="clearSelection" style="padding: 0;">
-        <!-- <h3 class="mb-5">결재 내역</h3> -->
-        <v-tabs v-model="currentTab" background-color="transparent" class="approval-tab" >
-            <v-tab value="received"  @click="selectTab('received')">수신</v-tab>
-            <v-tab value="sent"  @click="selectTab('sent')">발신</v-tab>
-            <v-tab value="sent"  @click="selectTab('sent')">대기 중</v-tab>
-            <v-tab value="sent"  @click="selectTab('sent')">발신</v-tab>
+      <div style="display:flex; flex-direction: row; justify-content: space-between; align-items: center;">
+        <v-tabs v-model="currentTab" background-color="transparent" class="approval-tab" style="width:fit-content;" >
+          <v-tab value="received"  @click.stop="selectTab('received')">수신</v-tab>
+          <v-tab value="sent"  @click.stop="selectTab('sent')">발신</v-tab>
         </v-tabs>
-        <input type="text" placeholder="검색 🔍" class="approval-search" v-model="searchApproval"/>
+        <v-btn variant="flat" color="#7578ee">결재 요청</v-btn>
+
+      </div>
+        
+        <input type="text" placeholder="결재 내역 검색어를 입력해주세요." 
+        class="approval-search" 
+        v-model="searchApproval"
+         @click.stop.prevent="selectApproval(item.id)"  <
+        />
         <v-table>
         <thead style="background-color: #F8F8F8; height: 20px; ">
             <tr>
@@ -57,12 +63,15 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/api'
+import { useRouter } from 'vue-router'
 
 const emit = defineEmits(['select-approval', 'select-tab'])
 
+const router = useRouter()
+
 function selectApproval(id) {
-    emit('select-approval', id)
-    emit('select-tab', currentTab.value)
+  emit('select-approval', id)
+  emit('select-tab', currentTab.value)
 }
 function clearSelection() {
     emit('select-approval', null)

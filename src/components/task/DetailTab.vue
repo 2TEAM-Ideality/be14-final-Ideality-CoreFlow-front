@@ -56,8 +56,8 @@
     </table>
 
     <!-- 수정 가능한 모달 컴포넌트 추가 -->
+
     <TaskModal
-      v-if="isModalVisible"
       :workId="selectedWorkId"
       :isVisible="isModalVisible"
       :isEditMode="isEditMode"

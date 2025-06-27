@@ -110,6 +110,11 @@ const routes = [
     // component: () => import('@/views/approval/Approval.vue')
     component: () => import('@/views/approval/NewApproval.vue')
   },
+  {
+    path: '/approval/:id',
+    name: 'ApprovalDetail',
+    component: () => import('@/components/approval/ApprovalDetails.vue')
+  },
 
   {
     path: '/admin',

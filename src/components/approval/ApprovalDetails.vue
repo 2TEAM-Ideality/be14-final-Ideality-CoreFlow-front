@@ -1,5 +1,13 @@
 <template>
-    <div>
+    <div class="list-layout">
+        <div style="display: flex; flex-direction: row; width :100%; justify-content: flex-start">
+        <v-btn variant="text" color="grey darken-1" @click="goBack">
+            <v-icon start>mdi-arrow-left</v-icon>
+            <!-- 뒤로가기 -->
+        </v-btn>
+        </div>
+        <h1 class="page-title">결재 내역</h1>
+        <v-divider class="my-6" />
         <div class="main-content" v-if="approvalData">
             <div class="content-wrapper">
                 <div style="display: flex; flex-direction: column; width: 100%;">
@@ -166,6 +174,11 @@
     import api from '@/api'
     import { useUserStore } from '@/stores/userStore'
     import ParticipantSelectModal from './ParticipantSelectModal.vue'
+    import { useRoute, useRouter } from 'vue-router'
+
+    const route = useRoute(); 
+    const router = useRouter(); 
+    const approvalId= route.params.id
     
     const showDelayExpect = ref(false)
     const showApproveModal = ref(false)
@@ -185,15 +198,20 @@
 
     const emit = defineEmits(['close', 'remount'])
     
-    const props = defineProps ({
-        approvalId: Number
-    })
+    // const props = defineProps ({
+    //     approvalId: Number
+    // })
 
     const approvalData = ref(null)
     const approver = ref(false)
     const requester = ref(false)
 
     const userList = ref([])
+
+
+    const goBack = () => {
+        router.back()
+    }
 
     const filteredUserList = computed(() => {
         if (userList.value === null || userList.value.length === 0 ) return
@@ -242,11 +260,11 @@
     }
 
     onMounted(() => {
-        fetchApprovalData(props.approvalId)
+        fetchApprovalData(approvalId)
         console.log('taskCountByDelay', approvalData.taskCountByDelay)
     })
 
-    watch(() => props.approvalId, (newId, oldId) => {
+    watch(() => approvalId, (newId, oldId) => {
         if (newId && newId !== oldId) {
             fetchApprovalData(newId)
         }
@@ -269,7 +287,7 @@
         if (!confirmed) return;
 
         try {
-            const response = await api.patch(`/api/approval/cancelled/${props.approvalId}`)
+            const response = await api.patch(`/api/approval/cancelled/${approvalId}`)
             approvalData.type = 'CANCELLED'
             emit('remount')
             showDelayExpect.value = false
@@ -287,7 +305,7 @@
 
         try {
             const response = await api.patch('/api/approval/approve', {
-                approvalId: props.approvalId,
+                approvalId: approvalId,
                 viewerIds: selectedViewerIds.value,
                 delayDays: approvalData.value.delayDays
             })
@@ -307,7 +325,7 @@
 
         try {
             const response = await api.patch('/api/approval/reject', {
-                approvalId: props.approvalId,
+                approvalId: approvalId,
                 reason: rejectReason.value
             })
             alert(response.data.message)
@@ -372,9 +390,14 @@
 </script>
 
 <style scoped>
+
+.list-layout {
+  padding: 7% 15%;
+  min-height: 100vh;
+}
     .main-content {
         height: 70vh;
-        width: 100%;
+        width : 100%;
     }
     .content-wrapper {
         border-top: 1px solid black;
@@ -616,5 +639,16 @@
     }
     .file-link:hover {
         color: #0b59d8;
+    }
+    .approval-container {
+        width:100%;
+        padding: 5%;
+    }
+    .page-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
     }
 </style>

@@ -1,6 +1,7 @@
 <template>
       <div class="list-layout">
         <h1 class="page-title">결재 내역</h1>
+         <v-divider class="my-6" />
         <div class="content-box">
             <div style="display: flex; flex-direction: row; gap: 10px;">
 
@@ -10,6 +11,7 @@
                 @select-approval="handleSelectApproval" 
                 @select-tab="handleSelectTab"
                 />
+                
                 </div>
                 <div style="width: 20%; display: flex; flex-direction: column; gap: 12px;">
                     <div class="widget-item">
@@ -29,19 +31,19 @@
             </div>
         </div>
 
-        <div style="background: white; height: calc(100vh - 50px); padding: 50px;">
-            <div class="header">
+        <!-- <div style="background: white; height: calc(100vh - 50px); padding: 50px;"> -->
+            <!-- <div class="header">
                 <h3 class="sub-title">
                     {{ showCreateApproval ? '결재 요청' : '결재 상세 조회' }}
                 </h3>
                 <button @click="handelShowDetails">
                 <v-icon class="close-btn">mdi-close</v-icon>
                 </button>
-            </div>
-            <div class="divide"/>
-            <ApprovalDetails v-if="showDetails" :approvalId = selectedApprovalId @remount="handleReRender" />
-            <CreateApproval v-if="showCreateApproval" @remount="handleReRender" />
-        </div>
+            </div> -->
+            <!-- <div class="divide"/> -->
+            <!-- <ApprovalDetails v-if="showDetails" :approvalId = selectedApprovalId @remount="handleReRender" />
+            <CreateApproval v-if="showCreateApproval" @remount="handleReRender" /> -->
+        <!-- </div> -->
         
         
         
@@ -55,6 +57,9 @@ import ApprovalLayout from '@/components/layout/ApprovalLayout.vue'
 import ApprovalHistory from '@/components/approval/ApprovalHistory.vue';
 import ApprovalDetails from '@/components/approval/ApprovalDetails.vue';
 import CreateApproval from '@/components/approval/CreateApproval.vue';
+import { useRouter } from 'vue-router'
+
+const router = useRouter(); 
 
 const selectedApprovalId = ref(null)
 
@@ -77,8 +82,10 @@ function handelShowCreateApproval() {
 }
 
 function handleSelectApproval(id) {
-  if (selectedApprovalId.value === id && showDetails.value) return
-  selectedApprovalId.value = id
+  // if (selectedApprovalId.value === id && showDetails.value) return
+  // selectedApprovalId.value = id
+  router.push(`/approval/${id}`)  
+
 }
 
 const showDetails = ref(false);

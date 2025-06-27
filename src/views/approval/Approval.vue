@@ -4,6 +4,9 @@ import ApprovalLayout from '@/components/layout/ApprovalLayout.vue'
 import ApprovalHistory from '@/components/approval/ApprovalHistory.vue';
 import ApprovalDetails from '@/components/approval/ApprovalDetails.vue';
 import CreateApproval from '@/components/approval/CreateApproval.vue';
+import { useRouter } from 'vue-router'
+
+const router = useRouter(); 
 
 const selectedApprovalId = ref(null)
 
@@ -14,8 +17,8 @@ function handleReRender() {
 }
 
 function handelShowDetails() {
-  selectedApprovalId.value = null
-  showDetails.value = false;
+  // selectedApprovalId.value = null
+  // showDetails.value = false;
   showCreateApproval.value = false;
 }
 
@@ -26,8 +29,10 @@ function handelShowCreateApproval() {
 }
 
 function handleSelectApproval(id) {
-  if (selectedApprovalId.value === id && showDetails.value) return
-  selectedApprovalId.value = id
+  // if (selectedApprovalId.value === id && showDetails.value) return
+  // selectedApprovalId.value = id
+  router.push(`/approval/${id}`)  
+
 }
 
 const showDetails = ref(false);
