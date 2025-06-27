@@ -50,13 +50,17 @@ const isMultiSelect = computed(() =>
 // 1) 초기 선택 세팅 함수
 function initSelection() {
   if (isApprover.value) {
-    selectedUserId.value = props.selectedApprover[0]?.id ?? null
+    // 결재자 모드
+    selectedUserId.value = props.selectedApprover?.[0]?.id ?? null;
   } else {
-    // viewers / leaders / members
-    const list = props.selectedViewers.length
-      ? props.selectedViewers
-      : props.selectedLeaders
-    selectedUserIds.value = list.map(u => u.id ?? u.userId)
+    // 다중 선택 모드: viewers, leaders, members 중 하나만 쓰이도록
+    const list =
+      (props.selectedViewers?.length && props.selectedViewers) ||
+      (props.selectedLeaders?.length && props.selectedLeaders) ||
+      (props.selectedMembers?.length && props.selectedMembers) ||
+      [];    // 모두 없으면 빈 배열
+
+    selectedUserIds.value = list.map(u => u.id ?? u.userId);
   }
 }
 
@@ -161,6 +165,12 @@ function goToCreateTask() {
   dialog.value = false
   router.push(`/project/${projectId}/pipeline`)
 }
+
+function handleCancel() {
+  dialog.value = false    // 내부 다이얼로그 상태를 닫고
+  emit('close')           // 부모에게도 닫힘을 알려줍니다
+}
+
 
 // expansion panels 자동 열기
 watch(groupedUsers, groups => {
@@ -291,7 +301,7 @@ watch(() => props.selectedViewers, initSelection)
       </v-card-text>
 
       <v-card-actions class="justify-end">
-        <v-btn color="gray" variant="tonal" @click="$emit('close')">취소</v-btn>
+        <v-btn color="gray" variant="tonal" @click="handleCancel">취소</v-btn>
         <v-btn color="#7578ee" variant="flat" @click="confirmSelection" :disabled="userList.length === 0">확인</v-btn>
       </v-card-actions>
     </v-card>
