@@ -3,7 +3,7 @@
         <!-- 로고 -->
         <div class="logo" style="width: 100%; height: 100%; display: flex; flex-direction:column; align-items: center; margin-bottom: 50px; gap: 15px;">
             <img src="@/assets/square-logo.png" style="width: 50px; height: 50px;" />
-            <span class="logo-text">CoreFlow</span>
+            <span class="logo-text">Core Flow</span>
         </div>
 
         <div class="mb-2 input-box">
@@ -174,6 +174,7 @@ async function login() {
     margin: 20px;
 }
 .logo-text {
+    /* font-family: 'Poppins', sans-serif;  */
     font-family: 'Audiowide', cursive;
     font-size: 25px;
     font-weight: bold;
