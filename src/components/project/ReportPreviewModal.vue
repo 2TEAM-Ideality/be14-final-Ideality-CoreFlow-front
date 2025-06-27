@@ -1,33 +1,39 @@
 <template>
-  <v-dialog v-model="dialogVisible" max-width="900px" persistent>
+  <v-dialog v-model="visible" max-width="900" persistent>
     <v-card>
-      <v-card-title>
-        📄 PDF 미리 보기
+      <v-toolbar class="toolbar-linear" dark>
+        <v-toolbar-title>📄 프로젝트 분석 리포트</v-toolbar-title>
         <v-spacer />
-        <v-btn text @click="emit('update:modelValue', false)">닫기</v-btn>
-        <v-btn color="primary" @click="download">다운로드</v-btn>
-      </v-card-title>
 
-      <v-card-text class="pdf-container">
-        <v-progress-circular
-          v-if="isLoading"
-          indeterminate
-          color="primary"
-          class="mx-auto"
-        />
+        <!-- ✅ 다운로드 버튼 추가 -->
+        <v-btn
+          icon
+          :disabled="!blobUrl"
+          @click="downloadPdf"
+          title="다운로드"
+        >
+          <v-icon>mdi-download</v-icon>
+        </v-btn>
+
+        <v-btn icon @click="close">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-toolbar>
+
+      <v-card-text style="height: 80vh; overflow-y: auto;">
         <vue-pdf-embed
-          v-else
-          :source="pdfUrl"
-          @loaded="onPdfLoaded"
-          style="width: 100%; border: 1px solid #ccc;"
+          v-if="blobUrl"
+          :source="blobUrl"
+          style="width: 100%;"
         />
+        <div v-else>PDF 로딩 중...</div>
       </v-card-text>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import VuePdfEmbed from 'vue-pdf-embed'
 
 const props = defineProps({
@@ -36,39 +42,43 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue'])
 
-const dialogVisible = computed({
-  get: () => props.modelValue,
-  set: val => emit('update:modelValue', val)
+const visible = ref(props.modelValue)
+const blobUrl = ref(null)
+
+watch(() => props.modelValue, (val) => {
+  visible.value = val
 })
 
-const pdfUrl = ref('')
-const totalPages = ref(0)
-const isLoading = ref(true)
+watch(() => visible.value, (val) => {
+  emit('update:modelValue', val)
+})
 
-watch(() => props.blob, (blob) => {
-  if (blob) {
-    isLoading.value = true
-    pdfUrl.value = URL.createObjectURL(blob)
+watch(() => props.blob, (val) => {
+  if (val) {
+    blobUrl.value = URL.createObjectURL(val)
   }
-}, { immediate: true })
+})
 
-const onPdfLoaded = (pdf) => {
-  totalPages.value = pdf.numPages
-  isLoading.value = false
+const close = () => {
+  visible.value = false
 }
 
-const download = () => {
-  const a = document.createElement('a')
-  a.href = pdfUrl.value
-  a.download = '프로젝트_분석_리포트.pdf'
-  a.click()
-  URL.revokeObjectURL(pdfUrl.value)
+// ✅ PDF 다운로드 함수
+const downloadPdf = () => {
+  if (!props.blob) return
+
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(props.blob)
+  link.download = 'project-report.pdf'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 </script>
 
 <style scoped>
-.pdf-container {
-  max-height: 600px;
-  overflow-y: auto;
+.toolbar-linear {
+  background: linear-gradient(to right, #6b6ee9, #a57aff);
+  color: white;
 }
 </style>
