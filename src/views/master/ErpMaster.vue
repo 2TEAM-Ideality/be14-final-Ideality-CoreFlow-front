@@ -34,6 +34,7 @@
             total-visible="7"
             class="mt-4"
             @update:modelValue="goToPage"
+        
         />
     </div>
     <div class="create-modal" v-if="showCreateModal">

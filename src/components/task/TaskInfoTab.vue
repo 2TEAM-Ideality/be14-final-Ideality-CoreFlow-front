@@ -40,7 +40,9 @@
       <div style="width: 250px; height: 250px;">
         <TaskDonutChart 
         :taskInfo="props.taskData" 
-        :detailList="props.detailList"/>
+        :detailList="props.detailList"
+        :taskDeadlineWarning="warningDeadlineCount"
+        />
       </div>
      
       <!-- 차트 오른편 -->
@@ -150,8 +152,10 @@
                   <!-- :model-value="props.taskData?.prevTasks.map(t => t.prevWorkName)" -->
 
                 <v-select
-                  v-model="selectedPrevNames"
-                  :items="taskList.map(t=>t.label)"
+                  v-model="selectedPrevIds"
+                  :items="taskList"
+                  item-title="label"
+                  item-value="id"
                   label="선행 태스크"
                   multiple
                   chips
@@ -160,12 +164,13 @@
                   hide-details
                 />
                 </div>
-                    <!-- :model-value="props.taskData?.nextTasks.map(t => t.nextWorkName)" -->
 
                 <div style="width: 50%;">
                   <v-select
-                    v-model="selectedNextNames"
-                    :items="taskList.map(t=>t.label)"
+                    v-model="selectedNextIds"
+                    :items="taskList"
+                    item-title="label"
+                    item-value="id"
                     label="후행 태스크"
                     multiple
                     chips
@@ -216,7 +221,7 @@
         <div class="data-label">
           <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
           <div style="width:12px; height: 12px;  background-color: #BBBBBB;"></div>
-          경과율
+           태스크 경과율
           </div>
         </div>
         <div class="data">
@@ -245,7 +250,7 @@
       <div class="data-item">
         <div style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 5px;" >
         <div style="width:12px; height: 12px;  background-color: #FFCC00;"></div>
-        지연 임박</div>
+        마감 임박</div>
         <div class="data">{{ task.selectTask?.nearDueSubtasks || 0 }} 개</div>
       </div>
       <div class="data-item">
@@ -270,6 +275,7 @@ import api from '@/api';
 
 const route = useRoute();
 const userStore = useUserStore();
+
 const task = ref({
     selectTask: {},
     prevTasks: [],
@@ -287,7 +293,6 @@ const props = defineProps({
 const taskId = route.params.taskId
 
 const isEdit = ref(false);
-
 
 
 // 태스크 수정 ? 을 위한 깊은 복사
@@ -315,16 +320,13 @@ const activeDetailList = computed(() => {
   return props.detailList.filter(d => d.status !== 'DELETED')
 })
 
+
 onMounted(() => {
   console.log(props.taskData.prevTaskList)
   handleDeptDropdown()
   fetchTaskList() // 태스크 목록 조회 
 
   window.addEventListener('click', handleClickOutside);
-
-
-
-
 });
 
 onUnmounted(() => {
@@ -346,40 +348,45 @@ const deptList = ref([])
 const taskList = ref([])
 
 // 선행 후행 수정
-const selectedPrevNames = computed({
-  get: () => task.value.prevTasks.map(t => t.prevWorkName),
-  set: (newNames) => {
-    const nextNames = task.value.nextTasks.map(t => t.nextWorkName)
-
-    // 교집합 체크
-    const overlap = newNames.filter(name => nextNames.includes(name))
+const selectedPrevIds = computed({
+  get: () => task.value.prevTasks.map(t => t.prevWorkId),
+  set: (newIds) => {
+    const nextIds = task.value.nextTasks.map(t => t.nextWorkId)
+    const overlap = newIds.filter(id => nextIds.includes(id))
     if (overlap.length > 0) {
-      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlap.join(', ')}`)
+      const overlapNames = overlap
+        .map(id => taskList.value.find(t => t.id === id)?.label || id)
+      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlapNames.join(', ')}`)
       return
     }
-
-    task.value.prevTasks = newNames.map(name => {
-      const match = taskList.value.find(t => t.label === name)
-      return { prevWorkId: match?.id || null, prevWorkName: name }
-    }).filter(t => t.prevWorkId !== null)
+    task.value.prevTasks = newIds.map(id => {
+      const taskItem = taskList.value.find(t => t.id === id)
+      return {
+        prevWorkId: id,
+        prevWorkName: taskItem?.label || ''
+      }
+    })
   }
 })
 
-const selectedNextNames = computed({
-  get: () => task.value.nextTasks.map(t => t.nextWorkName),
-  set: (newNames) => {
-    const prevNames = task.value.prevTasks.map(t => t.prevWorkName)
-
-    const overlap = newNames.filter(name => prevNames.includes(name))
+const selectedNextIds = computed({
+  get: () => task.value.nextTasks.map(t => t.nextWorkId),
+  set: (newIds) => {
+    const prevIds = task.value.prevTasks.map(t => t.prevWorkId)
+    const overlap = newIds.filter(id => prevIds.includes(id))
     if (overlap.length > 0) {
-      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlap.join(', ')}`)
+      const overlapNames = overlap
+        .map(id => taskList.value.find(t => t.id === id)?.label || id)
+      alert(`⛔ 선행/후행에 동시에 포함될 수 없습니다: ${overlapNames.join(', ')}`)
       return
     }
-
-    task.value.nextTasks = newNames.map(name => {
-      const match = taskList.value.find(t => t.label === name)
-      return { nextWorkId: match?.id || null, nextWorkName: name }
-    }).filter(t => t.nextWorkId !== null)
+    task.value.nextTasks = newIds.map(id => {
+      const taskItem = taskList.value.find(t => t.id === id)
+      return {
+        nextWorkId: id,
+        nextWorkName: taskItem?.label || ''
+      }
+    })
   }
 })
 

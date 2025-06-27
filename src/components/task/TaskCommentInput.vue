@@ -81,6 +81,9 @@ import axios from 'axios'
 import { useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/userStore'
 import api from '@/api'
+import { useUpdateStore } from '@/stores/updateStore'
+
+const updateStore = useUpdateStore()    // 업데이트 여부 
 
 const route = useRoute()
 const taskId = route.params.taskId
@@ -339,6 +342,9 @@ const handleSubmit = async () => {
     } else {
       await api.post(`/api/comment/write/${taskId}`, formData)
     }
+    if(fileInput.value?.files?.[0]){
+      updateStore.triggerSearchHistoryUpdate()  // 자료 검색 탭 갱신
+    }
 
     // 6. 초기화
     input.value = ''
@@ -359,13 +365,17 @@ const handleSubmit = async () => {
 
 // 수정 시 불러오기
 watch(() => props.editData, (newVal) => {
-console.log(newVal);
-if (newVal) {
-  input.value = newVal.content
-  isNotice.value = !!newVal.isNotice
-  editingCommentId.value = newVal.id
-  nextTick(() => resizeTextarea())
-}
+  if (newVal) {
+    input.value = newVal.content
+    isNotice.value = !!newVal.isNotice
+    editingCommentId.value = newVal.id
+
+    if (newVal.originName) {
+      selectedFileName.value = newVal.originName // ✅ 첨부파일명 세팅
+    }
+
+    nextTick(() => resizeTextarea())
+  }
 })
 
 onMounted(() => resizeTextarea())

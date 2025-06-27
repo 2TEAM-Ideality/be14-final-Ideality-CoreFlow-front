@@ -1,25 +1,26 @@
 <template>
     <form class="login-modal" @submit.prevent="login">
         <!-- 로고 -->
-        <div class="logo">
-            <img src="@/assets/logo.png" />
+        <div class="logo" style="width: 100%; height: 100%; display: flex; flex-direction:column; align-items: center; margin-bottom: 50px; gap: 15px;">
+            <img src="@/assets/square-logo.png" style="width: 50px; height: 50px;" />
+            <span class="logo-text">CoreFlow</span>
         </div>
 
         <div class="mb-2 input-box">
-            <label class="block text-gray-700 text-sm mb-1">회사 코드</label>
+            <!-- <label class="block text-sm mb-1 input-label">회사 코드</label> -->
             <input ref="companyCodeInput" v-model="companyCode" placeholder="회사 코드를 입력해주세요."
                 class="px-2 py-2 border border-gray-300 box" />
         </div>
 
         <!-- 사번 (이메일) -->
         <div class="mb-2 input-box">
-            <label class="block text-gray-700 text-sm mb-1">아이디</label>
+            <!-- <label class="block text-gray-700 text-sm mb-1 input-label">아이디</label> -->
             <input ref="identifierInput" v-model="identifier" placeholder="사번 또는 이메일을 입력해주세요."
                 class="px-2 py-2 border border-gray-300 box" />
         </div>
 
         <div class="mb-2 input-box">
-            <label class="block text-gray-700 text-sm mb-1">비밀번호</label>
+            <!-- <label class="block text-gray-700 text-sm mb-1 input-label">비밀번호</label> -->
             <input ref="passwordInput" v-model="password" type="password" placeholder="비밀번호를 입력해주세요."
                 class="px-2 py-2 border border-gray-300 box" />
         </div>
@@ -36,12 +37,12 @@
         </div>
 
         <!-- 로그인 버튼 -->
-        <button type="submit" class="text-white py-2 box login-btn">
+        <button type="submit" class="text-white py-2 box login-btn mt-5">
             로그인
         </button>
 
         <!-- 비밀번호 찾기 -->
-        <div class="text mt-3">
+        <div class="text mt-3 mb-10">
             <span class="reissue-password" @click="showModal = true">
                 비밀번호 재발급
             </span>
@@ -160,13 +161,10 @@ async function login() {
 
 <style scoped>
 .login-modal {
-    height: 450px;
-    width: 500px;
     display: flex;
     align-items: center;
     flex-direction: column;
-    box-shadow: 0px 3px 9px rgba(0, 0, 0, .5);
-    border-radius: 20px;
+    gap: 10px;
 }
 
 .logo {
@@ -174,6 +172,15 @@ async function login() {
     justify-content: center;
     transform: scale(1.2);
     margin: 20px;
+}
+.logo-text {
+    font-family: 'Audiowide', cursive;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+input[type="checkbox"] {
+  accent-color: #7578ee; /* 체크 표시 및 테두리 색상 */
 }
 
 .input-box {
@@ -184,25 +191,31 @@ async function login() {
 
 .box {
     width: 400px;
+    background-color: #F4F7FF;
     border-radius: 8px;
+    border: solid 1px #E8EAEE;
 }
 
 .login-btn {
-    background-color: black;
-    transition: background-color 0.3s;
+  background: linear-gradient(to right, #7578ee, #9c70f9);
+  border: none;
+  border-radius: 8px;
+  transition: background 0.3s ease;
 }
-
 .login-btn:hover {
-    background-color: blue;
+  background: linear-gradient(to right, #6b6ee9, #a57aff);
+}
+.input-label {
+    color: gray;
 }
 
 .reissue-password {
-    color: black;
+    color: #7578ee;
     cursor: pointer;
     transition: color 0.3s;
 }
 
 .reissue-password:hover {
-    color: blue;
+    color: black;
 }
 </style>

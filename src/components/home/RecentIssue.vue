@@ -84,13 +84,13 @@
         <v-window-item value="task">
           <!-- TASK LIST -->
           <v-list
-            v-if="warningDeadlineTest.tasks"
+            v-if="props.warningDeadline?.tasks?.length"
             style="max-height: 400px; overflow-y: auto; gap: 10px; display: flex; flex-direction: column; padding:  20px 10px;"
           >
           <!-- v-if="props.warningDeadline?.tasks?.length" -->
             <v-list-item
               :key="'task-' + index"
-              v-for="(item, index) in warningDeadlineTest.tasks"
+              v-for="(item, index) in props.warningDeadline?.tasks"
               style="cursor: pointer; background-color: #eeee; border-radius:15px; padding: 10px;" 
               @click="goToTask(item.workId)"
             >
@@ -111,11 +111,11 @@
         </v-window-item>
 
         <v-window-item value="subtask">
-          <v-list v-if="warningDeadlineTest.subtasks?.length" 
+          <v-list v-if="props.warningDeadline?.subtasks?.length" 
           style="max-height: 400px; overflow-y: auto; gap: 10px; display: flex; flex-direction: column; padding:  20px 10px;">
           <!-- <v-list v-if="props.warningDeadline?.subtasks?.length"> -->
             <v-list-item
-              v-for="(item, index) in warningDeadlineTest.subtasks"
+              v-for="(item, index) in props.warningDeadline.subtasks"
               :key="'subtask-' + index"
               @click="goToDetail(item.parentTaskId, item.workId)"
               style="cursor: pointer; background-color: #eeee; border-radius:15px; padding: 10px;" 
@@ -174,11 +174,11 @@ const warningDeadlineTest = {
   tasks: [
     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
     { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
-     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
     { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
-     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
     { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' },
-     { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
+    { workId: 1, name: '디자인 기획서 정리', parentTaskId: null, endBaseLine: '2025-06-28' },
     { workId: 2, name: 'UI 가이드라인 수립', parentTaskId: null, endBaseLine: '2025-06-29' }
   ],
   subtasks: [

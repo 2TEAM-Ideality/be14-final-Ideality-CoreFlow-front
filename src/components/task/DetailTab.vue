@@ -57,12 +57,13 @@
 
     <!-- 수정 가능한 모달 컴포넌트 추가 -->
     <TaskModal
+      v-if="isModalVisible"
       :workId="selectedWorkId"
       :isVisible="isModalVisible"
       :isEditMode="isEditMode"
-      @close-modal="closeModal" 
-      @open-edit-modal="openEditModal" 
-      @update-task="updateTaskInList" 
+      @close-modal="closeModal"
+      @open-edit-modal="openEditModal"
+      @update-task="updateTaskInList"
     />
     
     <!-- 확인 대화상자 -->

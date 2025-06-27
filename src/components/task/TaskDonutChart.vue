@@ -27,7 +27,8 @@ Chart.register(ArcElement, Tooltip, Legend, Title, DoughnutController)
 
 const props = defineProps({
   taskInfo: { type: Object, required: true },
-  detailList: { type: Array, default: () => [] }
+  detailList: { type: Array, default: () => [] },
+  taskDeadlineWarning : {type: Number, default: () => 0}
 })
 
 // ✅ 완료 여부 체크
@@ -36,10 +37,15 @@ const isCompleted = computed(() => props.taskInfo?.selectTask?.progressRate >= 1
 const chartRef = ref(null)
 let chartInstance = null
 
+
+onMounted(() => {
+  console.log(props.taskInfo)
+})
 // ✅ 상태별 카운트 계산
 const statusCounts = computed(() => {
   const pending = props.detailList.filter(d => d.status === 'PENDING').length
-  const delay = props.detailList.filter(d => d.delayDays > 0).length
+  // const delay = props.detailList.filter(d => d.delayDays > 0).length
+  const delay = props.taskDeadlineWarning
   const progress = props.detailList.filter(d => d.status === 'PROGRESS').length
   const completed = props.detailList.filter(d => d.status === 'COMPLETED').length
   return [pending, delay, progress, completed]

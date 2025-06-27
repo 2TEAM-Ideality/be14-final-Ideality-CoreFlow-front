@@ -24,6 +24,19 @@
 
         <div class="comment-box">
           <span class="comment-content">{{ comment.content }}</span>
+          <!-- comment-box 내부에 아래 div 추가 -->
+          <div
+            v-if="comment.attachmentId && comment.originName"
+            class="comment-attachment"
+          >
+            <a
+              :href="`/attachment/${comment.attachmentId}/download`"
+              :download="comment.originName"
+              style="color:#3d5afe; text-decoration:underline; font-size:13px;"
+            >
+              📎 {{ comment.originName }}
+            </a>
+          </div>
 
           <div class="comment-icons">
             <v-btn
@@ -137,6 +150,7 @@ const closeDeleteModal = () => {
 };
 
 const deleteComment = async () => {
+  dropdownIndex.value = null // ✅ 드롭다운 닫기
   try {
     await api.patch(`/api/comment/${deleteTargetId.value}/delete`);
     closeDeleteModal();
@@ -153,10 +167,13 @@ const deleteComment = async () => {
 const emit = defineEmits(['edit-comment']);
 
 const onEditComment = (comment) => {
+  dropdownIndex.value = null // ✅ 드롭다운 닫기
   emit('edit-comment', {
     id: comment.commentId,
     content: comment.content,
-    isNotice: true
+    isNotice: true, 
+    originName: comment.originName,        // ✅ 추가
+    attachmentId: comment.attachmentId     // ✅ 선택적으로 함께 전달
   });
 };
 

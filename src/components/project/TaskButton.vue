@@ -23,9 +23,18 @@
         </template>
 
       <v-list>
-        <v-list-item v-for="action in actions" :key="action" @click="handleSelect(action)">
-          <v-list-item-title>{{ action }}</v-list-item-title>
-        </v-list-item>
+        <div v-for="action in actions" :key="action">
+          <v-tooltip v-if="isDisabled(action)" activator="parent" location="right">
+            진척률이 100%일 때만 완료할 수 있습니다.
+          </v-tooltip>
+
+          <v-list-item
+            @click="!isDisabled(action) && handleSelect(action)"
+            :disabled="isDisabled(action)"
+          >
+            <v-list-item-title>{{ action }}</v-list-item-title>
+          </v-list-item>
+        </div>
       </v-list>
     </v-menu>
 
@@ -39,9 +48,12 @@
         <v-card-text>
             <div v-if="selectedAction === '태스크 시작'">
                 <p>이 태스크를 시작하시겠습니까?</p>
-                <v-btn color="primary" @click="confirmStart">시작</v-btn>
+                <v-btn color="#7578ee" @click="confirmStart">시작</v-btn>
             </div>
-
+             <div v-else-if="selectedAction === '태스크 완료'">
+                <p>진행 중인 태스크를 중단하시겠습니까?</p>
+                <v-btn color="#7578ee" @click="confirmComplete">완료</v-btn>
+            </div>
             <div v-else-if="selectedAction === '태스크 중단'">
                 <p>진행 중인 태스크를 중단하시겠습니까?</p>
                 <v-btn color="warning" @click="confirmStop">중단</v-btn>
@@ -69,21 +81,37 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <CompleteTaskModal 
+      v-if="showCompleteModal"
+      :show="showCompleteModal"
+      :taskInfo="props.task"
+      :allTaskList="[]" 
+      :completedTaskList="[]"
+      @close="showCompleteModal = false"
+      @complete="handleComplete"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import CompleteTaskModal from '@/components/task/CompleteTaskModal.vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 
 const props = defineProps({
   status: String,
-  id: String
+  id: String,
+  task: Object,
+  detailList: Array
 })
+
 const emit = defineEmits(['menuAction'])
 
 const menu = ref(false)
 const showDialog = ref(false)
 const selectedAction = ref(null)
+const showCompleteModal = ref(false)  // 태스크 완료 모달 
+
 
 const form = reactive({
   label: '',
@@ -91,20 +119,26 @@ const form = reactive({
 })
 
 const iconMap = {
-  pending: 'mdi-pause-circle-outline',
-  progress: 'mdi-play-circle-outline',
-  completed: 'mdi-check-circle-outline',
-  deleted: 'mdi-close-circle-outline',
-  cancelled: 'mdi-cancel'
+  PENDING: 'mdi-pause-circle-outline',
+  PROGRESS: 'mdi-play-circle-outline',
+  COMPLETED: 'mdi-check-circle-outline',
+  DELETED: 'mdi-close-circle-outline',
+  WARNING: 'mdi-alert-circle-outline', // 경고 아이콘도 추가
+  CANCELED: 'mdi-cancel'
 }
 
 const iconColorMap = {
-  pending: '#B2B2B2',
-  progress: '#307CFF',
-  completed: '#34C759',
-  warning: '',
-  deleted: '#9CA3AF',
-  cancelled: '#EF4444'
+  PENDING: '#B2B2B2',
+  PROGRESS: '#307CFF',
+  COMPLETED: '#34C759',
+  WARNING: '#FFA000', // 주황색 계열 추가
+  DELETED: '#9CA3AF',
+  CANCELED: '#EF4444'
+}
+
+
+function isDisabled(action) {
+  return action === '태스크 완료' && props.task?.progressRate !== 100
 }
 
 const icon = computed(() => iconMap[props.status] || 'mdi-help-circle-outline')
@@ -115,7 +149,7 @@ const actions = computed(() => {
     case 'PENDING':
       return ['태스크 시작', '삭제']
     case 'PROGRESS':
-      return ['태스크 중단', '삭제']
+      return ['태스크 중단', '태스크 완료', '삭제']
     case 'COMPLETED':
       return ['상세 보기']
     case 'WARNING':
@@ -133,6 +167,9 @@ function handleSelect(action) {
   switch (action) {
     case '태스크 시작':
       onStartTask()
+      break
+    case '태스크 완료':
+      onCompleteTask()
       break
     case '태스크 중단':
       onStopTask()
@@ -154,15 +191,38 @@ function onStartTask() {
   showDialog.value = true
   emit('menuAction', { id: props.id, action: '태스크 시작' })
 }
+//  태스크 완료 처리 
+// function onCompleteTask() {
+//   showDialog.value = true
+//   emit('menuAction', { id: props.id, action: '태스크 완료' })
+// }
+
+function handleComplete() {
+  showCompleteModal.value = false
+  emit('menuAction', { id: props.id, action: '태스크 완료 확정' })
+}
+
+function onCompleteTask() {
+  showCompleteModal.value = true
+  emit('menuAction', { id: props.id, action: '태스크 완료' })
+}
+
 
 function onStopTask() {
   showDialog.value = true
   emit('menuAction', { id: props.id, action: '태스크 중단' })
 }
 
+
+// 
 function confirmStart() {
   showDialog.value = false
   emit('menuAction', { id: props.id, action: '태스크 시작 확정' })
+}
+
+function confirmComplete() {
+  showDialog.value = false
+  emit('menuAction', { id: props.id, action: '태스크 완료 확정' })
 }
 
 function confirmStop() {
@@ -186,6 +246,11 @@ function confirmDelete() {
   emit('menuAction', { id: props.id, action: '삭제 확정' })
 }
 
+
+onMounted(() => {
+  console.log(props.taskList)
+  console.log(props.detailList)
+})
 </script>
 
 <style scoped>
