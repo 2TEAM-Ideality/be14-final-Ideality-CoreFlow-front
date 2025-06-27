@@ -69,8 +69,8 @@
          @click.stop.prevent="selectApproval(item.id)"  
         /> -->
         <v-table>
-        <thead style="background-color: #F8F8F8; height: 20px; ">
-            <tr>
+        <thead style="background-color: #F8F8F8; height: 20px;text-align:center; ">
+          <tr style="padding-left: 20px;">
             <th class="text-left">결재 유형</th>
             <th class="text-left">{{ currentTab === 'received' ? '보낸 사람' : '받는 사람' }}</th>
             <th class="text-left">제목</th>
@@ -79,7 +79,7 @@
             <th class="text-left">상태</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody style="text-align: left;">
             <tr
             style="cursor:pointer;"
             v-for="item in paginatedApprovals"
