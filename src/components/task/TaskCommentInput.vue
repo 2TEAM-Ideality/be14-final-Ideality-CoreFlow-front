@@ -359,13 +359,17 @@ const handleSubmit = async () => {
 
 // 수정 시 불러오기
 watch(() => props.editData, (newVal) => {
-console.log(newVal);
-if (newVal) {
-  input.value = newVal.content
-  isNotice.value = !!newVal.isNotice
-  editingCommentId.value = newVal.id
-  nextTick(() => resizeTextarea())
-}
+  if (newVal) {
+    input.value = newVal.content
+    isNotice.value = !!newVal.isNotice
+    editingCommentId.value = newVal.id
+
+    if (newVal.originName) {
+      selectedFileName.value = newVal.originName // ✅ 첨부파일명 세팅
+    }
+
+    nextTick(() => resizeTextarea())
+  }
 })
 
 onMounted(() => resizeTextarea())

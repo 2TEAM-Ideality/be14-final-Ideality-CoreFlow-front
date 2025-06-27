@@ -35,7 +35,24 @@
             </div>
 
                 <div class="comment-box">
-                  <span class="comment-content">{{ comment.content }}</span>
+                  <!-- <span class="comment-content">{{ comment.content }}</span> -->
+                  <!-- 수정 -->
+                  <span class="comment-content" v-html="convertContentToHTML(comment.content)"></span>
+
+                  <!-- 첨부파일이 있을 경우 다운로드 링크 표시 -->
+                  <!-- 첨부파일 ID와 파일명이 모두 존재할 때만 링크 표시 -->
+                  <div
+                    v-if="comment.attachmentId && comment.originName"
+                    class="comment-attachment"
+                  >
+                    <a
+                      :href="`/attachment/${comment.attachmentId}/download`"
+                      :download="comment.originName"
+                      style="color:#3d5afe; text-decoration:underline; font-size:13px;"
+                    >
+                      📎 {{ comment.originName }}
+                    </a>
+                  </div>
 
                 <!-- 아이콘들 공통 스타일 icon 적용 -->
                 <div class="comment-icons">
@@ -81,6 +98,18 @@
 
                       <div class="reply-comment-box">
                         <span class="comment-content">{{ reply.content }}</span>
+
+
+                        <!-- 대댓글 첨부파일 링크 (조건: id + originName 존재) -->
+                        <div v-if="reply.attachmentId && reply.originName" class="comment-attachment">
+                          <a
+                            :href="`/attachment/${reply.attachmentId}/download`"
+                            :download="reply.originName"
+                            style="color:#3d5afe; text-decoration:underline; font-size:13px;"
+                          >
+                            📎 {{ reply.originName }}
+                          </a>
+                        </div>
                         <div class="comment-icons">
                           <v-btn
                             @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)"
@@ -239,6 +268,7 @@ const handleClickOutside = (event) => {
 
 // 댓글 삭제 모달 창 함수 + api 요청 만들기
 const openDeleteModal = (id) => {
+  dropdownIndex.value = null // ✅ 드롭다운 닫기
   console.log(id);
   deleteTargetId.value = id;   
   isDeleteModalOpen.value = true;
@@ -276,6 +306,7 @@ const deleteComment = async () => {
 
 // 댓글 수정
 const updateNoticeComment = async (id) => {
+  dropdownIndex.value = null // ✅ 드롭다운 닫기
   console.log("공지로 등록한 댓글", id)
   try {
     const res = await api.patch(`/api/comment/${id}/notice`)
@@ -288,6 +319,10 @@ const updateNoticeComment = async (id) => {
   }
 };
 
+function convertContentToHTML(content) {
+  if (!content) return '';
+  return content.replace(/\n/g, '<br>');
+}
 
 onMounted(() => {
   window.addEventListener('click', handleClickOutside)
@@ -311,10 +346,13 @@ const emit = defineEmits(['edit-comment', 'set-reply']);
 // const taskId = computed(() => props.task?.taskId)
 
 const onEditComment = (comment) => {
+  dropdownIndex.value = null // ✅ 드롭다운 닫기
   emit('edit-comment', {
     id: comment.commentId,
     content: comment.content,
-    isNotice: false
+    isNotice: false, 
+    originName: comment.originName,        // ✅ 추가
+    attachmentId: comment.attachmentId     // ✅ 선택적으로 함께 전달
   });
 };
 
