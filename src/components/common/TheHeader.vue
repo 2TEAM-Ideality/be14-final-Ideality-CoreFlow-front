@@ -108,11 +108,16 @@ const handleFileChange = async (event) => {
     const isConfirmed = confirm('프로필 사진을 등록하시겠습니까?')
     if (!isConfirmed) return
 
+  const formData = new FormData();
+  formData.append('id', userStore.id);
+  formData.append('profileImage', file);
+
     try {
-      const response = await api.patch('/api/user/update-profile', {
-        id: userStore.id,
-        profileImage: imageUrl.value
-      })
+      const response = await api.patch('/api/user/update-profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       alert(response.data.message)
       await userStore.updateUserInfo(userStore.id)
       profileImage.value = userStore.profileImage
