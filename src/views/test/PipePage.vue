@@ -193,9 +193,9 @@ watch(() => props.edges, (newVal) => {
 
 <template>
   <div class="layout-flow">
-    <VueFlow
-      :nodes="nodes"
-      :edges="edges"
+<VueFlow
+  :nodes="localNodes"
+  :edges="localEdges"
       :node-types="nodeTypes"
       :connectable="false"
       @connect="onConnect"
