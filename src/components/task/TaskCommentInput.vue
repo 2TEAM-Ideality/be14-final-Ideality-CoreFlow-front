@@ -305,17 +305,13 @@ const removeFile = () => {
 const handleSubmit = async () => {
   const formData = new FormData()
 
-  // 1. 파일 있는지 확인 후 파일 추가
-  if (fileInput.value?.files?.[0]) {
-    formData.append('attachmentFile', fileInput.value.files[0])
-  }
+  // 1. 댓글 내용 추가
+  formData.append('content', input.value.trim())
 
-  // 2. content 작성 (파일이 있을 경우 파일명 포함)
-  let contentText = input.value.trim()
+  // 파일 있을 때 파일 내용 추가
   if (fileInput.value?.files?.[0]) {
-    contentText += `\n${fileInput.value.files[0].name}`
+  formData.append('attachmentFile', fileInput.value.files[0]);  // ✅ 파일 추가
   }
-  formData.append('content', contentText)
 
   // 3. 공지 여부 추가
   formData.append('isNotice', isNotice.value.toString())

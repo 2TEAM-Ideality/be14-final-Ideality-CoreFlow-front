@@ -3,9 +3,7 @@
     <div class="logo">
       <router-link to="/">
         <img src="@/assets/black-logo.png" alt="Coreflow Logo" />
-         <!-- TEST -->
-        <!-- <img src="@/assets/square-logo.png" alt="Coreflow Logo" />
-        <span class="logo-text">CoreFlow</span> -->
+        <!-- <img src="/logo-favicon.png" alt="Coreflow Logo" /> -->
       </router-link>
     </div>
 
@@ -108,11 +106,16 @@ const handleFileChange = async (event) => {
     const isConfirmed = confirm('프로필 사진을 등록하시겠습니까?')
     if (!isConfirmed) return
 
+  const formData = new FormData();
+  formData.append('id', userStore.id);
+  formData.append('profileImage', file);
+
     try {
-      const response = await api.patch('/api/user/update-profile', {
-        id: userStore.id,
-        profileImage: imageUrl.value
-      })
+      const response = await api.patch('/api/user/update-profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       alert(response.data.message)
       await userStore.updateUserInfo(userStore.id)
       profileImage.value = userStore.profileImage
@@ -221,38 +224,10 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-}
-
-/* router-link 내부 스타일 초기화 */
-.logo a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none; /* ✅ 밑줄 제거 */
-  color: inherit;
-}
-
 .logo img {
   height: 32px;
-  /* width: 32px; */ 
   object-fit: contain;
 }
-
-.logo-text {
-  font-family: 'Audiowide', cursive;
-  /* font-weight: bold; */
-  font-size: 17px;
-  margin-top: 3px;
-  color: black;
-  user-select: text;
-  pointer-events: auto;
-  cursor: default;
-  text-decoration: none;
-}
-
 
 .nav {
   display: flex;
