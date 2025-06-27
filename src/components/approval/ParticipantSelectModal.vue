@@ -3,7 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ref, computed, watch, onMounted } from 'vue'
 
 const props = defineProps({
-  type: String, // 'approver' | 'viewer | project | leader | member '
+  type: String, // 'approver' | 'viewer' | 'project' | 'leader' | 'member'
   userList: {
     type: Array,
     default: () => []
@@ -12,7 +12,7 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  selectedViewers:{
+  selectedViewers: {
     type: Array,
     default: () => []
   },
@@ -23,14 +23,19 @@ const props = defineProps({
   selectedMembers: {
     type: Array,
     default: () => []
+  },
+  mustSelectDept: {
+    type: Array,
+    default: () => []
   }
 })
+
 const route = useRoute()
 const router = useRouter()
 const emit = defineEmits(['close', 'select'])
 
-
 const projectId = route.params.id
+
 const dialog = ref(true)
 const search = ref('')
 const selectedUserId = ref(null)
@@ -38,27 +43,35 @@ const selectedUserIds = ref([])
 const openedPanels = ref([])
 
 const isApprover = computed(() => props.type === 'approver')
-const isMultiSelect = computed(() => props.type === 'viewer' || props.type === 'project' || props.type === 'leader' || props.type === 'member')
+const isMultiSelect = computed(() =>
+  ['viewer', 'project', 'leader', 'member'].includes(props.type)
+)
 
-onMounted(() => {
-  console.log('선택 대상들', props.userList)
-  console.log('선택 리더들', props.selectedLeaders)
+// 1) 초기 선택 세팅 함수
+function initSelection() {
   if (isApprover.value) {
-    selectedUserId.value = (props.selectedApprover?.[0]?.id) ?? null
+    // 결재자 모드
+    selectedUserId.value = props.selectedApprover?.[0]?.id ?? null;
   } else {
-    selectedUserIds.value = (props.selectedViewers || props.selectedLeaders || []).map(v => v.id)
-  }
-})
+    // 다중 선택 모드: viewers, leaders, members 중 하나만 쓰이도록
+    const list =
+      (props.selectedViewers?.length && props.selectedViewers) ||
+      (props.selectedLeaders?.length && props.selectedLeaders) ||
+      (props.selectedMembers?.length && props.selectedMembers) ||
+      [];    // 모두 없으면 빈 배열
 
+    selectedUserIds.value = list.map(u => u.id ?? u.userId);
+  }
+}
+
+// 2) 사용자 그룹핑 & 검색
 const groupedUsers = computed(() => {
   const groups = {}
-  if (!props.userList || !Array.isArray(props.userList)) return groups
   props.userList.forEach(user => {
     const dept = user.deptName || '기타'
-    if (!groups[dept]) groups[dept] = []
+    groups[dept] = groups[dept] || []
     groups[dept].push(user)
   })
-
   const filtered = {}
   for (const dept in groups) {
     filtered[dept] = groups[dept].filter(user =>
@@ -68,18 +81,16 @@ const groupedUsers = computed(() => {
   return filtered
 })
 
-// const selectedUsers = computed(() => {
-//   return isApprover.value
-//     ? props.userList.filter(user => user.id === selectedUserId.value)
-//     : props.userList.filter(user => selectedUserIds.value.includes(user.id))
-// })
-
+// 3) 우측에 표시할 선택된 유저 목록
 const selectedUsers = computed(() => {
-  return isApprover.value
-    ? props.userList.filter(user => (user.id ?? user.userId) === selectedUserId.value)
-    : props.userList.filter(user =>
-        selectedUserIds.value.includes(user.userId ?? user.id)
-      )
+  if (isApprover.value) {
+    return props.userList.filter(
+      u => (u.id ?? u.userId) === selectedUserId.value
+    )
+  }
+  return props.userList.filter(u =>
+    selectedUserIds.value.includes(u.userId ?? u.id)
+  )
 })
 
 function removeUser(id) {
@@ -90,86 +101,91 @@ function removeUser(id) {
   }
 }
 
+// 체크박스 전체/부분선택 상태
 function isAllSelected(dept) {
   const users = groupedUsers.value[dept]
-  return users.length > 0 && users.every(user =>
-    selectedUserIds.value.includes(user.id)
+  return users.length > 0 && users.every(u =>
+    selectedUserIds.value.includes(u.id)
   )
 }
-
 function isIndeterminate(dept) {
   const users = groupedUsers.value[dept]
-  const selected = users.filter(user =>
-    selectedUserIds.value.includes(user.id)
-  )
-  return selected.length > 0 && selected.length < users.length
+  const sel = users.filter(u => selectedUserIds.value.includes(u.id))
+  return sel.length > 0 && sel.length < users.length
 }
 
-// function toggleGroup(dept) {
-//   const users = groupedUsers.value[dept]
-//   const userIds = users.map(u => u.id)
-//   if (isAllSelected(dept)) {
-//     selectedUserIds.value = selectedUserIds.value.filter(id => !userIds.includes(id))
-//   } else {
-//     const toAdd = userIds.filter(id => !selectedUserIds.value.includes(id))
-//     selectedUserIds.value.push(...toAdd)
-//   }
-// }
+// 필수 부서 강조
+function isDeptRequired(users) {
+  const deptId = users[0]?.deptId
+  return props.mustSelectDept.includes(deptId)
+}
 
-
+// 그룹 토글
 function toggleGroup(dept) {
-  const users = groupedUsers.value[dept]
-  const userIds = users.map(u => u.userId ?? u.id)
-
+  const ids = groupedUsers.value[dept].map(u => u.id ?? u.userId)
   if (isAllSelected(dept)) {
-    selectedUserIds.value = selectedUserIds.value.filter(id => !userIds.includes(id))
+    selectedUserIds.value = selectedUserIds.value.filter(id => !ids.includes(id))
   } else {
-    const toAdd = userIds.filter(id => !selectedUserIds.value.includes(id))
-    selectedUserIds.value.push(...toAdd)
+    ids.forEach(id => {
+      if (!selectedUserIds.value.includes(id)) selectedUserIds.value.push(id)
+    })
   }
 }
 
-
-function confirmSelection() {
-  if (props.type === 'leader') {
-    console.log('리더')
-  }
-
-  const selected = isApprover.value
-    ? props.userList.filter(u => (u.id ?? u.userId) === selectedUserId.value)
-    : props.userList.filter(u =>
-        selectedUserIds.value.includes(u.userId ?? u.id)
-      )
-
-  emit('select', selected)
-  dialog.value = false
-  emit('close')
-}
-
-
-
-// 결재자 토글
+// 결재자 라디오 토글
 function toggleRadio(userId) {
   selectedUserId.value = selectedUserId.value === userId ? null : userId
 }
 
-// 태스크 탭으로 이동 
-const goToCreateTask = () => {
+// 선택 확인
+function confirmSelection() {
+  const selected = selectedUsers.value;
+
+  if (props.type === 'leader' && props.mustSelectDept.length) {
+    console.log(props.mustSelectDept)
+    // deptName 으로 비교
+    const selectedDeptNames = new Set(selected.map(u => u.deptName));
+    const missing = props.mustSelectDept.filter(
+      deptName => !selectedDeptNames.has(deptName)
+    );
+    if (missing.length) {
+      alert('템플릿에 사용된 모든 부서에 대해 최소 한 명의 팀장을 선택하세요.');
+      return;
+    }
+  }
+
+  emit('select', selected);
+  dialog.value = false;
+  emit('close');
+}
+
+
+// 탭 이동
+function goToCreateTask() {
   dialog.value = false
   router.push(`/project/${projectId}/pipeline`)
 }
 
-watch(groupedUsers, (val) => {
-  const panelList = Object.entries(val)
-    .map(([dept, users], index) => (users.length > 0 ? index : null))
-    .filter(index => index !== null)
-  openedPanels.value = panelList
+function handleCancel() {
+  dialog.value = false    // 내부 다이얼로그 상태를 닫고
+  emit('close')           // 부모에게도 닫힘을 알려줍니다
+}
+
+
+// expansion panels 자동 열기
+watch(groupedUsers, groups => {
+  openedPanels.value = Object.keys(groups)
+    .map((_, i) => i)
+    .filter(i => groups[Object.keys(groups)[i]].length)
 })
 
-
-
+// 다이얼로그 열고 닫힐 때, 그리고 prop 변경될 때만 초기화
+onMounted(initSelection)
+watch(() => props.selectedLeaders, initSelection)
+watch(() => props.selectedViewers, initSelection)
 
 </script>
+
 
 <template>
   <v-dialog v-model="dialog" persistent width="900px" height="750px">
@@ -207,8 +223,12 @@ watch(groupedUsers, (val) => {
                 v-for="(users, dept, index) in groupedUsers"
                 :key="dept"
                 :value="index"
+                :class="{ 'required-dept-panel': isDeptRequired(users) }"
               >
-                <v-expansion-panel-title class="expansion-title">
+                <v-expansion-panel-title 
+                  class="expansion-title"
+                  :class="{ 'required-dept-title': isDeptRequired(users) }"
+                   >
                   <v-checkbox
                   class="panel-checkbox"
                     v-if="isMultiSelect"
@@ -281,7 +301,7 @@ watch(groupedUsers, (val) => {
       </v-card-text>
 
       <v-card-actions class="justify-end">
-        <v-btn color="gray" variant="tonal" @click="$emit('close')">취소</v-btn>
+        <v-btn color="gray" variant="tonal" @click="handleCancel">취소</v-btn>
         <v-btn color="#7578ee" variant="flat" @click="confirmSelection" :disabled="userList.length === 0">확인</v-btn>
       </v-card-actions>
     </v-card>
@@ -332,10 +352,48 @@ watch(groupedUsers, (val) => {
   margin-bottom: 6px;
 }
 
+/* 1) 카드 전체를 flex column 구조로 잡아서 */
 .participant-card {
-  padding: 20px;
+  display: flex; 
+  flex-direction: column;
+  height: 100%;
+  padding: 0;        /* 필요에 따라 조정 */
+  box-sizing: border-box;
 }
 
+/* 2) 제목(bar) 고정, actions(버튼) 고정 */
+.participant-card .v-card-title,
+.participant-card .v-card-actions {
+  flex: 0 0 auto;
+}
+
+/* 3) 본문 영역을 flex-grow 시켜서 남은 공간을 차지하게 */
+.participant-card .v-card-text.main-area {
+  flex: 1 1 auto;
+  display: flex;
+  overflow: hidden;  /* 자식만 스크롤 처리 */
+  padding: 20px;     /* 기존 padding 유지 */
+}
+
+/* 4) 왼쪽 패널 전체: flex column, 검색창 + 그룹 영역 */
+.participant-card .main-area > div:first-child {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 450px;   /* 너비 고정 */
+  margin-right: 20px;
+}
+
+/* 5) 검색창 아래 그룹 스크롤 영역이 flex-grow 하도록 */
+.participant-card .group-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* (오른쪽 영역은 기존대로) */
+.participant-card .right-area {
+  flex: 1 1 auto;
+  /* ... */
+}
 .header-title {
   height: 56px;
   display: flex;
@@ -376,5 +434,16 @@ watch(groupedUsers, (val) => {
   align-items: center;
   height: 20px !important;
   --v-input-control-height: 20px; /* Vuetify 3 커스텀 높이 */
+}
+
+/* 필수 선택 강조 */
+.required-dept-panel {
+  border: 2px solid #f44336;      /* 빨간 테두리 예시 */
+  border-radius: 4px;
+}
+
+/* 타이틀만 강조하고 싶다면 */
+.required-dept-title {
+  background-color: rgba(244, 67, 54, 0.1);  /* 연한 빨강 배경 */
 }
 </style>
