@@ -26,7 +26,7 @@
         v-if="showInviteModal"
         :type="inviteType"
         :user-list="inviteList"
-        :selected-approver=null
+        :selected-approver=[]
         :selectedLeaders = "selectedLeaders"
         :selectedMembers = "selectedMembers"
         @close="showInviteModal = false"
