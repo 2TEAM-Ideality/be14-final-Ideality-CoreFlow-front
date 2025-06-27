@@ -439,6 +439,7 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
+  height:100%;
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
@@ -454,7 +455,7 @@ export default {
   padding: 20px;
   border-radius: 10px;
   max-width: 600px;
-  max-height: 750px;
+  max-height: 80vh;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
