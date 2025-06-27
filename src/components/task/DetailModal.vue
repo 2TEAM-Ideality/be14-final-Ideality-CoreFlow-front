@@ -126,7 +126,8 @@
         <div class="modal-footer">
           <button class="edit-btn" @click="openEditModal" v-if="!isEditMode">수정</button>
           <button class="save-btn" @click="saveChanges" v-if="isEditMode">저장</button>
-          <button class="delete-btn" @click="deleteTask">삭제</button>
+          <button class="cancelled-btn" @click="closeEditModal" v-if="isEditMode">취소</button>
+          <button class="delete-btn" @click="deleteTask" v-if="!isEditMode">삭제</button>
         </div>
       </div>
     </div>
@@ -223,6 +224,10 @@ export default {
       this.localEditMode = true; // 수정 모드로 전환
       this.$emit('open-edit-modal');
 
+    },
+    closeEditModal() {
+      this.localEditMode = false;
+      this.$emit('close-edit-modal');
     },
     async fetchTaskDetails(workId) {
       const userStore = useUserStore();
@@ -523,6 +528,7 @@ export default {
 
 .edit-btn,
 .save-btn,
+.cancelled-btn,
 .delete-btn {
   padding: 10px 20px;
   margin-left: 10px;
@@ -536,12 +542,14 @@ export default {
 
 .edit-btn:hover,
 .save-btn:hover,
+.cancelled-btn:hover,
 .delete-btn:hover {
   opacity: 0.8;
 }
 
 .edit-btn:focus,
 .save-btn:focus,
+.cancelled-btn:focus,
 .delete-btn:focus {
   outline: none;
 }
