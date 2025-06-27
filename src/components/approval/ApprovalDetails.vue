@@ -105,9 +105,8 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="btn-area">
+        <div class="btn-area">
         <div v-if="approver && approvalData.status === 'PENDING'" class="approved-area">
             <button class="btn approve" @click="handleApprove">승인하기</button>
             <button class="btn reject" @click="showRejectModal = true; showApproveModal = false; showAddViewer = false">반려하기</button>
@@ -118,20 +117,23 @@
         <div v-if="approvalData?.status !== 'PENDING'">
             <div class="completed" disabled>결재 완료</div>
         </div>
+        </div>
+
+        <!-- 자세히 버튼 -->
+        <div class="delayExpectModal" v-if="showDelayExpect">
+            <div style="display: flex; justify-content: end; margin: 6px 0;">
+                <button @click="showDelayExpect = false">
+                    <v-icon style="font-size: 18px;">mdi-close</v-icon>
+                </button>
+            </div>
+            <div v-for="(value, key) in approvalData.delayDaysByTaskName" :key="key" style="display: flex; gap: 6px; font-size: 14px;">
+                <div style="font-weight: bold;">{{ value.name }}:</div>
+                <div>{{ value.delayDays }}일</div>
+            </div>
+        </div>
     </div>
 
-    <!-- 자세히 버튼 -->
-    <div class="delayExpectModal" v-if="showDelayExpect">
-        <div style="display: flex; justify-content: end; margin: 6px 0;">
-            <button @click="showDelayExpect = false">
-                <v-icon style="font-size: 18px;">mdi-close</v-icon>
-            </button>
-        </div>
-        <div v-for="(value, key) in approvalData.delayDaysByTaskName" :key="key" style="display: flex; gap: 6px; font-size: 14px;">
-            <div style="font-weight: bold;">{{ value.name }}:</div>
-            <div>{{ value.delayDays }}일</div>
-        </div>
-    </div>
+    
 
     <!-- 승인 모달 -->
     <div class="approve-modal modal" v-if="showApproveModal">

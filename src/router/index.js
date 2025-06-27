@@ -115,6 +115,11 @@ const routes = [
     name: 'ApprovalDetail',
     component: () => import('@/components/approval/ApprovalDetails.vue')
   },
+  {
+    path: '/approval/create',
+    name: 'CreateApproval',
+    component: () => import('@/components/approval/CreateApproval.vue')
+  },
 
   {
     path: '/admin',

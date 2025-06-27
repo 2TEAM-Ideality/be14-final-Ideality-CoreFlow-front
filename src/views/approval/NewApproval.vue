@@ -5,7 +5,7 @@
         <div class="content-box">
             <div style="display: flex; flex-direction: row; gap: 10px;">
 
-                <div style="width: 80%;">
+                <div style="width: 100%;">
                 <ApprovalHistory 
                 :key="approvalHistoryRender" 
                 @select-approval="handleSelectApproval" 
@@ -13,7 +13,7 @@
                 />
                 
                 </div>
-                <div style="width: 20%; display: flex; flex-direction: column; gap: 12px;">
+                <!-- <div style="width: 20%; display: flex; flex-direction: column; gap: 12px;">
                     <div class="widget-item">
                         <span>처리하지 않은 수신 결재</span>
                     </div>
@@ -27,7 +27,7 @@
                         <span>반려</span>
                     </div>
 
-                </div>
+                </div> -->
             </div>
         </div>
 
@@ -82,10 +82,11 @@ function handelShowCreateApproval() {
 }
 
 function handleSelectApproval(id) {
-  // if (selectedApprovalId.value === id && showDetails.value) return
-  // selectedApprovalId.value = id
   router.push(`/approval/${id}`)  
 
+}
+const goToCreateApproval = () => {
+  router.push(`/approval/create`)
 }
 
 const showDetails = ref(false);
