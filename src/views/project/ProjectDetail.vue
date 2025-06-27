@@ -87,7 +87,7 @@ const tabs = [
 
 
 if (route.params.id) {
-      localStorage.setItem('projectId', route.params.id); // 세션 저장소에 프로젝트 ID 저장
+      sessionStorage.setItem('projectId', route.params.id); // 세션 저장소에 프로젝트 ID 저장
     }
 
 
