@@ -2,7 +2,7 @@
     <div class="user-info">
         <v-avatar size="24" class="user-avatar">
             <template v-if="profileImage">
-                <img :src="profileImage" alt="프로필 이미지">
+                <img :src="profileImage" alt="프로필 이미지" class="avatar-image">
             </template>
             <template v-else>
                 <v-icon size="24">mdi-account</v-icon>
@@ -55,5 +55,12 @@ defineProps({
 .user-meta {
     font-size: 13px;
     color: #999;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%; /* 원형 유지 */
 }
 </style>
