@@ -261,34 +261,42 @@
     }
 
     async function handleFileChange(event) {
-        const file = event.target.files[0]
-        if (!file && file.type.statsWith('image/')) {
-            alert('이미지 파일만 선택해주세요.')
-            return
+        const file = event.target.files[0];
+        if (!file || !file.type.startsWith('image/')) {
+            alert('이미지 파일만 선택해주세요.');
+            return;
         }
-    const reader = new FileReader()
-    reader.onload = async () => {
-    imageUrl.value = reader.result // base64 문자열
-    const isConfirmed = confirm('프로필 사진을 등록하시겠습니까')
-    if(!isConfirmed) return
 
-    try {
-        const response = await api.patch('/api/user/update-profile',{
-            id: formData.value.id,
-            profileImage: imageUrl.value
-        })
-        alert(response.data.message)
-        formData.value.profileImage.value = imageUrl.value
-        } catch(error) {
-        if (error.message) {
-            error(error.message)
-        } else {
-            error('알 수 없는 에러가 발생했습니다.')
-        }
-        }
+        const isConfirmed = confirm('프로필 사진을 등록하시겠습니까?');
+        if (!isConfirmed) return;
+
+        const reader = new FileReader();
+
+        reader.onload = async () => {
+            const formDataObj = new FormData();
+            formDataObj.append('id', String(formData.value.id));
+            formDataObj.append('profileImage', file);
+
+            try {
+            const response = await api.patch('/api/user/update-profile', formDataObj, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            alert(response.data.message);
+
+            // ✅ 응답 URL을 바로 반영 (여기서 await는 필요 없음, set은 동기)
+            formData.value.profileImage = response.data.data.profileImage;
+
+            // ✅ Vue가 반응성으로 이미지를 재랜더링
+            } catch (error) {
+            console.error(error);
+            alert(error?.message || '알 수 없는 에러가 발생했습니다.');
+            }
+        };
+
+        reader.readAsDataURL(file);
     }
-    reader.readAsDataURL(file)
-    }
+    
     async function deleteProfile() {
     const isConfirmed = confirm('프로필 사진을 삭제하시겠습니까?')
     if (!isConfirmed) return
