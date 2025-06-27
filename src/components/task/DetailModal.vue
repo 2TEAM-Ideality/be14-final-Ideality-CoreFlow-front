@@ -53,7 +53,8 @@
             <!-- 예상 시작일과 예상 마감일을 한 행에 표시 -->
             <tr>
               <td><strong>예상 시작일</strong></td>
-              <td>{{ taskDetails.startExpect }}</td>
+              <td v-if="!localEditMode">{{ taskDetails.startExpect }}</td>
+              <td v-if="localEditMode"><input v-model="taskDetails.startExpect" type="date" class="input-field" /></td>
 
               <td><strong>예상 마감일</strong></td>
               <td v-if="!localEditMode">{{ taskDetails.endExpect }}</td>
@@ -125,7 +126,8 @@
         <div class="modal-footer">
           <button class="edit-btn" @click="openEditModal" v-if="!isEditMode">수정</button>
           <button class="save-btn" @click="saveChanges" v-if="isEditMode">저장</button>
-          <button class="delete-btn" @click="deleteTask">삭제</button>
+          <button class="cancelled-btn" @click="closeEditModal" v-if="isEditMode">취소</button>
+          <button class="delete-btn" @click="deleteTask" v-if="!isEditMode">삭제</button>
         </div>
       </div>
     </div>
@@ -192,6 +194,7 @@ export default {
         !this.taskDetails?.taskName ||  // taskDetails가 없으면 오류가 나지 않도록 처리
         !this.taskDetails?.taskDescription ||
         !this.taskDetails?.deptId ||
+        !this.taskDetails?.startExpect ||  // 추가된 부분: 예상 시작일 확인
         !this.taskDetails?.endExpect ||
         !this.taskDetails?.assignees ||
         this.taskDetails.assignees.length === 0 ||
@@ -214,6 +217,10 @@ export default {
       this.localEditMode = true; // 수정 모드로 전환
       this.$emit('open-edit-modal');
 
+    },
+    closeEditModal() {
+      this.localEditMode = false;
+      this.$emit('close-edit-modal');
     },
     async fetchTaskDetails(workId) {
       const userStore = useUserStore();
@@ -373,7 +380,8 @@ export default {
         description: this.taskDetails.taskDescription,
         deptId: this.taskDetails.deptId,
         assigneeId: assigneeId,
-        participantIds: validParticipants, // id 값만 추출
+        participantIds: validParticipants, // id 값만 ,추출
+        startExpect:this.taskDetails.startExpect,
         expectEnd: this.taskDetails.endExpect,
         progress: this.taskDetails.progressRate,
       };
@@ -514,6 +522,7 @@ export default {
 
 .edit-btn,
 .save-btn,
+.cancelled-btn,
 .delete-btn {
   padding: 10px 20px;
   margin-left: 10px;
@@ -527,12 +536,14 @@ export default {
 
 .edit-btn:hover,
 .save-btn:hover,
+.cancelled-btn:hover,
 .delete-btn:hover {
   opacity: 0.8;
 }
 
 .edit-btn:focus,
 .save-btn:focus,
+.cancelled-btn:focus,
 .delete-btn:focus {
   outline: none;
 }

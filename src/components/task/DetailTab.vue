@@ -63,6 +63,7 @@
       :isEditMode="isEditMode"
       @close-modal="closeModal"
       @open-edit-modal="openEditModal"
+      @close-edit-modal="closeEditModal"
       @update-task="updateTaskInList"
     />
     
@@ -78,6 +79,7 @@
     </v-dialog>
     
     <div class="total-progress">
+      
       <p class="right-align">총 진척률: {{ totalProgress }}%</p>
     </div>
   </div>
@@ -223,6 +225,9 @@ confirmAndUpdateStatus(item, newStatus) {
     openEditModal() {
       this.isEditMode = true; // 수정 모드로 설정
     },
+    closeEditModal() {
+      this.isEditMode = false; // 수정 모드 취소
+    }
   },
 };
 

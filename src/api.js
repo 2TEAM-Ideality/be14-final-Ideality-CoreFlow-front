@@ -70,6 +70,7 @@ api.interceptors.response.use(response => response, async error => {
         } catch (error) {
             processQueue(error, null)
             console.log('에러', error)
+            userStore.forceLogout()
             return Promise.reject(error)
         } finally {
             isRefreshing = false
