@@ -57,7 +57,6 @@
 
     <!-- 수정 가능한 모달 컴포넌트 추가 -->
     <TaskModal
-      v-if="isModalVisible"
       :workId="selectedWorkId"
       :isVisible="isModalVisible"
       :isEditMode="isEditMode"
@@ -78,6 +77,7 @@
     </v-dialog>
     
     <div class="total-progress">
+      
       <p class="right-align">총 진척률: {{ totalProgress }}%</p>
     </div>
   </div>
