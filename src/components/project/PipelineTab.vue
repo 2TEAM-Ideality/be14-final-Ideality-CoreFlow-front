@@ -182,7 +182,7 @@ const editingNode = ref(null)       // 수정 대상 태스크
 
 const newTasks = ref([])        // 생성할 태스크 목록 
 
-
+const projectStatus = ref(null);
 
 // 프로젝트 파이프라인 데이터 가져오기
 async function fetchPipeline() {
@@ -199,6 +199,7 @@ async function fetchPipeline() {
     console.log('✅ 파이프라인 데이터 조회', data)
    
     projectName.value = data.name
+    projectStatus.value = data.status
     
     const rawNodes = data.nodeList
     const rawEdges = data.edgeList
@@ -356,7 +357,7 @@ async function handleCreateNewNode(nodeData) {
       startBaseLine: nodeData.startBase,
       endBaseLine: nodeData.endBase,
       projectId: Number(projectId),
-      deptList: nodeData.deptList.map(d => d.id),
+      deptList: nodeData.deptList,
       source: nodeData.parentIds,
       target: nodeData.childIds
     }
@@ -854,6 +855,7 @@ function handleCloseModal() {
         :deptList="deptList"
         :existingNodes="nodes"
         :initialData="editingNode"
+        :projectStatus="projectStatus"
         @create="handleCreateNewNode" 
         @update="handleUpdateTask"
         @close="handleCloseModal"
