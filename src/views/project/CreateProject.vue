@@ -113,13 +113,13 @@
         <!-- 템플릿 소요일 표시 -->
         <div style="display: flex; flex-direction: row; align-items: flex-start; gap: 8px;">
           <!-- 워크데이 / 템플릿 소요일 -->
-          <div v-if="selectedTemplate && workingDuration && templateDuration"
-              class="text-caption d-flex align-center"
-              style="color: #757575;">
-            <v-icon start>mdi-calendar-range</v-icon>
-            <!-- 워크데이: &nbsp;<strong>{{ workingDuration }}일</strong>&nbsp;/&nbsp; -->
-            템플릿 소요일: &nbsp;<strong>{{ templateDuration }}일</strong>
-          </div>
+           <div v-if="selectedTemplate" style="display: flex; gap: 8px; align-items: center;">
+             <!-- 템플릿 소요일 항상 표시 -->
+             <div class="text-caption d-flex align-center" style="color: #757575;">
+               <v-icon start>mdi-calendar-range</v-icon>
+               템플릿 소요일: <strong>{{ templateDuration }}일</strong>
+             </div>
+             </div>
 
           <!-- 초과/부족 여부 메시지 -->
           <div v-if="durationDifference !== null" class="text-caption d-flex align-center"
@@ -158,7 +158,7 @@
         <div style="justify-content: flex-start; width: 100%; display :flex; flex-direction: row; margin-bottom: 20px; align-items: center; gap: 15px;">
         <v-btn 
         @click="openLeaderModal('project')" 
-        size="small" style="width:fit-content; " variant="tonal" color="purple"
+        size="small" style="width:fit-content; " variant="tonal" color="#7578ee"
         >
           구성원 조회</v-btn>
         <span style="font-size: 13px; color: gray;">프로젝트에 참여할 팀장을 선택해주세요.</span>
@@ -282,12 +282,10 @@
           :type="modalType"
           :userList="userList"
           :selectedLeaders="selectedLeaders"
+          :mustSelectDept="usedDeptList.map(dept => dept.id)"  
           @close="showLeaderModal = false"
           @select="handleLeaderSelect"
         />
-                 
-        <!-- :userList="availableLeaderCandidates"  -->
-            
     
     </template>
     
@@ -295,11 +293,16 @@
     <template #sidebar>
         <InfoField label="작성자" icon="mdi-account" :value="createdBy" />
         <InfoField label="생성일" icon="mdi-calendar" :value="createdAt" />
-        <InfoField label="베이스라인 기준 소요일" icon="mdi-timer-sand" :value="baseLineDuration + ' 일'" />
+        <InfoField label="워크데이 기반 소요일" icon="mdi-timer-sand" :value="workingDuration + ' 일'" />
         <InfoField label="전체 태스크 수" icon="mdi-format-list-numbered" :value="taskCount + '개'" />
         <div>
-          <div class="section-label">참여 부서</div>
-          <div class="d-flex flex-wrap dept-chip-wrap">
+              <div class="sidebar-section-label">
+                <span class="icon-wrapper">
+                  <v-icon size="18">mdi-domain</v-icon>
+                </span>
+                <span>참여 부서</span>
+              </div>
+            <div class="d-flex flex-wrap dept-chip-wrap">
             <v-chip
               v-for="dept in usedDeptList"
               :key="dept.id"
@@ -336,6 +339,7 @@ import api from '@/api.js'
 
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
+import { mdiConsoleNetworkOutline } from '@mdi/js';
 
 const nodeTypes = {
   custom: markRaw(TemplateViewNode)
@@ -412,33 +416,61 @@ const userList = ref([])    // 초대 가능 유저
 
 
 // 참여 부서 (템플릿 + 팀장 초대) -> 중복 제거
-const usedDeptList = computed(() => {
-  const deptMap = new Map();
+ const usedDeptList = computed(() => {
+   const deptMap = new Map();
 
-  // ✅ 1. 템플릿 노드에 있는 부서 먼저 추가 (우선순위 높음)
+  // ✅ 1. 템플릿 노드에 있는 부서 먼저 추가 (삭제)
   const templateDeptIds = new Set();
 
   const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : [];
   nodes.flatMap(node => node.data?.deptList || []).forEach(d => {
-    const id = d.id ?? d.deptId ?? d;
-    const name = d.name ?? d.deptName ?? d;
+    const id = d.id ?? d.deptId;
+    const name = d.name ?? d.deptName;
     if (id && !deptMap.has(id)) {
       deptMap.set(id, { id, name });
-      templateDeptIds.add(id); // 템플릿 부서로 등록
+      templateDeptIds.add(id);
     }
   });
 
-  // ✅ 2. 팀장 초대에서 템플릿에 없는 부서만 추가
-  selectedLeaders.value.forEach(user => {
-    const id = user.deptId ?? user.deptName;
-    const name = user.deptName;
-    if (id && !templateDeptIds.has(id) && !deptMap.has(id)) {
-      deptMap.set(id, { id, name });
-    }
-  });
+   // ✅ 2. 팀장 초대(selectedLeaders) 에서만 추가
+   selectedLeaders.value.forEach(user => {
+     const id = user.deptId;
+     const name = user.deptName;
+     if (id && !deptMap.has(id)) {
+       deptMap.set(id, { id, name });
+     }
+   });
 
-  return Array.from(deptMap.values());
-});
+   return Array.from(deptMap.values());
+ });
+
+// const usedDeptList = computed(() => {
+//   const deptMap = new Map();
+
+//   // ✅ 1. 템플릿 노드에 있는 부서 먼저 추가 (우선순위 높음)
+//   const templateDeptIds = new Set();
+
+//   const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : [];
+//   nodes.flatMap(node => node.data?.deptList || []).forEach(d => {
+//     const id = d.id ?? d.deptId ?? d;
+//     const name = d.name ?? d.deptName ?? d;
+//     if (id && !deptMap.has(id)) {
+//       deptMap.set(id, { id, name });
+//       templateDeptIds.add(id); // 템플릿 부서로 등록
+//     }
+//   });
+
+//   // ✅ 2. 팀장 초대에서 템플릿에 없는 부서만 추가
+//   selectedLeaders.value.forEach(user => {
+//     const id = user.deptId ?? user.deptName;
+//     const name = user.deptName;
+//     if (id && !templateDeptIds.has(id) && !deptMap.has(id)) {
+//       deptMap.set(id, { id, name });
+//     }
+//   });
+
+//   return Array.from(deptMap.values());
+// });
 
 
 console.log('참여 부서', usedDeptList)
@@ -524,7 +556,6 @@ const workingDuration = computed(() => {
     const iso = date.toISOString().slice(0, 10);
     const day = date.getDay(); // 일(0), 토(6)
     const isWeekend = day === 0 || day === 6;
-    console.log(holidays)
     const isHoliday = holidays.has(iso);
 
     if (!isWeekend && !isHoliday) {
@@ -604,7 +635,8 @@ const availableLeaderCandidates = computed(() => {
 
 // 팀장 초대 모달 열기
 function openLeaderModal(type) {
-  const available = availableLeaderCandidates.value
+  // const available = availableLeaderCandidates.value
+  const available = userList.value
   if (!available || available.length === 0) {
     alert('초대할 수 있는 팀장이 없습니다.');
     return;
@@ -697,43 +729,49 @@ const openModal = () => {
   }
   showModal.value = true;
 };
-
 // 프로젝트 생성 확인 모달
-const checkSaveProject = async() => {
-   // 🔸 공통 필수 입력값 검사
-    if (!projectName.value || !startDate.value || !endDate.value) {
-      alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
+const checkSaveProject = async () => {
+  // 1) 공통 필수 입력값 검사
+  if (!projectName.value || !startDate.value || !endDate.value) {
+    alert('프로젝트 이름과 시작/마감일을 입력해주세요.');
+    return;
+  }
+
+  // 2) 템플릿을 사용하지 않는 경우 팀장은 필수
+  if (!selectedTemplate.value && selectedLeaders.value.length === 0) {
+    alert('템플릿을 사용하지 않는 경우, 팀장 초대는 필수입니다.');
+    return;
+  }
+
+  // 4) 템플릿을 사용하는 경우, 부서별 팀장 최소 1명 검사
+  if (selectedTemplate.value) {
+    // -- 1) 템플릿에 포함된 부서 이름 집합
+    const requiredDeptNames = new Set();
+    flowNodes.value.forEach(node => {
+      (node.data.deptList || []).forEach(d => {
+        const name = d.name ?? d.deptName;
+        if (name) requiredDeptNames.add(name);
+      });
+    });
+
+    // -- 2) 선택된 팀장들의 부서 이름 집합
+    const selectedDeptNames = new Set(
+      selectedLeaders.value.map(u => u.deptName)
+    );
+
+    // -- 3) 빠진 부서가 있는지 확인
+    const missing = Array.from(requiredDeptNames)
+                         .filter(name => !selectedDeptNames.has(name));
+
+    if (missing.length > 0) {
+      alert(`다음 부서에 팀장을 선택해주세요: ${missing.join(', ')}`);
       return;
     }
+  }
 
-    // 🔸 템플릿을 사용하지 않는 경우, 팀장은 필수
-    if (!selectedTemplate.value && selectedLeaders.value.length === 0) {
-      alert('템플릿을 사용하지 않는 경우, 팀장 초대는 필수입니다.');
-      return;
-    }
-    
-
-    // 시작일 검사
-    const start = new Date(startDate.value);
-    const startIsWeekend = start.getDay() === 0 || start.getDay() === 6;
-    const startIsHoliday = await checkIfHoliday(startDate.value);
-
-    if (startIsWeekend || startIsHoliday) {
-      alert('시작일은 주말 또는 공휴일로 설정할 수 없습니다.');
-      return;
-    }
-
-    // 마감일 검사
-    const end = new Date(endDate.value);
-    const endIsWeekend = end.getDay() === 0 || end.getDay() === 6;
-    const endIsHoliday = await checkIfHoliday(endDate.value);
-
-    if (endIsWeekend || endIsHoliday) {
-      alert('마감일은 주말 또는 공휴일로 설정할 수 없습니다.');
-      return;
-    }
-    showSaveCheck.value = true;
-}
+  // 모든 검증 통과 시 확인 모달 열기
+  showSaveCheck.value = true;
+};
 
 const closeModal = () => {
   showModal.value = false
@@ -1091,5 +1129,15 @@ const editProjectTask = (payload) => {
 }
 .leftAndRight{
   display: flex;
+}
+/* 부서 칩 라벨 영역 */
+.sidebar-section-label {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: gray;
 }
 </style>

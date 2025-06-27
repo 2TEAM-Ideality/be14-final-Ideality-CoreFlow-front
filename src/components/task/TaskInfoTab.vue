@@ -322,7 +322,7 @@ const activeDetailList = computed(() => {
 
 
 onMounted(() => {
-  console.log(props.taskData.prevTaskList)
+  console.log(props.taskData.prevTasks)
   handleDeptDropdown()
   fetchTaskList() // 태스크 목록 조회 
 

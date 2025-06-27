@@ -14,14 +14,14 @@
         <div class="comment-list" ref="commentListRef">
             <!-- 댓글 -->
             <div
-                v-for="(comment, index) in comments"
+                v-for="(comment, index) in filteredComments"
                 :key="comment.id"
                 class="comment-item"
             >
             <div class="comment-header">
               <div class="writer-with-modify">
                 <img
-                :src="userStore.profileImage"
+                :src="comment.profileImage || '/images/profile/defaultProfile.png'"
                 alt="프로필 이미지"
                 class="profile-img"
                 />
@@ -91,7 +91,9 @@
                 <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
                     <div class="reply-header">
                       <div class="writer-with-modify">
-                        <span class="comment-writer">ㄴ {{ reply.deptName + '_' + reply.name }}</span>
+                        <span class="reply-prefix">ㄴ</span>
+                        <img :src="reply.profileImage || '/images/profile/defaultProfile.png'" class="profile-img" />
+                        <span class="comment-writer">{{ reply.deptName + '_' + reply.name }}</span>
                         <span class="modify-comment" v-if="reply.isModify">(수정됨)</span>
                       </div>
                     </div>
@@ -187,9 +189,9 @@ const isDeleteModalOpen = ref(false);
 const deleteTargetId = ref(null);
 
 const comments = ref([]);
-const selectOptions = [1, 2, 3, 4, 5]
+const selectOptions = ref(['전체']);
 
-const selectedValue = ref(null)
+const selectedValue = ref('전체');
 
 
 // 코멘트 생성 시, 스크롤 맨 아래로 이동
@@ -203,6 +205,16 @@ const scrollToBottom = () => {
   })
 }
 
+// 세부일정 목록 필터링을 위해 가져오기
+const fetchScheduleOptions = async () => {
+  try {
+    const res = await api.get(`/api/work/detail/nameList?parentTaskId=${taskId}`);
+    const names = res.data.data.map(item => item.name);
+    selectOptions.value = ['전체', ...names];
+  } catch (error) {
+    console.log(error.message);
+  }
+}
 //  댓글 목록 가져오기
 const fetchComments = async (id)=> {
   try {
@@ -324,11 +336,37 @@ function convertContentToHTML(content) {
   return content.replace(/\n/g, '<br>');
 }
 
+// 댓글 필터링 되게 하기 -> 세부 일정 이름대로
+const filteredComments = computed(() => {
+  if (selectedValue.value === '전체') return comments.value;
+
+  const keyword = selectedValue.value;
+
+  return comments.value
+    .map(comment => {
+      const isParentMatched = comment.content?.includes(keyword);
+      const matchedReplies = comment.replies?.filter(reply =>
+        reply.content?.includes(keyword)
+      ) || [];
+
+      if (isParentMatched || matchedReplies.length > 0) {
+        return {
+          ...comment,
+          replies: matchedReplies // 대댓글도 필터링 결과만 넣음
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean); // null 제거
+});
+
 onMounted(() => {
   window.addEventListener('click', handleClickOutside)
 
   if (taskId) {
     fetchComments(taskId)
+    fetchScheduleOptions()
   }
 })
 
@@ -548,6 +586,12 @@ watch(() => taskId, (newId) => {
 }
 
 .comment-writer {
+  font-size: 13px;
+  color: rgb(60, 60, 60);
+  font-weight: bold;
+}
+
+.reply-prefix {
   font-size: 13px;
   color: rgb(60, 60, 60);
   font-weight: bold;

@@ -29,6 +29,7 @@ defineProps({
 
 <style scoped>
 .sidebar-field {
+  text-align: left;
   margin-bottom: 12px;
 }
 
