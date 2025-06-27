@@ -419,7 +419,7 @@ async function createApproval() {
 
     if (selectedFiles.value && selectedFiles.value.length > 0) {
         selectedFiles.value.forEach(file => {
-            formData.append('attachment', file)
+            formData.append('attachmentFile', file)
         })
     }
 
