@@ -118,7 +118,8 @@ const handleToolbarAction = (action) => {
 // 완료 모달에서 emit되는 데이터 받기
 const handleComplete = async (completedInfo) => {
   try {
-    await api.patch(`/api/task/completed/${props.id}`, completedInfo)
+    console.log('완료', completedInfo)
+    await api.patch(`/api/task/complete/${props.id}`)
     updateNodeData(props.id, { status: 'completed', toolbarVisible: false })
     showCompleteModal.value = false
   } catch (e) {
@@ -275,7 +276,9 @@ onMounted(() => {
     v-if="showCompleteModal"
     :show="showCompleteModal"
     :taskInfo="props.data"
+    :taskId="props.id"
     :allTaskList="[]" 
+    :dataType="'pipe'"
     :completedTaskList="[]"
     @close="showCompleteModal = false"
     @complete="handleComplete"
