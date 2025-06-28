@@ -340,6 +340,7 @@ const handleStyle = {
     <div flat elevation="0" class="node-card" :style="cardStyle">
       <!-- 헤더 -->
       <div class="node-header">
+        
         <div class="left-header">
           <v-btn
             icon
@@ -353,8 +354,7 @@ const handleStyle = {
           </v-btn>
           <span class="title">{{ data.label || '작업 이름' }}</span>
         </div>
-
-
+          
         <!-- DOT more 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
         <v-btn
         v-if=" showFullscreenView === true"
@@ -378,6 +378,7 @@ const handleStyle = {
         </v-btn>
       </div>
 
+
       <div style="display: flex; flex-direction: column; padding: 10px;">
         <!-- 날짜 -->
         <div class="date-info">
@@ -398,14 +399,31 @@ const handleStyle = {
 
           <div v-if="status === 'cancelled' || status === 'deleted'">기간 없음</div>
         </div>
-        <!-- ⚠️ 지연 위험 표시 -->
-        <div v-if="isWarningActive" >
-          <v-btn @click="goCreateApproval" class="warning-banner">⚠️ 지연 사유서 작성</v-btn>
-          
-        </div>
+
+
+        <!-- <div class="dept-info">
+        📁 {{ data.deptList.join(', ')  || '참여 부서 정보 없음'}}
+        </div> -->
 
         <div class="dept-info">
-        📁 {{ data.deptList.join(', ')  || '참여 부서 정보 없음'}}
+          <template v-if="data.deptList?.length">
+            <span style="margin-right: 6px;">📁</span>
+            <v-chip
+              v-for="(dept, index) in data.deptList"
+              :key="index"
+              size="small"
+              class="ma-1"
+              color="indigo lighten-5"
+              text-color="indigo darken-2"
+              variant="tonal"
+              style="font-size: 11px;"
+            >
+              {{ dept }}
+            </v-chip>
+          </template>
+          <template v-else>
+            📁 참여 부서 정보 없음
+          </template>
         </div>
       </div>
       
@@ -443,6 +461,10 @@ const handleStyle = {
           <div :class="['delay-text', delayColor]" style="margin-bottom: 15px; font-size: 25px;">{{ delayText }}</div>
         </div>
       </div>
+            <!-- ⚠️ 지연 위험 표시 -->
+          <div v-if="isWarningActive"  >
+            <v-btn @click="goCreateApproval" class="warning-banner" style="width:100%;">⚠️ 지연 사유서 작성</v-btn>
+          </div>
       <v-btn
         v-if="showFullscreenView"
         icon
@@ -452,7 +474,10 @@ const handleStyle = {
       >
         <v-icon size="20" color="white">mdi-plus</v-icon>
       </v-btn>
+      
     </div>
+
+    
     
   </div>
 
@@ -469,7 +494,7 @@ const handleStyle = {
 }
 .node-card {
   padding: 16px 16px 10px 16px;
-  width: 270px;
+  width: 300px;
 }
 .node-header {
   display: flex;
