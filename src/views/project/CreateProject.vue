@@ -556,6 +556,7 @@ const workingDuration = computed(() => {
     const iso = date.toISOString().slice(0, 10);
     const day = date.getDay(); // 일(0), 토(6)
     const isWeekend = day === 0 || day === 6;
+    
     const isHoliday = holidays.has(iso);
 
     if (!isWeekend && !isHoliday) {
@@ -929,7 +930,7 @@ const saveProject = async () => {
       const node = taskMap.get(id);
       const duration = node.data?.duration || 0;
       const start = new Date(baseDate);
-      const end = addDays(start, duration);
+      const end = addWorkingDays(start, duration);
       taskDates.set(id, { start, end });
       queue.push(id);
     }
@@ -938,8 +939,8 @@ const saveProject = async () => {
   while (queue.length > 0) {
     const currentId = queue.shift();
     const currentEnd = taskDates.get(currentId).end;
-    const slack = taskMap.get(currentId).data?.slackTime || 0;
-    const availableStart = addDays(currentEnd, slack);
+    const slack = taskMap.get(currentId).data?.slackTime + 1 || 0;
+    const availableStart = addSlackWorkingDays(currentEnd, slack);
 
     for (const nextId of graph.get(currentId)) {
       const prev = taskDates.get(nextId)?.start;
@@ -947,7 +948,7 @@ const saveProject = async () => {
         // 최신 availableStart로 갱신
         const node = taskMap.get(nextId);
         const duration = node.data?.duration || 0;
-        const end = addDays(availableStart, duration);
+        const end = addWorkingDays(availableStart, duration);
         taskDates.set(nextId, { start: availableStart, end });
       }
 
@@ -1004,6 +1005,52 @@ const saveProject = async () => {
   }
 };
 
+const addWorkingDays = (startDate, workDays) => {
+  const start = new Date(startDate);
+  let addedDays = 0;
+
+  const date = new Date(start)
+  const holidays = holidaySet.value;
+  while (addedDays < workDays) {
+    const iso = date.toISOString().slice(0, 10);
+    const day = date.getDay(); // 일(0), 토(6)
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidays.has(iso);
+    
+    if (!isWeekend && !isHoliday) {
+      addedDays++;
+    }
+    if (addedDays < workDays) {
+      date.setDate(date.getDate() + 1);
+    }
+  }
+
+  return date;
+}
+
+const addSlackWorkingDays = (endDate, slack) => {
+  let addedDays = 0;
+
+  const date = new Date(endDate)
+  date.setDate(date.getDate() + 1)
+
+  const holidays = holidaySet.value;
+  while (addedDays < slack) {
+    const iso = date.toISOString().slice(0, 10);
+    const day = date.getDay(); // 일(0), 토(6)
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidays.has(iso);
+    
+    if (!isWeekend && !isHoliday) {
+      addedDays++;
+    }
+    if (addedDays < slack) {
+      date.setDate(date.getDate() + 1);
+    }
+  }
+
+  return date;
+}
 
 
 // 프로젝트 태스크 편집 완료 후 반영
