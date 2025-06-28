@@ -222,7 +222,7 @@ const downloadReport = async () => {
     console.log('all headers ▶', response.headers)
 
     // Content-Disposition 헤더에서 filename 파싱
-    const contentDisposition = response.headers.get['content-disposition'] || ''
+    const contentDisposition = response.headers.get('content-disposition') || ''
     let filename = 'project-report.pdf'
     const match = contentDisposition.match(
       /filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/
