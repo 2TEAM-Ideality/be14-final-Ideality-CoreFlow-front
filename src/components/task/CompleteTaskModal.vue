@@ -12,13 +12,13 @@
       <!-- 태스크 정보 -->
       <div class="mb-4 pa-6" style="background-color:aliceblue; border-radius: 5px;">
         <div class="text-title-2 font-weight-bold mb-2">
-          📁 TASK : {{ localTaskInfo.label }}
+          📁 TASK : {{ localTaskInfo.taskName }}
         </div>
         <!-- 담당 부서 -->
         <div v-if="detailList.length > 0" class="d-flex flex-wrap align-center" style="gap: 6px; font-size: 12px;">
             <v-icon size="14" color="grey-darken-1">mdi-office-building</v-icon>
             <v-chip
-                v-for="(dept, index) in localTaskInfo.deptList"
+                v-for="(dept, index) in deptList"
                 :key="index"
                 size="small"
                 color="primary"
@@ -130,7 +130,7 @@
         <div cols="6" style="width: 100%;">
           <label class="text-caption font-weight-medium">시작 베이스라인</label>
           <v-text-field
-            v-model="localTaskInfo.startBase"
+            v-model="localTaskInfo.startBaseLine"
             type="date"
             density="compact"
             variant="outlined"
@@ -142,7 +142,7 @@
         <div cols="6" style="width: 100%;">
           <label class="text-caption font-weight-medium">마감 베이스라인</label>
           <v-text-field
-            v-model="localTaskInfo.endBase"
+            v-model="localTaskInfo.endBaseLine"
             type="date"
             density="compact"
             variant="outlined"
@@ -170,9 +170,9 @@
           />
         </div>
         <div cols="6" style="width: 100%;">
-          <label class="text-caption font-weight-medium">실제 마감일</label>
+          <label class="text-caption font-weight-medium">현재 날짜</label>
           <v-text-field
-            v-model="localTaskInfo.endReal"
+            v-model="nowDate"
             type="date"
             density="compact"
             variant="outlined"
@@ -190,12 +190,12 @@
       <!-- 버튼 -->
       <div class="d-flex justify-space-between mt-8" style="width: 100%;">
         <v-btn variant="text" class="basic-button" @click="$emit('close')">취소</v-btn>
-        <template v-if="localTaskInfo.progressRate === 100.0">
+        <!-- <template v-if="localTaskInfo.progressRate === 100.0">
             <v-btn class="color-button" @click="goToTask" >태스크 상세 보기</v-btn>
-        </template>
-        <template v-else>
-            <v-btn class="color-button" @click="completeTask">태스크 완료하기</v-btn>
-        </template>
+        </template> -->
+        <!-- <template v-else> -->
+          <v-btn class="color-button" @click="completeTask">태스크 완료하기</v-btn>
+        <!-- </template> -->
       </div>
     </v-card>
   </v-dialog>
@@ -205,6 +205,7 @@
 import { ref, computed, reactive, watch, onMounted } from 'vue'
 import api from '@/api'
 import router from '@/router'
+import { now } from 'lodash'
 
 const props = defineProps({
   show: Boolean,
@@ -231,6 +232,7 @@ watch(() => props.taskInfo, (newVal) => {
   Object.assign(localTaskInfo, newVal);
 });
 
+const nowDate = new Date().toISOString().slice(0, 10);
 
 // ✅ 세부일정 리스트
 const detailList = ref([])
@@ -240,9 +242,9 @@ const completedDetailList = computed(() =>
 // 마감 베이스라인, 실제 마감일 비교
 const baselineDiffText = computed(() => {
   const base = new Date(localTaskInfo.endBase)
-  const real = new Date(localTaskInfo.endReal)
+  const real = new Date().toISOString().slice(0, 10);
 
-  if (!localTaskInfo.endBase || !localTaskInfo.endReal) return ''
+  if (!localTaskInfo.endBase) return ''
 
   const diff = Math.floor((base - real) / (1000 * 60 * 60 * 24))
 
@@ -252,17 +254,32 @@ const baselineDiffText = computed(() => {
 })
 
 onMounted(() => {
-    console.log(props.taskInfo)
+    console.log("부모 태스크 정보", props.taskInfo)
     fetchDetailList()
-
+    fetchDeptList()
 })
+
+const deptList = ref([])
+async function fetchDeptList() {
+  if (!props.taskInfo?.taskId) {
+    return
+  }
+  try {
+    const res = await api.get(`/api/dept/task/${props.taskInfo.taskId}`)
+    deptList.value = res.data.data || []
+  } catch (e) {
+    console.error(e)
+  }
+}
 
 // 세부일정 목록 
 async function fetchDetailList() {
-  if (!props.taskInfo?.id) return
+  if (!props.taskInfo?.taskId) {
+    return
+  }
   try {
     console.log("✅ 세부일정 목록 조회 요청")
-    const res = await api.get(`/api/work/detailList?parentTaskId=${props.taskInfo.id}`)
+    const res = await api.get(`/api/work/detailList?parentTaskId=${props.taskInfo.taskId}`)
     detailList.value = res.data.data || []
     console.log("✅ 세부일정 목록 조회 확인", detailList.value)
 
@@ -273,6 +290,8 @@ async function fetchDetailList() {
 
 // 태스크 완료 처리
 const completeTask = () => {
+  const confirmed = confirm("완료 처리 하시겠습니까")
+  if (!confirmed) return
   if (completedDetailList.value.length < detailList.value.length) {
     alert('모든 세부일정이 완료되지 않았습니다!')
     return

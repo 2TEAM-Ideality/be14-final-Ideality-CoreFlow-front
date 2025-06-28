@@ -69,6 +69,7 @@ const fetchTask = async (id) => {
     try {
       // 테스크 정보 가져오기
         const res = await api.get(`/api/task/detail/${id}`);
+        await api.patch(`/api/task/${id}/progress-rate`)  // 진척률 업데이트
         originTaskValue.value = res.data.data
         taskName.value = originTaskValue.value.selectTask.taskName
 
