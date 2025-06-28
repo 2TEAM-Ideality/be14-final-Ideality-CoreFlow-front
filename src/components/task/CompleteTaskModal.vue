@@ -8,11 +8,10 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
-
       <!-- 태스크 정보 -->
       <div class="mb-4 pa-6" style="background-color:aliceblue; border-radius: 5px;">
         <div class="text-title-2 font-weight-bold mb-2">
-          📁 TASK : {{ localTaskInfo.taskName }}
+          📁 TASK : {{ props.dataType === 'pipe' ? localTaskInfo.label : localTaskInfo.taskName }}
         </div>
         <!-- 담당 부서 -->
         <div v-if="detailList.length > 0" class="d-flex flex-wrap align-center" style="gap: 6px; font-size: 12px;">
@@ -130,7 +129,8 @@
         <div cols="6" style="width: 100%;">
           <label class="text-caption font-weight-medium">시작 베이스라인</label>
           <v-text-field
-            v-model="localTaskInfo.startBaseLine"
+            :model-value="props.dataType === 'pipe' ? localTaskInfo.startBase : localTaskInfo.startBaseLine"
+            @update:model-value="propsStartBase"
             type="date"
             density="compact"
             variant="outlined"
@@ -142,7 +142,8 @@
         <div cols="6" style="width: 100%;">
           <label class="text-caption font-weight-medium">마감 베이스라인</label>
           <v-text-field
-            v-model="localTaskInfo.endBaseLine"
+            :model-value="props.dataType === 'pipe' ? localTaskInfo.endBase : localTaskInfo.endBaseLine"
+            @update:model-value="propsEndBase"
             type="date"
             density="compact"
             variant="outlined"
@@ -212,8 +213,26 @@ const props = defineProps({
   taskInfo: {
     type: Object,
     required: true
-  }
+  },
+  dataType: String,
+  taskId: Number
 })
+
+function propsStartBase(value) {
+  if (props.dataType === 'pipe') {
+    localTaskInfo.value.startBase = value
+  } else {
+    localTaskInfo.value.startBaseLine = value
+  }
+}
+
+function propsEndBase(value) {
+  if (props.dataType === 'pipe') {
+    localTaskInfo.value.endBase = value
+  } else {
+    localTaskInfo.value.endBaseLine = value
+  }
+}
 
 
 const emit = defineEmits(['close', 'complete', 'update:show'])
@@ -241,10 +260,16 @@ const completedDetailList = computed(() =>
 )
 // 마감 베이스라인, 실제 마감일 비교
 const baselineDiffText = computed(() => {
-  const base = new Date(localTaskInfo.endBase)
-  const real = new Date().toISOString().slice(0, 10);
+  const rawDate = props.dataType === 'pipe' ? localTaskInfo.endBase : localTaskInfo.endBaseLine;
+  if (!rawDate) return '';  // ✅ 유효하지 않으면 빈 문자열
 
-  if (!localTaskInfo.endBase) return ''
+  const base = new Date(rawDate)
+  const real = new Date()
+  console.log("📌 rawDate:", rawDate);
+  console.log("📌 base Date:", base);
+  console.log("📌 real Date:", real);
+
+  if (localTaskInfo.endBase === null && localTaskInfo.endBaseLine === null) return ''
 
   const diff = Math.floor((base - real) / (1000 * 60 * 60 * 24))
 
@@ -254,18 +279,17 @@ const baselineDiffText = computed(() => {
 })
 
 onMounted(() => {
-    console.log("부모 태스크 정보", props.taskInfo)
     fetchDetailList()
     fetchDeptList()
 })
 
 const deptList = ref([])
 async function fetchDeptList() {
-  if (!props.taskInfo?.taskId) {
+  if (props.taskInfo?.taskId == null && props.taskId == null) {
     return
   }
   try {
-    const res = await api.get(`/api/dept/task/${props.taskInfo.taskId}`)
+    const res = await api.get(`/api/dept/task/${props.dataType === 'pipe' ? props.taskId : props.taskInfo.taskId}`)
     deptList.value = res.data.data || []
   } catch (e) {
     console.error(e)
@@ -274,12 +298,12 @@ async function fetchDeptList() {
 
 // 세부일정 목록 
 async function fetchDetailList() {
-  if (!props.taskInfo?.taskId) {
+  if (props.taskInfo?.taskId == null && props.taskId == null) {
     return
   }
   try {
     console.log("✅ 세부일정 목록 조회 요청")
-    const res = await api.get(`/api/work/detailList?parentTaskId=${props.taskInfo.taskId}`)
+    const res = await api.get(`/api/work/detailList?parentTaskId=${props.dataType === 'pipe' ? props.taskId : props.taskInfo.taskId}`)
     detailList.value = res.data.data || []
     console.log("✅ 세부일정 목록 조회 확인", detailList.value)
 

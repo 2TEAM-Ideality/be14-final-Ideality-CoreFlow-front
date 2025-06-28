@@ -87,6 +87,7 @@
       :show="showCompleteModal"
       :taskInfo="props.task"
       :allTaskList="[]" 
+      :dataType="'task'"
       :completedTaskList="[]"
       @close="showCompleteModal = false"
       @complete="handleComplete"
