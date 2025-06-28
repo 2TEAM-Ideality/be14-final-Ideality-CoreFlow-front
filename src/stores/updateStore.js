@@ -11,5 +11,17 @@ export const useUpdateStore = defineStore('update', {
     acknowledgeSearchHistoryUpdate() {
       this.shouldRefreshSearchHistory = false
     }
+  },
+
+  state :() => ({
+    shouldRefreshDeptList: false,
+  }),
+  actions: {
+    triggerDeptListUpdate() {
+      this.shouldRefreshDeptList = true
+    },
+    acknowledgeDeptListUpdate() {
+      this.shouldRefreshDeptList = false
+    }
   }
 })
