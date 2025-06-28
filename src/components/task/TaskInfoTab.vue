@@ -144,7 +144,6 @@
                 @change="handleEndDateChange"
                 :rules="[v => !isInvalidDate(v) || '주말 또는 공휴일은 선택할 수 없습니다.']"
               />
-              <div>{{ task.selectTask.startReal }}</div>
             </div>  
           </div>
         </div>
@@ -155,8 +154,6 @@
             <!-- 수정 모드: 드롭다운 -->
              <div style="display: flex; flex-direction: row; justify-content: space-between; width: 100%; gap: 12px;">
                 <div style="width: 50%;">
-                  <!-- :model-value="props.taskData?.prevTasks.map(t => t.prevWorkName)" -->
-
                 <v-select
                   v-model="selectedPrevIds"
                   :items="taskList"
@@ -213,7 +210,6 @@
                 />
                 </div>  
              </div>
-           
           </template>
         </div>
       </div>

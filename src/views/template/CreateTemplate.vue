@@ -162,7 +162,7 @@ const handleSelectProject = async (project: any) => {
       id: edge.id,
       source: edge.source.toString(),
       target: edge.target.toString(),
-      type: edge.type || 'default',
+      type: 'bezier',
       animated: true
     }));
 
