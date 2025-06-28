@@ -128,6 +128,8 @@
                 :readonly="!isEdit"
                 variant="outlined"
                 density="compact"
+                @change="handleStartDateChange"
+                :rules="[v => !isInvalidDate(v) || '주말 또는 공휴일은 선택할 수 없습니다.']"
               />
               </div>
               <div style="width: 50%;">
@@ -138,6 +140,8 @@
                 :readonly="!isEdit"
                 variant="outlined"
                 density="compact"
+                @change="handleEndDateChange"
+                :rules="[v => !isInvalidDate(v) || '주말 또는 공휴일은 선택할 수 없습니다.']"
               />
             </div>  
           </div>
@@ -273,6 +277,12 @@ import TaskDonutChart from '@/components/task/TaskDonutChart.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import api from '@/api';
 import { useUpdateStore } from '@/stores/updateStore'
+import { useHolidayStore } from '@/stores/holidayStore'
+import dayjs from 'dayjs'
+
+
+
+const holidayStore = useHolidayStore()  // 공휴일
 
 const updateStore = useUpdateStore()    // 업데이트 여부 
 
@@ -298,8 +308,10 @@ const taskId = route.params.taskId
 const isEdit = ref(false);
 
 
+
 // 태스크 수정 ? 을 위한 깊은 복사
 const originalTask = ref({});
+
 
 // 태스크 수정을 위한 모달 열기창
 const showConfirmModal = ref(false);
@@ -323,18 +335,36 @@ const activeDetailList = computed(() => {
   return props.detailList.filter(d => d.status !== 'DELETED')
 })
 
+// 날짜 유효성 검사
+function isInvalidDate(date) {
+  return holidayStore.isHoliday(date)
+}
+
+const handleStartDateChange = (val) => {
+  if (isInvalidDate(val)) {
+    alert('주말 또는 공휴일은 선택할 수 없습니다.');
+    task.value.selectTask.expectStartDate = '';
+  }
+}
+
+const handleEndDateChange = (val) => {
+  if (isInvalidDate(val)) {
+    alert('주말 또는 공휴일은 선택할 수 없습니다.');
+    task.value.selectTask.expectEndDate = '';
+  }
+}
 
 onMounted(() => {
-  console.log(props.taskData.prevTasks)
+  holidayStore.fetchHolidays()
   handleDeptDropdown()
-  fetchTaskList() // 태스크 목록 조회 
-
-  window.addEventListener('click', handleClickOutside);
-});
+  fetchTaskList()
+  window.addEventListener('click', handleClickOutside)
+})
 
 onUnmounted(() => {
   window.removeEventListener('click', handleClickOutside);
 });
+
 
 // 드롭다운 코드
 /* 드롭다운 상태 */
@@ -516,9 +546,6 @@ watch(() => props.taskData, (newData) => {
 }, { immediate: true });
 
 
-
-
-
 const hasChanges = computed(() => {
   return JSON.stringify(task.value) !== JSON.stringify(originalTask.value);
 });
@@ -560,6 +587,19 @@ const fetchModify = async () => {
 
 // 완료 클릭 처리
 const handleCompleteClick = () => {
+  // 시작일- 종료일 예외처리 
+  const start = dayjs(task.value.selectTask.expectStartDate)
+  const end = dayjs(task.value.selectTask.expectEndDate)
+
+  if (isInvalidDate(end)) {
+    alert('예상 종료일은 주말 또는 공휴일로 설정할 수 없습니다.')
+    return
+  }
+  if (start.isAfter(end)) {
+    alert('예상 시작일은 종료일보다 늦을 수 없습니다.')
+    return
+  }
+
   if (hasChanges.value) {
     showConfirmModal.value = true
   } else {
@@ -570,6 +610,8 @@ const handleCompleteClick = () => {
 // 모달 확인 => patch 전송
 // 수정 완료 제출
 const submitEdit = async () => {
+  
+
   showConfirmModal.value = false;
   isEdit.value = false;
   try {

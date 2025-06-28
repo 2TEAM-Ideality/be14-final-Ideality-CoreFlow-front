@@ -262,9 +262,9 @@ const handleStyle = {
 }
 
 
-onMounted(() => {
-  console.log(props.data)
-})
+// onMounted(() => {
+//   console.log(props.data)
+// })
 
 
 </script>
@@ -347,6 +347,7 @@ onMounted(() => {
             class="icon-btn"
             :ripple="false"
             @click.stop="toggleToolbar"  
+            
           >
             <v-icon size="28" :color="iconColor">{{ icon }}</v-icon>
           </v-btn>
@@ -365,10 +366,13 @@ onMounted(() => {
         </v-btn>
         <v-btn
         v-if="showFullscreenView === false"
-          @click="goToTask"
+          @click.stop="goToTask"
           icon
           size="small"
           variant="text"
+          @mousedown.stop
+          @mouseup.stop
+          style="z-index: 10;"
         >
           <v-icon style="color: gray;">mdi-open-in-new</v-icon>
         </v-btn>
