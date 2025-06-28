@@ -11,7 +11,26 @@
         </v-btn>
       </div>
       <div style="display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 20px; margin-bottom: 20px;">
-        <!-- 필드 필터 버튼 -->
+        <v-menu offset-y>
+          <template #activator="{ props }">
+            <v-btn v-bind="props" variant="outlined" class="filter-btn">
+              <v-icon size="16" class="mr-1">mdi-file-document-outline</v-icon>
+              {{ typeFilterLabel }}
+              <v-icon end>mdi-chevron-down</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="opt in typeFilterOptions"
+              :key="opt.value"
+              @click="typeFilter = opt.value"
+            >
+              <v-list-item-title>{{ opt.label }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+
+        <!-- 검색어 필드 필터 버튼 -->
         <v-menu offset-y>
           <template #activator="{ props }">
             <v-btn v-bind="props" variant="outlined" class="filter-btn">
@@ -52,22 +71,6 @@
         </v-menu>
       </div>
 
-
-      <!-- <div style="width: 100%; margin-top: 20px;">
-      <input
-        class="search-new"
-        type="text"
-        v-model="searchApproval"
-        placeholder="결재 내역 검색어를 입력해주세요." 
-      />  
-
-      </div> -->
-      
-        <!-- <input type="text" placeholder="결재 내역 검색어를 입력해주세요." 
-        class="approval-search" 
-        v-model="searchApproval"
-         @click.stop.prevent="selectApproval(item.id)"  
-        /> -->
         <v-table>
         <thead style="background-color: #F8F8F8; height: 20px;text-align:center; ">
           <tr style="padding-left: 20px;">
@@ -86,11 +89,21 @@
             :key="item.id"
             @click.stop="selectApproval(item.id)"
             >
-            <td>{{ convertedType(item.approvalType) }}</td>
+            <td>
+              <v-chip
+                :color="typeChipColor(item.approvalType)"
+                :text-color="typeTextColor(item.approvalType)"
+                variant="flat"
+                size="small"
+                class="font-weight-medium"
+              >
+                {{ convertedType(item.approvalType) }}
+              </v-chip>
+            </td>
             <td>{{ currentTab === 'received' ? item.requesterName : item.approverName }}</td>
             <td>{{ item.title }}</td>
             <td>{{ item.createdAt.split('T')[0] }}</td>  
-            <td>{{ item.title }}</td>
+            <td>{{ item.projectName }}</td>
              <td class="status-cell">
                 <v-chip
                 :color="chipColor(item.approvalStatus)"
@@ -147,6 +160,7 @@ const searchFieldOptions = [
   { value: 'title', label: '제목' },
   { value: 'name', label: '이름' }
 ]
+
 const searchFieldLabel = computed(() => {
   return searchFieldOptions.find(opt => opt.value === searchField.value)?.label ?? ''
 })
@@ -168,10 +182,36 @@ const statusFilterLabel = computed(() => {
 const convertedType = (type) => {
   if(type === 'GENERAL'){
     return '일반'
-  }else if(type === 'DELAYED'){
+  }else if(type === 'DELAY'){
     return '지연'
   }else{
-    return '산출물'
+    return '산출물'  // DELIVERABLE
+  }
+}
+
+function typeChipColor(type) {
+  switch (type) {
+    case 'GENERAL':
+      return '#E0F7FA' // 연한 청록 (일반)
+    case 'OUTPUT':
+      return '#FFF3E0' // 연한 주황 (산출물)
+    case 'DELAY':
+      return '#FCE4EC' // 연한 핑크 (지연)
+    default:
+      return '#E0E0E0'
+  }
+}
+
+function typeTextColor(type) {
+  switch (type) {
+    case 'GENERAL':
+      return '#00796B'
+    case 'OUTPUT':
+      return '#EF6C00'
+    case 'DELAY':
+      return '#C2185B'
+    default:
+      return '#424242'
   }
 }
 
@@ -194,6 +234,24 @@ const fetchApprovalData = async () => {
     }
 }
 
+// 
+const typeFilter = ref('ALL')
+
+// 2) 옵션 정의
+const typeFilterOptions = [
+  { value: 'ALL',      label: '결재 유형'   },
+  { value: 'GENERAL',  label: '일반'   },
+  { value: 'DELIVERABLE',   label: '산출물' },
+  { value: 'DELAY',    label: '지연'   },
+]
+
+// 3) 선택된 필터의 라벨
+const typeFilterLabel = computed(() => {
+  return typeFilterOptions.find(o => o.value === typeFilter.value)?.label || ''
+})
+
+
+
 const goToCreateApproval = () => {
   router.push(`/approval/create`)
 }
@@ -202,7 +260,7 @@ onMounted(() => {
     fetchApprovalData()
 })
 
-// 여러 필터 기준(상태 / 이름, 제목)으로 검색 결과 도출
+// 여러 필터 기준(상태 / 이름, 제목 / 결재 유형)으로 검색 결과 도출
 const displayedList = computed(() => {
   const list = currentTab.value === 'received'
     ? approvalData.value.receivedApproval ?? []
@@ -211,24 +269,32 @@ const displayedList = computed(() => {
   const keyword = searchApproval.value.toLowerCase().trim()
 
   return list.filter(item => {
-    // 상태 필터 적용
-    const statusMatch = selectedStatus.value === 'ALL' || item.approvalStatus === selectedStatus.value
+    // ① 상태 필터
+    const statusMatch = selectedStatus.value === 'ALL'
+      || item.approvalStatus === selectedStatus.value
 
-    // 검색어 필터 적용
-    if (!keyword) return statusMatch
+    // ② 결재 유형 필터
+    const typeMatch = typeFilter.value === 'ALL'
+      || item.approvalType === typeFilter.value
+
+    if (!statusMatch || !typeMatch) return false
+
+    // ③ 검색어 필터
+    if (!keyword) return true
 
     if (searchField.value === 'title') {
-      return statusMatch && item.title?.toLowerCase().includes(keyword)
+      return item.title?.toLowerCase().includes(keyword)
     }
     if (searchField.value === 'name') {
-      const name = currentTab.value === 'received' ? item.requesterName : item.approverName
-      return statusMatch && name?.toLowerCase().includes(keyword)
+      const name = currentTab.value === 'received'
+        ? item.requesterName
+        : item.approverName
+      return name?.toLowerCase().includes(keyword)
     }
 
-    return statusMatch
+    return true
   })
 })
-
 
 
 // const displayedList = computed(() => {

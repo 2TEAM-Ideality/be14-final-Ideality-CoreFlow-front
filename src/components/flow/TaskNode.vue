@@ -47,23 +47,37 @@ const selectedAction = ref('') // 어떤 액션 눌렀는지 저장
 const isWarningActive = computed(() => props.data.warning === true)     
 // 배경색도 warning일 때 강제 적용
 
+// 지연이 1일 이상인 경우 (지연된 태스크 여부)
+const isDelayedActive = computed(() => 
+status.value !== 'completed' && (props.data.delayDays ?? 0) >= 1
+)
+
 const delay = props.data?.delayDays ?? 0
 const delayText = delay > 0 ? `+${delay}일` : '0일'
 const delayColor = delay > 0 ? 'text-red' : 'text-grey'
 const progressColor = 'deep-purple-lighten-1'
 
 const status = computed(() => props.data?.status?.toLowerCase() || 'pending')
-const iconColor = computed(() =>
-  isWarningActive.value ? colorMap.warning : colorMap[status.value]
-)
 
+
+// 아이콘 & 색상 관련
 const icon = computed(() =>
   isWarningActive.value ? iconMap.warning : iconMap[status.value]
 )
+const iconColor = computed(() => {
+  if (isWarningActive.value)      return colorMap.warning
+  if (status.value === 'completed') return colorMap.completed
+  if (isDelayedActive.value)      return colorMap.delayed
+  return colorMap[status.value]
+})
 
-const backgroundColor = computed(() =>
-  isWarningActive.value ? backgroundMap.warning : backgroundMap[status.value]
-)
+const backgroundColor = computed(() => {
+  if (isWarningActive.value) return backgroundMap.warning
+  if (isDelayedActive.value)  return backgroundMap.delayed
+  return backgroundMap[status.value]
+})
+
+
 const statusActions = computed(() => actionMap[status.value] || ['작업 없음'])
 
 const menuVisible = ref(false)
@@ -187,6 +201,13 @@ const goToTask = () => {
 const toggleToolbar = () => {
   updateNodeData(props.id, { toolbarVisible: !props.data.toolbarVisible })
 }
+// 지연 위험→결재 요청 페이지로 이동 (taskId 전달)
+const goCreateApproval = () => {
+  router.push({
+    path: '/approval/create',
+    query: { taskId: props.id }
+  })
+}
 
 const actionMap = {
   pending: ['태스크 시작', '태스크 삭제'],
@@ -212,7 +233,8 @@ const colorMap = {
   completed: '#34C759',
   deleted: '#9CA3AF',
   cancelled: '#EF4444',
-  warning: '#FFA000' 
+  warning: '#FFA000' ,
+  delayed:   '#EF4444'    
 }
 
 const backgroundMap = {
@@ -221,7 +243,8 @@ const backgroundMap = {
   completed: '#F6FCF7',
   deleted: '#F5F5F5',
   cancelled: '#FFF5F5',
-  warning: '#FFF8E1' 
+  warning: '#FFF8E1' ,
+  delayed:   '#FFF5F5'
 }
 
 
@@ -351,29 +374,37 @@ onMounted(() => {
         </v-btn>
       </div>
 
-      <!-- 날짜 -->
-      <div class="date-info">
-        <div v-if="status === 'null'">예상 시작일: {{ data.startExpect || '-' }}</div>
-        <div v-if="status === 'null'">예상 마감일: {{ data.endExpect || '-' }}</div>
+      <div style="display: flex; flex-direction: column; padding: 10px;">
+        <!-- 날짜 -->
+        <div class="date-info">
+          <div v-if="status === 'null'">예상 시작일: {{ data.startExpect || '-' }}</div>
+          <div v-if="status === 'null'">예상 마감일: {{ data.endExpect || '-' }}</div>
 
-        <div v-if="status === 'pending'">예상 시작일: {{ data.startExpect || '-' }}</div>
-        <div v-if="status === 'pending'">예상 마감일: {{ data.endExpect || '-' }}</div>
+          <div v-if="status === 'pending'">예상 시작일: {{ data.startExpect || '-' }}</div>
+          <div v-if="status === 'pending'">예상 마감일: {{ data.endExpect || '-' }}</div>
 
-        <div v-if="status === 'progress'">실제 시작일: {{ data.startReal || '-' }}</div>
-        <div v-if="status === 'progress'">예상 마감일: {{ data.endExpect || '-' }}</div>
+          <div v-if="status === 'progress'">실제 시작일: {{ data.startReal || '-' }}</div>
+          <div v-if="status === 'progress'">예상 마감일: {{ data.endExpect || '-' }}</div>
 
-        <div v-if="status === 'completed'">실제 시작일: {{ data.startReal || '-' }}</div>
-        <div v-if="status === 'completed'">실제 종료일: {{ data.endReal || '-' }}</div>
+          <div v-if="status === 'completed'">실제 시작일: {{ data.startReal || '-' }}</div>
+          <div v-if="status === 'completed'">실제 종료일: {{ data.endReal || '-' }}</div>
 
-        <div v-if="status === 'warning'">예상 시작일: {{ data.startExpect || '-' }}</div>
-        <div v-if="status === 'warning'">예상 마감일: {{ data.endExpect || '-' }}</div>
+          <div v-if="status === 'warning'">예상 시작일: {{ data.startExpect || '-' }}</div>
+          <div v-if="status === 'warning'">예상 마감일: {{ data.endExpect || '-' }}</div>
 
-        <div v-if="status === 'cancelled' || status === 'deleted'">기간 없음</div>
+          <div v-if="status === 'cancelled' || status === 'deleted'">기간 없음</div>
+        </div>
+        <!-- ⚠️ 지연 위험 표시 -->
+        <div v-if="isWarningActive" >
+          <v-btn @click="goCreateApproval" class="warning-banner">⚠️ 지연 사유서 작성</v-btn>
+          
+        </div>
+
+        <div class="dept-info">
+        📁 {{ data.deptList.join(', ')  || '참여 부서 정보 없음'}}
+        </div>
       </div>
-      <!-- ⚠️ 지연 위험 표시 -->
-      <div v-if="isWarningActive" class="warning-banner">
-        ⚠️ 지연 위험
-      </div>
+      
 
       <!-- 진행 정보 -->
       <div class="metrics">
@@ -385,7 +416,7 @@ onMounted(() => {
             size="40"
             width="4"
           >
-          <span style="font-size: 12px;">
+          <span style="font-size: 12px; font-weight: bold;">
             {{ (data.progressRate || 0) + '%' }}
           </span>
           </v-progress-circular>
@@ -398,14 +429,14 @@ onMounted(() => {
             size="40"
             width="4"
           >
-          <span style="font-size: 12px;">
+          <span style="font-size: 12px; font-weight: bold">
             {{ (data.passedRate || 0) + '%' }}
           </span>
           </v-progress-circular>
         </div>
         <div class="metric">
           <div class="label">지연일</div>
-          <div :class="['delay-text', delayColor]">{{ delayText }}</div>
+          <div :class="['delay-text', delayColor]" style="margin-bottom: 15px; font-size: 25px;">{{ delayText }}</div>
         </div>
       </div>
       <v-btn
@@ -433,8 +464,8 @@ onMounted(() => {
   position: relative;
 }
 .node-card {
-  padding: 16px;
-  width: 220px;
+  padding: 16px 16px 10px 16px;
+  width: 270px;
 }
 .node-header {
   display: flex;
@@ -458,6 +489,10 @@ onMounted(() => {
   font-size: 11px;
   color: #888;
   margin-bottom: 12px;
+  display: flex;
+  /* flex-direction: column; */
+  flex-direction: row;
+  gap:12px;
 }
 .metrics {
   display: flex;
@@ -471,7 +506,7 @@ onMounted(() => {
   flex: 1;
 }
 .label {
-  font-size: 11px;
+  font-size: 12px;
   color: #6b7280;
   margin-bottom: 4px;
 }
@@ -544,5 +579,15 @@ onMounted(() => {
   border-radius: 4px;
   margin-bottom: 10px;
   text-align: center;
+}
+.dept-info {
+  display: flex;
+  flex-direction: row;
+  /* justify-content: left; */
+  font-size: 12px;
+  color: gray;
+  align-items: center;
+  margin-bottom: 12px;
+
 }
 </style>

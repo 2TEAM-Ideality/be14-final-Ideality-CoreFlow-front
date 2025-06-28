@@ -31,7 +31,7 @@
             <div class="info-card">
                 <h3 class="section-title">부서별 책임자</h3>
                 <div class="info-table">
-                    <div class="info-row" v-for="(leader, i) in data.leaders" :key="i">
+                    <div class="info-row leader-list" v-for="(leader, i) in data.leaders" :key="i">
                         <div class="info-label">{{ leader.deptName }}</div>
                         <div class="info-separator">-</div>
                         <div class="info-value">
@@ -144,13 +144,14 @@ const projectInfo = computed(() => [
     gap: 22px;
     justify-content: space-between;
     margin-bottom: 7px;
+    text-align: left;
 }
 
 .info-card{
     background: #F8F8F8;
     /* border: 1px solid #DEDEDE; */
     flex: 1;
-    padding: 20px;
+    padding: 3%;
     border-radius: 8px;
     
 }
@@ -161,6 +162,7 @@ const projectInfo = computed(() => [
     color: #757575;
     /* min-width: 120px; 고정 너비 또는 flex-basis */
     white-space: nowrap;
+    max-height: 300px;
 }
 
 .info-value {
@@ -188,5 +190,9 @@ const projectInfo = computed(() => [
     display: table-cell;
     padding: 4px 8px;
     vertical-align: top;
+}
+.leader-list {
+    height: 100%; 
+    
 }
 </style>

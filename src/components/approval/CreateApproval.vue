@@ -1,7 +1,7 @@
 <template>
   <BasicLayout>
     <template #main>
-      <div class="page-title">결재 요청</div>
+      <div class="page-title" >{{ createApprovalTitle ||  '결재 요청' }}</div>
       <v-row>
         <v-col>
           <div class="d-flex align-center mb-1">
@@ -236,6 +236,13 @@ import ParticipantSelectModal from './ParticipantSelectModal.vue';
 import { useRouter } from 'vue-router'
 import InfoField from '@/components/common/SideInfoField.vue'
 import { useUserStore } from '@/stores/userStore';
+import { useRoute } from 'vue-router'
+
+
+const route = useRoute()
+
+const createApprovalTitle = ref(null)
+
 
 const router = useRouter(); 
 const user = useUserStore();
@@ -369,25 +376,47 @@ function handleFileChange(event) {
     selectedFiles.value = files
 }
 
-onMounted(async() => {
-    const projectResponse = await api.get('/api/projects/list')
-    projectList.value = projectResponse.data.data
-    projectIds.value = projectList.value.map(p => p.id)
-    const delayResponse = await api.get('/api/approval/delay-reason')
-    delayResons.value = delayResponse.data.data
-    const taskResponse = await api.post('/api/projects/tasks/list', {
-        projectIds: projectIds.value
-    })
-    taskList.value = taskResponse.data.data
+onMounted(async () => {
+  // 1) 프로젝트 목록 조회
+  const projectResponse = await api.get('/api/projects/list')
+  projectList.value = projectResponse.data.data
+  projectIds.value = projectList.value.map(p => p.id)
 
-    // 참여자에서 결재자, 참조자 설정
-    const participantResponse = await api.post('/api/projects/participants/list', {
-        projectIds: projectIds.value
-    })
-    participantList.value = participantResponse.data.data
-    console.log('프로젝트별 참여자 목록', participantList.value)
+  // 2) 지연 사유 목록 조회
+  const delayResponse = await api.get('/api/approval/delay-reason')
+  delayResons.value = delayResponse.data.data
 
-    // Map<Long, User> 형태로 받을 것 프로젝트 ids로 참여자 조회해오기
+  // 3) 태스크 목록 조회 (프로젝트별)
+  const taskResponse = await api.post('/api/projects/tasks/list', {
+    projectIds: projectIds.value
+  })
+  taskList.value = taskResponse.data.data
+
+  // 4) 참여자 목록 조회 (프로젝트별)
+  const participantResponse = await api.post('/api/projects/participants/list', {
+    projectIds: projectIds.value
+  })
+  participantList.value = participantResponse.data.data
+
+  // 5) URL 쿼리에서 taskId 파라미터가 있으면
+  const tid = route.query.taskId
+  
+  if (tid) {
+    createApprovalTitle.value = "지연 사유서 작성"
+    // 5-1) 해당 태스크 자동 선택
+    selectedTaskId.value = tid
+    // 5-2) 결재 구분을 '지연'으로 설정
+    approvalType.value = '지연'
+    // 5-3) 그 태스크가 속한 프로젝트도 찾아서 선택
+    for (const [pid, tasks] of Object.entries(taskList.value)) {
+      if (tasks.some(t => String(t.id) === String(tid))) {
+        selectedProjectId.value = pid
+        break
+      }
+    }
+  }
+
+  console.log('프로젝트별 참여자 목록', participantList.value)
 })
 
 // 결재 요청 확인

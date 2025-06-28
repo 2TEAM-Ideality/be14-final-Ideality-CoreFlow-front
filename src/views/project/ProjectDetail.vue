@@ -47,6 +47,7 @@
     <ReportPreviewModals
       v-model="showPdfModal"
       :blob="pdfBlob"
+      :file-name="pdfFileName"
     />
         
   </div>
@@ -207,18 +208,31 @@ const markAsRestore = async () => {
 
 // 프로젝트 분석 리포트 다운로드 
 const pdfBlob = ref(null)
+const pdfFileName = ref('')
 const showPdfModal = ref(false)
 
 const downloadReport = async () => {
   try {
-    const response = await api.get(`/api/projects/report/${projectId}`, {
-      responseType: 'blob',
-      headers: {
-        Authorization: `Bearer ${userStore.accessToken}`
+    const response = await api.get(
+      `/api/projects/report/${projectId}`,
+      {
+        responseType: 'blob',
       }
-    })
+    )
+    console.log('all headers ▶', response.headers)
 
-    pdfBlob.value = response.data
+    // Content-Disposition 헤더에서 filename 파싱
+    const contentDisposition = response.headers.get('content-disposition') || ''
+    let filename = 'project-report.pdf'
+    const match = contentDisposition.match(
+      /filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/
+    )
+    if (match && match[1]) {
+      filename = decodeURIComponent(match[1])
+    }
+    pdfFileName.value = filename
+    pdfBlob.value     = response.data
+
     showPdfModal.value = true
   } catch (err) {
     console.error('PDF 다운로드 실패:', err)
