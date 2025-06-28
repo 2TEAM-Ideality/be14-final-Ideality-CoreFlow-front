@@ -21,27 +21,21 @@
             <v-btn 
               v-if="item.status === 'PENDING'" 
               @click.stop="confirmAndUpdateStatus(item, 'PROGRESS')" 
-              icon small
-              class="no-round-btn" 
-              style="background-color: transparent; color: rgb(0, 0, 0);"> <!-- 검정색 시작 버튼 -->
-              <v-icon>mdi-play-circle</v-icon> <!-- 시작 버튼 아이콘 -->
+              icon  variant="plain"> 
+              <v-icon size="35" color="#307CFF ">mdi-play-circle</v-icon> <!-- 시작 버튼 아이콘 -->
             </v-btn>
 
             <v-btn 
               v-else-if="item.status === 'PROGRESS'" 
               @click.stop="confirmAndUpdateStatus(item, 'COMPLETED')" 
-              icon small
-              class="no-round-btn" 
-              style="background-color: transparent; color: rgb(0, 0, 255);"> <!-- 파란색 진행 버튼 -->
-              <v-icon>mdi-pause-circle</v-icon> <!-- 진행 중 버튼 아이콘 -->
+              icon variant="plain"> <!-- 회색 진행 버튼 -->
+              <v-icon size="35" color="#B2B2B2">mdi-pause-circle</v-icon> <!-- 진행 중 버튼 아이콘 -->
             </v-btn>
 
             <v-btn 
               v-else-if="item.status === 'COMPLETED'" 
-              icon small
-              class="no-round-btn" 
-              style="background-color: transparent; color: rgb(0, 128, 0);"> <!-- 초록색 완료 버튼 (비활성화) -->
-              <v-icon>mdi-check-circle</v-icon> <!-- 완료 버튼 아이콘 -->
+              icon varaint="plain"> <!-- 초록색 완료 버튼 (비활성화) -->
+              <v-icon size="35" color="#34C759">mdi-check-circle</v-icon> <!-- 완료 버튼 아이콘 -->
             </v-btn>
           </td>
           
