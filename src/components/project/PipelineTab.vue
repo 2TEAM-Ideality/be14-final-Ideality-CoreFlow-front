@@ -184,6 +184,8 @@ const newTasks = ref([])        // 생성할 태스크 목록
 
 const projectStatus = ref(null);
 
+const totalTasks = ref(0)
+
 // 프로젝트 파이프라인 데이터 가져오기
 async function fetchPipeline() {
   try {
@@ -208,7 +210,15 @@ async function fetchPipeline() {
     // 상태별 개수 계산
     const statusCounts = rawNodes.reduce((acc, node) => {
       const status = node.status?.toUpperCase() || 'UNKNOWN'
+
+      // 기본 상태 카운트
       acc[status] = (acc[status] || 0) + 1
+
+      // 추가: warning 필드가 true면 WARNING으로도 카운트
+      if (node.warning === true) {
+        acc['WARNING'] = (acc['WARNING'] || 0) + 1
+      }
+
       return acc
     }, {})
 
@@ -217,6 +227,8 @@ async function fetchPipeline() {
       ...data,
       statusCounts
     }
+
+
     console.log("✅ 프로젝트 파이프라인 데이터 확인", projectInfo.value)
 
     // 중복 제거한 엣지
@@ -803,6 +815,7 @@ function handleCloseModal() {
   <div>
     <FloatingInfo
     v-if="projectInfo.statusCounts && !showFullscreenView"
+    :totalTaskCount="projectInfo?.nodeList?.length || 0"
     :passedRate="projectInfo.passedRate"
     :progressRate="projectInfo.progressRate"
     :delayDays="projectInfo.delayDays"

@@ -206,7 +206,8 @@ const toggleToolbar = () => {
 const goCreateApproval = () => {
   router.push({
     path: '/approval/create',
-    query: { taskId: props.id }
+    query: { taskId: props.id, type: 'delay' },
+    
   })
 }
 

@@ -382,42 +382,61 @@ onMounted(async () => {
   projectList.value = projectResponse.data.data
   projectIds.value = projectList.value.map(p => p.id)
 
-  // 지연 사유 목록 조회
-  const delayResponse = await api.get('/api/approval/delay-reason')
-  delayResons.value = delayResponse.data.data
-
   // 태스크 목록 조회 (프로젝트별)
   const taskResponse = await api.post('/api/projects/tasks/list', {
     projectIds: projectIds.value
   })
   taskList.value = taskResponse.data.data
 
+  
   // 참여자 목록 조회 (프로젝트별)
   const participantResponse = await api.post('/api/projects/participants/list', {
     projectIds: projectIds.value
   })
   participantList.value = participantResponse.data.data
 
+  // 지연 사유 목록 조회
+  const delayResponse = await api.get('/api/approval/delay-reason')
+  delayResons.value = delayResponse.data.data
+
   // URL 쿼리에서 taskId 파라미터가 있으면
   const tid = route.query.taskId
+  const pid = route.query.projectId
+  const type = route.query.type
   
-  if (tid) {
-    createApprovalTitle.value = "지연 사유서 작성"
-    // 해당 태스크 자동 선택
-    selectedTaskId.value = tid
-    // 결재 구분을 '지연'으로 설정
-    approvalType.value = '지연'
-    // 그 태스크가 속한 프로젝트도 찾아서 선택
-    for (const [pid, tasks] of Object.entries(taskList.value)) {
+  if(pid){
+    selectedProjectId.value = Number(pid)
+  }
+  else if (tid) {
+    selectedTaskId.value = Number(tid)
+
+    // 해당 태스크가 속한 프로젝트 찾기
+    for (const [targetProjectId, tasks] of Object.entries(taskList.value)) {
       if (tasks.some(t => String(t.id) === String(tid))) {
-        selectedProjectId.value = pid
+        selectedProjectId.value = Number(targetProjectId)
         break
       }
     }
   }
 
-  console.log('프로젝트별 참여자 목록', participantList.value)
+  
+
+  // ✅ type 파라미터에 따라 결재 제목 + 유형 자동 설정
+  if (type === 'delay') {
+    createApprovalTitle.value = '지연 사유서 작성'
+    approvalType.value = '지연'
+  } else if (type === 'output') {
+    createApprovalTitle.value = '산출물 작성'
+    approvalType.value = '산출물'
+  } else {
+    createApprovalTitle.value = '결재 요청'
+    approvalType.value = '일반'
+  }
+
+  console.log('✅ 자동 선택된 태스크:', selectedTaskId.value)
+  console.log('✅ 자동 선택된 프로젝트:', selectedProjectId.value)
 })
+
 
 // 결재 요청 확인
 const checkCreateApproval = () => {
