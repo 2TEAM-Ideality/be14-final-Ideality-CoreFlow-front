@@ -393,7 +393,7 @@ onMounted(() => {
         </div>
 
         <div class="dept-info">
-        📁 {{ data.deptList.join(', ') }}
+        📁 {{ data.deptList.join(', ')  || '참여 부서 정보 없음'}}
         </div>
       </div>
       
@@ -578,6 +578,7 @@ onMounted(() => {
   /* justify-content: left; */
   font-size: 12px;
   color: gray;
+  align-items: center;
   margin-bottom: 12px;
 
 }
