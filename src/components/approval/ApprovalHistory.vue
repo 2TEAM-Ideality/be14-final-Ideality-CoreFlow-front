@@ -191,7 +191,7 @@ function typeChipColor(type) {
       return '#E0F7FA' // 연한 청록 (일반)
     case 'OUTPUT':
       return '#FFF3E0' // 연한 주황 (산출물)
-    case 'DELAYED':
+    case 'DELAY':
       return '#FCE4EC' // 연한 핑크 (지연)
     default:
       return '#E0E0E0'
@@ -204,7 +204,7 @@ function typeTextColor(type) {
       return '#00796B'
     case 'OUTPUT':
       return '#EF6C00'
-    case 'DELAYED':
+    case 'DELAY':
       return '#C2185B'
     default:
       return '#424242'
