@@ -272,6 +272,9 @@ import axios from 'axios'
 import TaskDonutChart from '@/components/task/TaskDonutChart.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import api from '@/api';
+import { useUpdateStore } from '@/stores/updateStore'
+
+const updateStore = useUpdateStore()    // 업데이트 여부 
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -537,6 +540,7 @@ const fetchModify = async () => {
       endExpect: task.value.selectTask.expectEndDate,
     };
     await api.patch(`/api/task/modify/${taskId}`, dto);
+    updateStore.triggerDeptListUpdate()
   } catch (error) {
     if (error.response && error.response.status === 403) {
       alert("권한이 없습니다.");
