@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch  } from 'vue';
 import { useRoute } from 'vue-router';
 import BreadCrumb from '@/components/common/BreadCrumb.vue'
 import TaskLayout from '@/components/layout/TaskLayout.vue';
@@ -46,7 +46,7 @@ import TaskMainTab from '@/components/task/TaskMainTab.vue';
 import SidebarCommentSection from '@/components/task/SidebarCommentSection.vue';
 import axios from 'axios';
 import { useUserStore } from '@/stores/userStore';
-import { updateStore } from '@/stores/updateStore';
+import { useUpdateStore } from '@/stores/updateStore';
 import api from '@/api.js'
 
 const userStore = useUserStore();
@@ -113,7 +113,7 @@ watch(
       console.log('🔄 태스크 변경 감지 → 다시 불러오기')
       await fetchTask(taskId)               
       await fetchDetailList(taskId)        
-      updateStore.acknowledgeTaskInfoUpdate() 
+      updateStore.acknowledgeTaskInfoUpdate() // ✅ 갱신 플래그 초기화
     }
   }
 )
