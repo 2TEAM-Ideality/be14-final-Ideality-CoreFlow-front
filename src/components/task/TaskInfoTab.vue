@@ -123,9 +123,9 @@
               <div style="width: 50%;">
               <v-text-field
                 type="date"
-                v-model="task.selectTask.expectStartDate"
-                label="예상 시작일"
-                :readonly="!isEdit"
+                v-model="startDateProxy"
+                :label="task.selectTask.status !== 'PENDING' ? '실제 시작일' : '예상 시작일'"
+                :readonly="!isEdit || task.selectTask.status !== 'PENDING'"
                 variant="outlined"
                 density="compact"
               />
@@ -133,9 +133,9 @@
               <div style="width: 50%;">
               <v-text-field
                 type="date"
-                v-model="task.selectTask.expectEndDate"
-                label="예상 종료일"
-                :readonly="!isEdit"
+                v-model="endDateProxy"
+                :label="task.selectTask.status === 'COMPLETED' ? '실제 종료일' : '예상 종료일'"
+                :readonly="!isEdit || task.selectTask.status === 'COMPLETED'"
                 variant="outlined"
                 density="compact"
               />
@@ -296,6 +296,36 @@ const props = defineProps({
 const taskId = route.params.taskId
 
 const isEdit = ref(false);
+
+const endDateProxy = computed({
+  get() {
+    return props.taskData?.status === 'COMPLETED'
+      ? task.value.selectTask.endReal
+      : task.value.selectTask.expectEndDate;
+  },
+  set(value) {
+    if (props.value.taskData?.status === 'COMPLETED') {
+      task.value.selectTask.endReal = value;
+    } else {
+      task.value.selectTask.expectEndDate = value;
+    }
+  }
+});
+
+const startDateProxy = computed({
+  get() {
+    return props.taskData?.status === 'COMPLETED'
+      ? task.value.selectTask.startReal
+      : task.value.selectTask.expectStartDate;
+  },
+  set(value) {
+    if (props.taskData?.status === 'COMPLETED') {
+      task.value.selectTask.startReal = value;
+    } else {
+      task.value.selectTask.expectStartDate = value;
+    }
+  }
+});
 
 
 // 태스크 수정 ? 을 위한 깊은 복사
