@@ -201,9 +201,12 @@ const goToTask = () => {
 const toggleToolbar = () => {
   updateNodeData(props.id, { toolbarVisible: !props.data.toolbarVisible })
 }
-// 지연 위험 지연 사유서 작성 이동 
+// 지연 위험→결재 요청 페이지로 이동 (taskId 전달)
 const goCreateApproval = () => {
-  router.push( `/approval/create`)
+  router.push({
+    path: '/approval/create',
+    query: { taskId: props.id }
+  })
 }
 
 const actionMap = {
@@ -393,7 +396,7 @@ onMounted(() => {
         </div>
         <!-- ⚠️ 지연 위험 표시 -->
         <div v-if="isWarningActive" >
-          <v-btn @click="goCreateApproval" class="warning-banner">⚠️ 지연 위험</v-btn>
+          <v-btn @click="goCreateApproval" class="warning-banner">⚠️ 지연 사유서 작성</v-btn>
           
         </div>
 
