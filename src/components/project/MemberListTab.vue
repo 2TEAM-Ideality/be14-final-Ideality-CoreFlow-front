@@ -151,10 +151,16 @@ const fetchInviteLeaderList = async () => {
   try {
     const res = await api.get(`/api/projects/${projectId}/invitable-user`)
 
-    // 참여중이지 않은 사용자만 초대 가능 대상
-    inviteList.value = res.data.data.filter(user => user.participation === false)
+    inviteList.value = res.data.data
+      // 1) 아직 참여하지 않은 사용자만
+      .filter(user => user.participation === false)
+      // 2) deptName이 admin(공백·대소문자 무관)이면 제외
+      .filter(user => {
+        const d = user.deptName?.trim().toLowerCase() || ''
+        return d !== 'admin'
+      })
 
-    console.log('✅ 초대 대상 리스트 (참여 X)', inviteList.value)
+    console.log('✅ 초대 대상 리스트 (참여 X, admin 제외)', inviteList.value)
   } catch (err) {
     console.error('초대 목록 로딩 실패:', err)
   }

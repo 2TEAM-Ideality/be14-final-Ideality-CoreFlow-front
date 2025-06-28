@@ -45,13 +45,13 @@
                     v-if="comment.attachmentId && comment.originName"
                     class="comment-attachment"
                   >
-                    <a
-                      :href="`/attachment/${comment.attachmentId}/download`"
-                      :download="comment.originName"
-                      style="color:#3d5afe; text-decoration:underline; font-size:13px;"
-                    >
-                      📎 {{ comment.originName }}
-                    </a>
+                  <a
+                    href="#"
+                    @click.prevent="downloadFromS3Url(comment.attachmentId, comment.originName)"
+                    style="color:#3d5afe; text-decoration:underline; font-size:13px;"
+                  >
+                    📎 {{ comment.originName }}
+                  </a>
                   </div>
 
                 <!-- 아이콘들 공통 스타일 icon 적용 -->
@@ -105,8 +105,8 @@
                         <!-- 대댓글 첨부파일 링크 (조건: id + originName 존재) -->
                         <div v-if="reply.attachmentId && reply.originName" class="comment-attachment">
                           <a
-                            :href="`/attachment/${reply.attachmentId}/download`"
-                            :download="reply.originName"
+                            href="#"
+                            @click.prevent="downloadFromS3Url(reply.attachmentId, reply.originName)"
                             style="color:#3d5afe; text-decoration:underline; font-size:13px;"
                           >
                             📎 {{ reply.originName }}
@@ -238,26 +238,32 @@ const fetchComments = async (id)=> {
 
 // 대댓글 부모 구조를 위한 변환
 function convertToTree(flatList) {
-  const map = {}
-  const tree = []
+  // 🔥 createdAt 기준 정렬 먼저
+  const sorted = [...flatList].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-  flatList.forEach(comment => {
-    map[comment.commentId] = { ...comment, replies: [] }
-  })
+  const map = {};
+  const tree = [];
 
-  flatList.forEach(comment => {
-    const node = map[comment.commentId]
+  // map 초기화
+  sorted.forEach(comment => {
+    map[comment.commentId] = { ...comment, replies: [] };
+  });
+
+  // 트리 구조 구성
+  sorted.forEach(comment => {
+    const node = map[comment.commentId];
     if (comment.parentCommentId) {
-      const parent = map[comment.parentCommentId]
-      if (parent) parent.replies.push(node)
+      const parent = map[comment.parentCommentId];
+      if (parent) {
+        parent.replies.push(node);
+      }
     } else {
-      tree.push(node)
+      tree.push(node);
     }
-  })
+  });
 
-  return tree
+  return tree;
 }
-
 
 const dropdownIndex = ref(null)
 
@@ -360,6 +366,27 @@ const filteredComments = computed(() => {
     })
     .filter(Boolean); // null 제거
 });
+
+const downloadFromS3Url = async (attachmentId, originName) => {
+  try {
+    const res = await api.get(`/api/attachment/${attachmentId}/download`, {
+      responseType: 'text' // 문자열 그대로 받기
+    });
+
+    const s3Url = res.data; // 그냥 URL 하나만 들어있는 응답
+
+    // 1. 다운로드 트리거
+    const a = document.createElement('a');
+    a.href = s3Url;
+    a.download = originName; // 선택: 없으면 S3의 Content-Disposition 따라감
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+  } catch (error) {
+    console.error('S3 다운로드 URL 요청 실패:', error);
+  }
+};
 
 onMounted(() => {
   window.addEventListener('click', handleClickOutside)

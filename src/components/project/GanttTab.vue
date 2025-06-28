@@ -1,9 +1,9 @@
 <template>
   <div>
     <div>
-      <button @click="canEdit = true">수정 </button>
+      <!-- <button @click="canEdit = true">수정 </button>
       <button @click="logChanges">수정 완료</button>
-      <button @click="cancelChanges">수정 취소</button>
+      <button @click="cancelChanges">수정 취소</button> -->
 
     </div>
     <ejs-gantt 

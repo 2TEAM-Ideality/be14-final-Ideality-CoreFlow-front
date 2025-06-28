@@ -108,7 +108,7 @@
 
 <script setup>
 import { useRoute } from "vue-router";
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import TaskInfoTab from '@/components/task/TaskInfoTab.vue'
 import TaskApprovalTab from '@/components/task/TaskApprovalTab.vue'
 import TaskAttachmentTab from '@/components/task/TaskAttachmentTab.vue'
@@ -120,12 +120,26 @@ import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import api from '@/api';
 import { useHolidayStore } from '@/stores/holidayStore'
 import dayjs from 'dayjs'
+import { useUpdateStore } from '@/stores/updateStore'
+
+const updateStore = useUpdateStore()
 
 // 주말/공휴일 예외 처리 목적
 const holidayStore = useHolidayStore()
 const startDateError = ref('')
 const endDateError = ref('')
 const holidaySet = computed(() => holidayStore.holidaySet)
+
+watch(
+  () => updateStore.shouldRefreshDeptList,
+  (val) => {
+    if (val) {
+      fetchDepartments()             // 실제 다시 불러오기
+      fetchTasks()
+      updateStore.acknowledgeDeptListUpdate() // 신호 초기화
+    }
+  }
+)
 
 // 워크 데이 기반 소요일
 const workingDuration = computed(() => {
@@ -405,7 +419,7 @@ const fetchDepartments = async () => {
   }
 
   try {
-    const response = await api.get(`/api/dept/all`)
+    const response = await api.get(`/api/dept/task/${props.taskData.selectTask.taskId}`)
     if (response.status === 200) {
       departments.value = response.data.data; // 부서 데이터를 departments에 저장
     } else {
