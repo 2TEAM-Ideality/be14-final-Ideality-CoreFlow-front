@@ -138,6 +138,7 @@
                 v-model="task.selectTask.expectEndDate"
                 label="예상 종료일"
                 :readonly="!isEdit"
+                :min="task.selectTask.expectStartDate"
                 variant="outlined"
                 density="compact"
                 @change="handleEndDateChange"
@@ -593,10 +594,6 @@ const handleCompleteClick = () => {
 
   if (isInvalidDate(end)) {
     alert('예상 종료일은 주말 또는 공휴일로 설정할 수 없습니다.')
-    return
-  }
-  if (start.isAfter(end)) {
-    alert('예상 시작일은 종료일보다 늦을 수 없습니다.')
     return
   }
 
