@@ -139,6 +139,7 @@ import { useUserStore } from "@/stores/userStore";
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
 import { useRoute } from "vue-router";
 import api from "@/api";
+import { props } from "@syncfusion/ej2-vue-gantt/src/gantt/gantt.component";
 
 export default {
   props: {
@@ -162,7 +163,7 @@ export default {
     workId(newWorkId) {
       if (newWorkId) {
         this.fetchTaskDetails(newWorkId);
-        this.fetchDepartments(); // 부서 목록을 가져옴
+        this.fetchDepartments(newWorkId); // 부서 목록을 가져옴
       }
     },
     // 부모 컴포넌트에서 전달된 `isEditMode` 값이 변경되면 반영
@@ -270,7 +271,7 @@ export default {
         console.error('세부일정을 불러오는 중 오류가 발생했습니다:', error);
       }
     },
-    async fetchDepartments() {
+    async fetchDepartments(workId) {
       const userStore = useUserStore();
       const token = userStore.accessToken;
 
@@ -280,7 +281,8 @@ export default {
       }
 
       try {
-        const response = await api.get('/api/dept/all');
+        console.log('props.workId', workId)
+        const response = await api.get(`/api/dept/task/${workId}`);
 
         if (response.status === 200) {
           this.departments = response.data.data; // 부서 데이터를 departments에 저장
@@ -381,7 +383,7 @@ export default {
         deptId: this.taskDetails.deptId,
         assigneeId: assigneeId,
         participantIds: validParticipants, // id 값만 ,추출
-        startExpect:this.taskDetails.startExpect,
+        expectStart:this.taskDetails.startExpect,
         expectEnd: this.taskDetails.endExpect,
         progress: this.taskDetails.progressRate,
       };
