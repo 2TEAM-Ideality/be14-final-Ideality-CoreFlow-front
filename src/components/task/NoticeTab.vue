@@ -15,6 +15,8 @@
             <img :src="comment.profileImage || '/images/profile/defaultProfile.png'" alt="프로필 이미지"
               class="profile-img" />
             <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
+            <span v-if="comment.userId === userStore.id">⭐</span>
+            <span v-else>💬</span>
             <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
           </div>
           <span class="comment-create">{{ comment.createdAt.split('T')[0] }} {{
