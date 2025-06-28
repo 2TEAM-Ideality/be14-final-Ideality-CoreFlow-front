@@ -1,166 +1,127 @@
 <template>
-    <div class="comment-tab">
-        <div class="comment-filter">
-              <label style="font-weight: bold; font-size:15px;"># 세부일정</label>
-                <!-- label="세부일정 선택" -->
+  <div class="comment-tab">
+    <div class="comment-filter">
+      <label style="font-weight: bold; font-size:15px;"># 세부일정</label>
+      <!-- label="세부일정 선택" -->
 
-              <select v-model="selectedValue" class="select-box">
-                <option v-for="option in selectOptions" :key="option" :value="option">
-                  {{ option }}
-                </option>
-              </select>
+      <select v-model="selectedValue" class="select-box">
+        <option v-for="option in selectOptions" :key="option" :value="option">
+          {{ option }}
+        </option>
+      </select>
+    </div>
+
+    <div class="comment-list" ref="commentListRef">
+      <!-- 댓글 -->
+      <div v-for="(comment, index) in filteredComments" :key="comment.id" class="comment-item">
+        <div class="comment-header">
+          <div class="writer-with-modify">
+            <img :src="comment.profileImage || '/images/profile/defaultProfile.png'" alt="프로필 이미지"
+              class="profile-img" />
+            <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
+            <span v-if="comment.userId === userStore.id">⭐</span>
+            <span v-else>💬</span>
+            <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
+          </div>
+          <span class="comment-create">{{ comment.createdAt.split('T')[0] }} {{
+            comment.createdAt.split('T')[1].split(':')[0] }}:{{ comment.createdAt.split('T')[1].split(':')[1] }}</span>
+
         </div>
 
-        <div class="comment-list" ref="commentListRef">
-            <!-- 댓글 -->
-            <div
-                v-for="(comment, index) in filteredComments"
-                :key="comment.id"
-                class="comment-item"
-            >
-            <div class="comment-header">
-              <div class="writer-with-modify">
-                <img
-                :src="comment.profileImage || '/images/profile/defaultProfile.png'"
-                alt="프로필 이미지"
-                class="profile-img"
-                />
-                <span class="comment-writer">{{ comment.deptName + '_' + comment.name }}</span>
-                <span v-if="comment.userId === userStore.id">⭐</span>
-                <span v-else>💬</span>
-                <span class="modify-comment" v-if="comment.isModify">(수정됨)</span>
-              </div>
-              <span class="comment-create">{{ comment.createdAt.split('T')[0] }}  {{ comment.createdAt.split('T')[1].split(':')[0] }}:{{ comment.createdAt.split('T')[1].split(':')[1] }}</span>
+        <div class="comment-box">
+          <!-- <span class="comment-content">{{ comment.content }}</span> -->
+          <!-- 수정 -->
+          <span class="comment-content" v-html="convertContentToHTML(comment.content)"></span>
 
-            </div>
+          <!-- 첨부파일이 있을 경우 다운로드 링크 표시 -->
+          <!-- 첨부파일 ID와 파일명이 모두 존재할 때만 링크 표시 -->
+          <div v-if="comment.attachmentId && comment.originName" class="comment-attachment">
+            <a href="#" @click.prevent="downloadFromS3Url(comment.attachmentId, comment.originName)"
+              style="color:#3d5afe; text-decoration:underline; font-size:13px;">
+              📎 {{ comment.originName }}
+            </a>
+          </div>
 
-                <div class="comment-box">
-                  <!-- <span class="comment-content">{{ comment.content }}</span> -->
-                  <!-- 수정 -->
-                  <span class="comment-content" v-html="convertContentToHTML(comment.content)"></span>
+          <!-- 아이콘들 공통 스타일 icon 적용 -->
+          <div class="comment-icons">
+            <v-btn @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)" icon size="x-small"
+              density="compact" variant="text">
+              <v-icon size="16">mdi-message-outline</v-icon>
+            </v-btn>
+            <!-- 댓글 드롭다운 열기 -->
+            <v-btn v-if="comment.userId === userStore.id" @click="toggleDropdown(`comment-${comment.commentId}`)"
+              class="icon-button" icon size="xsmall" variant="text">
+              <v-icon size="xsmall">mdi-dots-vertical</v-icon>
+            </v-btn>
+          </div>
 
-                  <!-- 첨부파일이 있을 경우 다운로드 링크 표시 -->
-                  <!-- 첨부파일 ID와 파일명이 모두 존재할 때만 링크 표시 -->
-                  <div
-                    v-if="comment.attachmentId && comment.originName"
-                    class="comment-attachment"
-                  >
-                  <a
-                    href="#"
-                    @click.prevent="downloadFromS3Url(comment.attachmentId, comment.originName)"
-                    style="color:#3d5afe; text-decoration:underline; font-size:13px;"
-                  >
-                    📎 {{ comment.originName }}
-                  </a>
-                  </div>
-
-                <!-- 아이콘들 공통 스타일 icon 적용 -->
-                <div class="comment-icons">
-                  <v-btn
-                    @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)"
-                    icon
-                    size="x-small"
-                    density="compact"
-                    variant="text"
-                  >
-                    <v-icon size="16">mdi-message-outline</v-icon>
-                  </v-btn>
-                  <!-- 댓글 드롭다운 열기 -->
-                  <v-btn
-                    v-if="comment.userId === userStore.id"
-                    @click="toggleDropdown(`comment-${comment.commentId}`)"
-                    class="icon-button"
-                    icon
-                    size="xsmall"
-                    variant="text"
-                  >
-                    <v-icon size="xsmall">mdi-dots-vertical</v-icon>
-                  </v-btn>
-                </div>
-                
-                  <!-- 댓글 드롭다운 -->
-                  <div v-if="dropdownIndex === `comment-${comment.commentId}`" class="comment-dropdown">
-                      <button @click="onEditComment(comment)">댓글 수정</button>
-                      <button @click="openDeleteModal(comment.commentId)">댓글 삭제</button>
-                      <button class="highlight" 
-                      @click="updateNoticeComment(comment.commentId)">공지로 등록하기</button>
-                  </div>
-                </div>
-
-                <!-- 대댓글 -->
-                <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
-                    <div class="reply-header">
-                      <div class="writer-with-modify">
-                        <span class="reply-prefix">ㄴ</span>
-                        <img :src="reply.profileImage || '/images/profile/defaultProfile.png'" class="profile-img" />
-                        <span class="comment-writer">{{ reply.deptName + '_' + reply.name }}</span>
-                        <span class="modify-comment" v-if="reply.isModify">(수정됨)</span>
-                      </div>
-                    </div>
-
-                      <div class="reply-comment-box">
-                        <span class="comment-content">{{ reply.content }}</span>
-
-
-                        <!-- 대댓글 첨부파일 링크 (조건: id + originName 존재) -->
-                        <div v-if="reply.attachmentId && reply.originName" class="comment-attachment">
-                          <a
-                            href="#"
-                            @click.prevent="downloadFromS3Url(reply.attachmentId, reply.originName)"
-                            style="color:#3d5afe; text-decoration:underline; font-size:13px;"
-                          >
-                            📎 {{ reply.originName }}
-                          </a>
-                        </div>
-                        <div class="comment-icons">
-                          <v-btn
-                            @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)"
-                            icon
-                            size="x-small"
-                            density="compact"
-                            variant="text"
-                          >
-                            <v-icon size="16">mdi-message-outline</v-icon>
-                          </v-btn>
-                          <!-- 대댓글 드롭다운 열기 -->
-                          <v-btn
-                            v-if="reply.userId === userStore.id"
-                            @click="toggleDropdown(`reply-${reply.commentId}`)"
-                            class="icon-button"
-                            icon
-                            size="xsmall"
-                            variant="text"
-                          >
-                            <v-icon size="xsmall">mdi-dots-vertical</v-icon>
-                          </v-btn>
-                      </div>
-                        <!-- 대댓글 드롭다운 -->
-                        <!-- 대댓글에 대한 부모처리는 내일 가서 물어볼 것-->
-                        <div v-if="dropdownIndex === `reply-${reply.commentId}`" class="comment-dropdown">
-                          <button @click="onEditComment(reply)">댓글 수정</button>
-                          <button @click="openDeleteModal(reply.commentId)">댓글 삭제</button>
-                          <button class="highlight" 
-                          @click="updateNoticeComment(reply.commentId)">공지로 등록하기</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <!-- 댓글 드롭다운 -->
+          <div v-if="dropdownIndex === `comment-${comment.commentId}`" class="comment-dropdown">
+            <button @click="onEditComment(comment)">댓글 수정</button>
+            <button @click="openDeleteModal(comment.commentId)">댓글 삭제</button>
+            <button class="highlight" @click="updateNoticeComment(comment.commentId)">공지로 등록하기</button>
+          </div>
         </div>
 
-        <!-- 모달 창 -->
-        <template v-if="isDeleteModalOpen">
-          <div class="modal-overlay">
-            <div class="modal-box">
-              <h2 class="modal-title">댓글 삭제</h2>
-              <p class="modal-message">댓글을 정말로 삭제하시겠습니까?</p>
-              <div class="modal-buttons">
-                <button class="modal-cancel" @click="closeDeleteModal">취소</button>
-                <button class="modal-confirm" @click="deleteComment">확인</button>
-              </div>
+        <!-- 대댓글 -->
+        <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
+          <div class="reply-header">
+            <div class="writer-with-modify">
+              <span class="reply-prefix">ㄴ</span>
+              <img :src="reply.profileImage || '/images/profile/defaultProfile.png'" class="profile-img" />
+              <span class="comment-writer">{{ reply.deptName + '_' + reply.name }}</span>
+              <span class="modify-comment" v-if="reply.isModify">(수정됨)</span>
             </div>
           </div>
-        </template>
+
+          <div class="reply-comment-box">
+            <span class="comment-content">{{ reply.content }}</span>
+
+
+            <!-- 대댓글 첨부파일 링크 (조건: id + originName 존재) -->
+            <div v-if="reply.attachmentId && reply.originName" class="comment-attachment">
+              <a href="#" @click.prevent="downloadFromS3Url(reply.attachmentId, reply.originName)"
+                style="color:#3d5afe; text-decoration:underline; font-size:13px;">
+                📎 {{ reply.originName }}
+              </a>
+            </div>
+            <div class="comment-icons">
+              <v-btn @click="emitSetReply(comment.commentId, comment.deptName + '_' + comment.name)" icon size="x-small"
+                density="compact" variant="text">
+                <v-icon size="16">mdi-message-outline</v-icon>
+              </v-btn>
+              <!-- 대댓글 드롭다운 열기 -->
+              <v-btn v-if="reply.userId === userStore.id" @click="toggleDropdown(`reply-${reply.commentId}`)"
+                class="icon-button" icon size="xsmall" variant="text">
+                <v-icon size="xsmall">mdi-dots-vertical</v-icon>
+              </v-btn>
+            </div>
+            <!-- 대댓글 드롭다운 -->
+            <!-- 대댓글에 대한 부모처리는 내일 가서 물어볼 것-->
+            <div v-if="dropdownIndex === `reply-${reply.commentId}`" class="comment-dropdown">
+              <button @click="onEditComment(reply)">댓글 수정</button>
+              <button @click="openDeleteModal(reply.commentId)">댓글 삭제</button>
+              <button class="highlight" @click="updateNoticeComment(reply.commentId)">공지로 등록하기</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- 모달 창 -->
+    <template v-if="isDeleteModalOpen">
+      <div class="modal-overlay">
+        <div class="modal-box">
+          <h2 class="modal-title">댓글 삭제</h2>
+          <p class="modal-message">댓글을 정말로 삭제하시겠습니까?</p>
+          <div class="modal-buttons">
+            <button class="modal-cancel" @click="closeDeleteModal">취소</button>
+            <button class="modal-confirm" @click="deleteComment">확인</button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
 </template>
 
 <script setup>
@@ -216,7 +177,7 @@ const fetchScheduleOptions = async () => {
   }
 }
 //  댓글 목록 가져오기
-const fetchComments = async (id)=> {
+const fetchComments = async (id) => {
   try {
     console.log("댓글 가져오기 요청")
 
@@ -224,7 +185,7 @@ const fetchComments = async (id)=> {
     comments.value = convertToTree(res.data.data);
     console.log("📁 댓글 가져오기 성공", comments.value)
     nextTick(() => scrollToBottom())
-    
+
   } catch (error) {
     const status = error.response?.status;
     const message = error.code;
@@ -288,7 +249,7 @@ const handleClickOutside = (event) => {
 const openDeleteModal = (id) => {
   dropdownIndex.value = null // ✅ 드롭다운 닫기
   console.log(id);
-  deleteTargetId.value = id;   
+  deleteTargetId.value = id;
   isDeleteModalOpen.value = true;
 };
 
@@ -415,7 +376,7 @@ const onEditComment = (comment) => {
   emit('edit-comment', {
     id: comment.commentId,
     content: comment.content,
-    isNotice: false, 
+    isNotice: false,
     originName: comment.originName,        // ✅ 추가
     attachmentId: comment.attachmentId     // ✅ 선택적으로 함께 전달
   });
@@ -441,10 +402,12 @@ watch(() => taskId, (newId) => {
   padding-left: 8%;
   padding-top: 3%;
   height: 100%;
-  max-height: calc(100vh - 100px); /* 필요시 적절히 조절 */
+  max-height: calc(100vh - 100px);
+  /* 필요시 적절히 조절 */
   flex-direction: column;
   gap: 2%;
-  overflow: hidden; /* 중요: 내부 스크롤을 위해 */
+  overflow: hidden;
+  /* 중요: 내부 스크롤을 위해 */
   /* background-color: yellowgreen; */
   /* background-color: yellow; */
   background-color: rgb(250, 250, 250);
@@ -466,7 +429,8 @@ watch(() => taskId, (newId) => {
 .select-box {
   width: 100%;
   max-width: 300px;
-  padding: 6px 40px;
+  padding: 8px 40px 8px 12px;
+  /* 위, 오른쪽, 아래, 왼쪽 */
   font-size: 12px;
   border: 1px solid #818181;
   border-radius: 6px;
@@ -486,17 +450,20 @@ watch(() => taskId, (newId) => {
   padding-bottom: 15px;
   text-align: left;
 }
+
 /* comment list 스크롤 */
 .comment-list::-webkit-scrollbar {
   width: 6px;
 }
 
 .comment-list::-webkit-scrollbar-track {
-  background: transparent; /* 배경 없애기 */
+  background: transparent;
+  /* 배경 없애기 */
 }
 
 .comment-list::-webkit-scrollbar-thumb {
-  background-color: rgba(132, 132, 132, 0.5);  /* 흐릿한 검정 */
+  background-color: rgba(132, 132, 132, 0.5);
+  /* 흐릿한 검정 */
   border-radius: 10px;
 }
 
@@ -520,8 +487,9 @@ watch(() => taskId, (newId) => {
   overflow: visible;
   box-sizing: border-box;
 }
-.reply-comment-box{
-    position: relative;
+
+.reply-comment-box {
+  position: relative;
   display: block;
   width: 100%;
   padding: 5%;
@@ -548,21 +516,27 @@ watch(() => taskId, (newId) => {
   object-fit: cover;
   border: 1px solid #ccc;
 }
+
 .comment-icons {
   position: absolute;
-  top: 0;        /* 🔥 꼭대기에 붙임 */
-  right: 0;      /* 🔥 오른쪽 끝 */
+  top: 0;
+  /* 🔥 꼭대기에 붙임 */
+  right: 0;
+  /* 🔥 오른쪽 끝 */
   display: flex;
   gap: 4px;
-  align-items: flex-start; /* 🔥 수직 기준 꼭대기 */
-  padding: 3%;   /* 아이콘 간 여백 확보 */
+  align-items: flex-start;
+  /* 🔥 수직 기준 꼭대기 */
+  padding: 3%;
+  /* 아이콘 간 여백 확보 */
   z-index: 2;
 }
 
 .icon {
   width: 12px;
   height: 12px;
-  display: block;            /* inline-block 말고 완전 block */
+  display: block;
+  /* inline-block 말고 완전 block */
   object-fit: contain;
   cursor: pointer;
 }
@@ -577,7 +551,8 @@ watch(() => taskId, (newId) => {
 
 .comment-dropdown {
   position: absolute;
-  top: 28px; /* 아이콘 기준 아래로 */
+  top: 28px;
+  /* 아이콘 기준 아래로 */
   right: 0;
   width: 160px;
   background: #fff;
@@ -666,7 +641,7 @@ watch(() => taskId, (newId) => {
   }
 
   .comment-icons {
-    color:rgb(60, 60, 60);
+    color: rgb(60, 60, 60);
     top: 10px;
     right: 10px;
   }
@@ -678,7 +653,8 @@ watch(() => taskId, (newId) => {
 
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.4);
@@ -694,7 +670,7 @@ watch(() => taskId, (newId) => {
   padding: 32px;
   width: 360px;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .modal-title {
@@ -720,7 +696,7 @@ watch(() => taskId, (newId) => {
   background: none;
   border: none;
   font-size: 14px;
-  color: #7578ee; 
+  color: #7578ee;
   cursor: pointer;
 }
 
@@ -745,7 +721,8 @@ watch(() => taskId, (newId) => {
   align-items: center;
   gap: 6px;
 }
-.comment-create{
+
+.comment-create {
   color: rgb(163, 163, 163);
   font-size: 10px;
 }
