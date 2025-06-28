@@ -377,37 +377,37 @@ function handleFileChange(event) {
 }
 
 onMounted(async () => {
-  // 1) 프로젝트 목록 조회
+  // 프로젝트 목록 조회
   const projectResponse = await api.get('/api/projects/list')
   projectList.value = projectResponse.data.data
   projectIds.value = projectList.value.map(p => p.id)
 
-  // 2) 지연 사유 목록 조회
+  // 지연 사유 목록 조회
   const delayResponse = await api.get('/api/approval/delay-reason')
   delayResons.value = delayResponse.data.data
 
-  // 3) 태스크 목록 조회 (프로젝트별)
+  // 태스크 목록 조회 (프로젝트별)
   const taskResponse = await api.post('/api/projects/tasks/list', {
     projectIds: projectIds.value
   })
   taskList.value = taskResponse.data.data
 
-  // 4) 참여자 목록 조회 (프로젝트별)
+  // 참여자 목록 조회 (프로젝트별)
   const participantResponse = await api.post('/api/projects/participants/list', {
     projectIds: projectIds.value
   })
   participantList.value = participantResponse.data.data
 
-  // 5) URL 쿼리에서 taskId 파라미터가 있으면
+  // URL 쿼리에서 taskId 파라미터가 있으면
   const tid = route.query.taskId
   
   if (tid) {
     createApprovalTitle.value = "지연 사유서 작성"
-    // 5-1) 해당 태스크 자동 선택
+    // 해당 태스크 자동 선택
     selectedTaskId.value = tid
-    // 5-2) 결재 구분을 '지연'으로 설정
+    // 결재 구분을 '지연'으로 설정
     approvalType.value = '지연'
-    // 5-3) 그 태스크가 속한 프로젝트도 찾아서 선택
+    // 그 태스크가 속한 프로젝트도 찾아서 선택
     for (const [pid, tasks] of Object.entries(taskList.value)) {
       if (tasks.some(t => String(t.id) === String(tid))) {
         selectedProjectId.value = pid
