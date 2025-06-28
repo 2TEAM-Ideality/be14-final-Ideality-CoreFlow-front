@@ -582,21 +582,34 @@ watch(selectedEvent, (event) => {
       <div style="min-height: 100vh; padding: 15px; font-size: 13px;" ref="eventDetailPanel">
         <div v-if="selectedEvent"  class="event-detail-panel" @click.stop>
           <h4>📌 이벤트</h4>
-          <div><strong>{{ selectedEvent?.title }}</strong></div>
-          <div class="content-section">
-            {{ selectedEvent?.content }}
+          <div style="diaplsy: flex; flex-direction: column; background-color: #f5f5f5; padding: 10px;">          
+            
+            <div><strong>{{ selectedEvent?.title }}</strong></div>
+            <div class="content-section">
+              {{ selectedEvent?.content }}
+            </div>
+
           </div>
 
+
           <div style="display: flex; flex-direction: column; width: 100%; text-align: left; justify-content: flex-start; gap: 6px;">
-            <div>
-              <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
-              <span class="mr-3"><strong>시작일</strong></span>
-              <input type="datetime-local" v-model="editableStart" readonly />
+            <div style="display: flex; flex-direction: row; justify-content: space-between;">
+              <span>
+                <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
+                <span class="mr-3"><strong>시작일</strong></span>
+              </span>
+              
+              <span>{{ new Date(selectedEvent?.start).toISOString().slice(0, 10) }}</span>
+              <!-- <input type="datetime-local" v-model="editableStart" readonly /> -->
             </div>
-            <div>
-              <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
-              <span class="mr-3"><strong>마감일</strong></span>
-              <input type="datetime-local" v-model="editableEnd" readonly/>
+            <div style="display: flex; flex-direction: row; justify-content: space-between;">
+              <span>
+                <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
+                <span class="mr-3"><strong>마감일</strong></span>
+              </span>
+              
+              <span>{{ new Date(selectedEvent?.end).toISOString().slice(0, 10) }}</span>
+              <!-- <input type="datetime-local" v-model="editableStart" readonly /> -->
             </div>
           </div>
           <v-switch 
