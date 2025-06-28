@@ -46,9 +46,11 @@ import TaskMainTab from '@/components/task/TaskMainTab.vue';
 import SidebarCommentSection from '@/components/task/SidebarCommentSection.vue';
 import axios from 'axios';
 import { useUserStore } from '@/stores/userStore';
+import { updateStore } from '@/stores/updateStore';
 import api from '@/api.js'
 
 const userStore = useUserStore();
+const updateStore = useUpdateStore()
 const route = useRoute()
 const targetProjectId = ref(null)
 const targetProjectName = ref('')
@@ -103,6 +105,18 @@ onMounted(async () => {
     await fetchTask(taskId);
     await fetchDetailList(taskId);
 })
+
+watch(
+  () => updateStore.shouldRefreshTaskInfo,
+  async (val) => {
+    if (val) {
+      console.log('🔄 태스크 변경 감지 → 다시 불러오기')
+      await fetchTask(taskId)               
+      await fetchDetailList(taskId)        
+      updateStore.acknowledgeTaskInfoUpdate() 
+    }
+  }
+)
 </script>
 
 

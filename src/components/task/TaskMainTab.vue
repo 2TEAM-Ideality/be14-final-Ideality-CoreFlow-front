@@ -140,6 +140,17 @@ watch(
     }
   }
 )
+watch(
+  () => updateStore.shouldRefreshTaskInfo,
+  async (val) => {
+    if (val) {
+      console.log('태스크 상세정보 갱신 감지됨')
+      await fetchTasks() 
+      updateStore.acknowledgeTaskInfoUpdate() 
+    }
+  }
+)
+
 
 // 워크 데이 기반 소요일
 const workingDuration = computed(() => {
