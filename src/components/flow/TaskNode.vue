@@ -201,6 +201,10 @@ const goToTask = () => {
 const toggleToolbar = () => {
   updateNodeData(props.id, { toolbarVisible: !props.data.toolbarVisible })
 }
+// 지연 위험 지연 사유서 작성 이동 
+const goCreateApproval = () => {
+  router.push( `/approval/create`)
+}
 
 const actionMap = {
   pending: ['태스크 시작', '태스크 삭제'],
@@ -388,8 +392,9 @@ onMounted(() => {
           <div v-if="status === 'cancelled' || status === 'deleted'">기간 없음</div>
         </div>
         <!-- ⚠️ 지연 위험 표시 -->
-        <div v-if="isWarningActive" class="warning-banner">
-          ⚠️ 지연 위험
+        <div v-if="isWarningActive" >
+          <v-btn @click="goCreateApproval" class="warning-banner">⚠️ 지연 위험</v-btn>
+          
         </div>
 
         <div class="dept-info">
