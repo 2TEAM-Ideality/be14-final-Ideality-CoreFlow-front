@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BasicLayout from '@/components/layout/BasicLayout.vue';
-import api from '@/api';
+import api from '@/api'
 import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import SelectProjectModal from '@/components/template/SelectProjectModal.vue'
 import { VueFlow } from '@vue-flow/core'
@@ -134,7 +134,7 @@ const handleSelectProject = async (project: any) => {
     loadProject.value = true;
     showModal.value = false;
 
-    const nodeList = selectedProject.value.nodeList;
+    const nodeList = selectedProject?.value.nodeList;
 
     // ✅ 태스크 수는 노드 개수
     taskCount.value = nodeList.length;
