@@ -16,7 +16,8 @@ const props = defineProps({
   projectId: Number,
   deptList: Array,
   initialData: Object,
-  existingNodes: Array
+  existingNodes: Array,
+  projectStatus: String
 })
 const emit = defineEmits(['close', 'create', 'update:show', 'update'])
 
@@ -290,11 +291,11 @@ const getNodeLabel = (item) => {
       <div style="display: flex; flex-direction: column; width: 100%;">
         <div style="display: flex; flex-direction: row; justify-content: space-between; gap: 10px;">
           <div class="input-group" style="width: 100%;">
-            <label>시작 베이스라인</label>
+            <label>{{ props.projectStatus === 'pending' ? "시작 베이스라인" : "예상 시작일"}}</label>
             <input v-model="localNode.startBase" type="date" @change="handleStartDateChange" value="localNode.startBase"/>
           </div>
           <div class="input-group" style="width: 100%;">
-            <label>마감 베이스라인</label>
+            <label>{{ props.projectStatus === 'pending' ? "마감 베이스라인" : "예상 마감일"}}</label>
             <input v-model="localNode.endBase" type="date" @change="handleEndDateChange" value="localNode.startBase"/>
           </div>
         </div>
