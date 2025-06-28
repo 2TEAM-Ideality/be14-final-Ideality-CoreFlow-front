@@ -156,7 +156,7 @@
           <v-list-item
             :key="'approval-' + index"
             v-for="(item, index) in approvalData"
-            @click="goToApprovalDetail(item.targetId)"
+            @click="goToApprovalDetail(item.id,item.targetId)"
             style="cursor: pointer; background-color: #eeee; border-radius:15px; padding: 10px;">
             <v-list-item-content>
               <div class="warning-item">
@@ -178,6 +178,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
+import api from '@/api.js'
 
 
 const props = defineProps({
@@ -239,8 +240,16 @@ const openApprovalModal = () => {
   openApprovalAlert.value = true
 }
 
-const goToApprovalDetail = (id) => {
-  router.push(`/approval/${id}`)
+const goToApprovalDetail = async (id, targetId) => {
+  try {
+    console.log(`✅ 읽음 처리 요청: /api/notifications/${id}/read`)
+    await api.patch(`/api/notifications/${id}/read`)
+    console.log(`✅ 알림(${id}) 읽음 처리 완료`)
+  } catch (err) {
+    console.error(`❌ 알림(${id}) 읽음 처리 실패`, err)
+  } finally {
+    router.push(`/approval/${targetId}`)
+  }
 }
 
 const goToCalendar = () => {
