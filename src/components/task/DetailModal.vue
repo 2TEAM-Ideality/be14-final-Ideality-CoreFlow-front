@@ -124,10 +124,10 @@
 
 
         <div class="modal-footer">
-          <button class="edit-btn" @click="openEditModal" v-if="!isEditMode">수정</button>
+          <button class="edit-btn" @click="openEditModal" v-if="!isEditMode && this.taskDetails.taskStatus !== 'COMPLETED'">수정</button>
           <button class="save-btn" @click="saveChanges" v-if="isEditMode">저장</button>
           <button class="cancelled-btn" @click="closeEditModal" v-if="isEditMode">취소</button>
-          <button class="delete-btn" @click="deleteTask" v-if="!isEditMode">삭제</button>
+          <button class="delete-btn" @click="deleteTask" v-if="!isEditMode && this.taskDetails.taskStatus !== 'COMPLETED'">삭제</button>
         </div>
       </div>
     </div>

@@ -123,9 +123,9 @@
               <div style="width: 50%;">
               <v-text-field
                 type="date"
-                v-model="task.selectTask.expectStartDate"
-                label="예상 시작일"
-                :readonly="!isEdit"
+                v-model="startDateProxy"
+                :label="task.selectTask.status !== 'PENDING' ? '실제 시작일' : '예상 시작일'"
+                :readonly="!isEdit || task.selectTask.status !== 'PENDING'"
                 variant="outlined"
                 density="compact"
                 @change="handleStartDateChange"
@@ -135,15 +135,16 @@
               <div style="width: 50%;">
               <v-text-field
                 type="date"
-                v-model="task.selectTask.expectEndDate"
-                label="예상 종료일"
-                :readonly="!isEdit"
-                :min="task.selectTask.expectStartDate"
+                v-model="endDateProxy"
+                :label="task.selectTask.status === 'COMPLETED' ? '실제 종료일' : '예상 종료일'"
+                :readonly="!isEdit || task.selectTask.status === 'COMPLETED'"
+                :min="task.selectTask.status === 'PENDING' ? task.selectTask.expectStartDate : task.selectTask.startReal"
                 variant="outlined"
                 density="compact"
                 @change="handleEndDateChange"
                 :rules="[v => !isInvalidDate(v) || '주말 또는 공휴일은 선택할 수 없습니다.']"
               />
+              <div>{{ task.selectTask.startReal }}</div>
             </div>  
           </div>
         </div>
@@ -307,6 +308,36 @@ const props = defineProps({
 const taskId = route.params.taskId
 
 const isEdit = ref(false);
+
+const endDateProxy = computed({
+  get() {
+    return task.value.selectTask.status === 'COMPLETED'
+      ? task.value.selectTask.endReal
+      : task.value.selectTask.expectEndDate;
+  },
+  set(value) {
+    if (task.value.selectTask.status === 'COMPLETED') {
+      task.value.selectTask.endReal = value;
+    } else {
+      task.value.selectTask.expectEndDate = value;
+    }
+  }
+});
+
+const startDateProxy = computed({
+  get() {
+    return task.value.selectTask.status !== 'PENDING'
+      ? task.value.selectTask.startReal
+      : task.value.selectTask.expectStartDate;
+  },
+  set(value) {
+    if (task.value.selectTask.status !== 'PENDING') {
+      task.value.selectTask.startReal = value;
+    } else {
+      task.value.selectTask.expectStartDate = value;
+    }
+  }
+});
 
 
 
