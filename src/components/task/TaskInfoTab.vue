@@ -495,7 +495,7 @@ const handleClickOutside = (e) => {
 
 watch(() => props.taskData, (newData) => {
   if (newData) {
-    showConfirmModal.value = false; // ✅ 혹시 떠 있을까봐 초기화
+    showConfirmModal.value = false; 
     isEdit.value = false;
 
     task.value = {
@@ -572,8 +572,7 @@ const submitEdit = async () => {
   try {
     await fetchModify();
     console.log("✅태스크 상세정보 수정 완료")
-
-    alert("수정되었습니다.");
+    
   } catch (err) {
     alert("일부 수정에 실패했습니다.");
   }

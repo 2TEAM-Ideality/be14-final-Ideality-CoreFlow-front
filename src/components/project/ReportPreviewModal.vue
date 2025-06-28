@@ -38,22 +38,26 @@ import VuePdfEmbed from 'vue-pdf-embed'
 
 const props = defineProps({
   modelValue: Boolean,
-  blob: Blob
+  blob: Blob,
+  fileName: {
+    type: String,
+    default: 'project-report.pdf'
+  }
 })
 const emit = defineEmits(['update:modelValue'])
 
 const visible = ref(props.modelValue)
 const blobUrl = ref(null)
 
-watch(() => props.modelValue, (val) => {
+watch(() => props.modelValue, val => {
   visible.value = val
 })
 
-watch(() => visible.value, (val) => {
+watch(() => visible.value, val => {
   emit('update:modelValue', val)
 })
 
-watch(() => props.blob, (val) => {
+watch(() => props.blob, val => {
   if (val) {
     blobUrl.value = URL.createObjectURL(val)
   }
@@ -63,13 +67,14 @@ const close = () => {
   visible.value = false
 }
 
+
 // ✅ PDF 다운로드 함수
 const downloadPdf = () => {
   if (!props.blob) return
 
   const link = document.createElement('a')
   link.href = URL.createObjectURL(props.blob)
-  link.download = 'project-report.pdf'
+  link.download = props.fileName
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
