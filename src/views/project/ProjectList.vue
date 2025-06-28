@@ -4,7 +4,7 @@ import Breadcrumb from '@/components/common/BreadCrumb.vue';
 import ListLayout from '@/components/layout/ListLayout.vue';
 import { useUserStore } from '@/stores/userStore.js'
 import { useRouter } from 'vue-router'
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '@/api';
 import ProjectCard from '@/components/project/ProjectCard.vue';
 
@@ -33,6 +33,17 @@ onMounted(async () => {
   } catch(err){
     console.error('프로젝트 목록 조회 실패', err);
   }
+})
+
+// 페이징
+const currentPage    = ref(1)
+const itemsPerPage   = 6
+const totalPages     = computed(() =>
+  Math.max(1, Math.ceil(projectList.value.length / itemsPerPage))
+)
+const paginatedProjects = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return projectList.value.slice(start, start + itemsPerPage)
 })
 
 const onSearch=()=>{
@@ -76,6 +87,7 @@ const applyFilter = ()=> {
     )
   }
   projectList.value = filtered
+  currentPage.value = 1
   // if()
 }
 
@@ -98,13 +110,14 @@ const applyFilter = ()=> {
               <v-icon class="search-icon" size="18">mdi-magnify</v-icon>
             </button>
           </div>
+          
           <div class="filter-wrapper">
-            <button @click="showFilterDropdown = !showFilterDropdown" class="filter-btn">
+            <button @click="showFilterDropdown = !showFilterDropdown" class="filter-btn" style="margin-right: 10px; ">
               <v-icon class="filter-icon" size="18">
                 {{ selectedStatuses.length > 0 ? 'mdi-filter-menu' : 'mdi-filter-menu-outline' }}
               </v-icon>
               필터
-            </button>
+            </button> 
             <div v-if="showFilterDropdown" class="filter-dropdown">
                 <ul class="filter-list">
                   <li
@@ -113,7 +126,9 @@ const applyFilter = ()=> {
                     :class="{ active: selectedStatuses.includes(option.value) }"
                     @click="() => toggleStatus(option.value)"
                   >
-                    <input type="checkbox" :checked="selectedStatuses.includes(option.value)" readonly />
+                    <input type="checkbox" :checked="selectedStatuses.includes(option.value)" readonly 
+                    style="margin-right: 10px;"
+                    />
                     {{ option.label }}
                   </li>
                   <li @click="() => { selectedStatuses = []; applyFilter() }">전체 해제</li>
@@ -127,10 +142,22 @@ const applyFilter = ()=> {
       </div>
 
       <div class="project-list">
+        <!-- v-for="project in projectList" -->
+        
+        <!-- paginatedProjects -->
         <ProjectCard
-        v-for="project in projectList"
+        v-for="project in paginatedProjects"
         :key="project.id"
         :project="project"/>
+      </div>
+
+      <div class="d-flex justify-center mt-4">
+        <v-pagination
+          v-model="currentPage"
+          :length="totalPages"
+          total-visible="7"
+          color="#7578ee"
+        />
       </div>
     </ListLayout>
 

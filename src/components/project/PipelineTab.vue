@@ -188,13 +188,13 @@ const projectStatus = ref(null);
 async function fetchPipeline() {
   try {
     // api
-    // const res = await api.get(`/api/projects/${projectId}/pipeline`, {
-    //   params: { projectId }
-    // })
-    // const data = res.data.data
+    const res = await api.get(`/api/projects/${projectId}/pipeline`, {
+      params: { projectId }
+    })
+    const data = res.data.data
 
     // warning TEST 용 
-    const data = pipelineData.data
+    // const data = pipelineData.data
 
     console.log('✅ 파이프라인 데이터 조회', data)
    
