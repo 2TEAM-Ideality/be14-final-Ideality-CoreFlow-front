@@ -151,6 +151,8 @@ const handleSelectProject = async (project: any) => {
         label: node.name,
         description: node.description,
         progressRate: node.progressRate,
+        duration: node.duration,
+        slackTime: node.slackTime,
         status: node.status,
         deptList: node.deptList
       }
