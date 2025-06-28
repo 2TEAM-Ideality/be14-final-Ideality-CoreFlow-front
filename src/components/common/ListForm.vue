@@ -103,24 +103,26 @@ function toggleAll(value) {
   paginatedItems.value.forEach(item => (item.selected = value))
 }
 
-function handleDownload(attachmentId, fileName) {
-  api.get(`/api/attachment/${attachmentId}/download`, {
-    responseType: 'blob' // 서버에서 byte[]로 내려주기 때문에 blob으로 받아야 함
-  })
-    .then(res => {
-      const blob = new Blob([res.data])
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.setAttribute('download', fileName || 'download')
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(link.href)
-    })
-    .catch(err => {
-      console.error('다운로드 실패:', err)
-    })
-}
+const handleDownload = async (attachmentId, originName) => {
+  try {
+    const res = await api.get(`/api/attachment/${attachmentId}/download`, {
+      responseType: 'text' // 문자열 그대로 받기
+    });
+
+    const s3Url = res.data; // 그냥 URL 하나만 들어있는 응답
+
+    // 1. 다운로드 트리거
+    const a = document.createElement('a');
+    a.href = s3Url;
+    a.download = originName; // 선택: 없으면 S3의 Content-Disposition 따라감
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+  } catch (error) {
+    console.error('S3 다운로드 URL 요청 실패:', error);
+  }
+};
 
 watch(currentPage, () => {
   selectAll.value = false

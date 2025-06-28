@@ -537,7 +537,6 @@ const fetchModify = async () => {
       endExpect: task.value.selectTask.expectEndDate,
     };
     await api.patch(`/api/task/modify/${taskId}`, dto);
-    alert("수정되었습니다.");
   } catch (error) {
     if (error.response && error.response.status === 403) {
       alert("권한이 없습니다.");

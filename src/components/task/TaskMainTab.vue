@@ -405,7 +405,7 @@ const fetchDepartments = async () => {
   }
 
   try {
-    const response = await api.get(`/api/dept/all`)
+    const response = await api.get(`/api/dept/task/${props.taskData.selectTask.taskId}`)
     if (response.status === 200) {
       departments.value = response.data.data; // 부서 데이터를 departments에 저장
     } else {
