@@ -263,9 +263,9 @@ const handleStyle = {
 }
 
 
-onMounted(() => {
-  console.log(props.data)
-})
+// onMounted(() => {
+//   console.log(props.data)
+// })
 
 
 </script>
@@ -343,6 +343,7 @@ onMounted(() => {
     <div flat elevation="0" class="node-card" :style="cardStyle">
       <!-- 헤더 -->
       <div class="node-header">
+        
         <div class="left-header">
           <v-btn
             icon
@@ -350,13 +351,13 @@ onMounted(() => {
             class="icon-btn"
             :ripple="false"
             @click.stop="toggleToolbar"  
+            
           >
             <v-icon size="28" :color="iconColor">{{ icon }}</v-icon>
           </v-btn>
           <span class="title">{{ data.label || '작업 이름' }}</span>
         </div>
-
-
+          
         <!-- DOT more 버튼 메뉴 (툴팁처럼 보이는 스타일) -->
         <v-btn
         v-if=" showFullscreenView === true"
@@ -368,14 +369,18 @@ onMounted(() => {
         </v-btn>
         <v-btn
         v-if="showFullscreenView === false"
-          @click="goToTask"
+          @click.stop="goToTask"
           icon
           size="small"
           variant="text"
+          @mousedown.stop
+          @mouseup.stop
+          style="z-index: 10;"
         >
           <v-icon style="color: gray;">mdi-open-in-new</v-icon>
         </v-btn>
       </div>
+
 
       <div style="display: flex; flex-direction: column; padding: 10px;">
         <!-- 날짜 -->
@@ -397,14 +402,31 @@ onMounted(() => {
 
           <div v-if="status === 'cancelled' || status === 'deleted'">기간 없음</div>
         </div>
-        <!-- ⚠️ 지연 위험 표시 -->
-        <div v-if="isWarningActive" >
-          <v-btn @click="goCreateApproval" class="warning-banner">⚠️ 지연 사유서 작성</v-btn>
-          
-        </div>
+
+
+        <!-- <div class="dept-info">
+        📁 {{ data.deptList.join(', ')  || '참여 부서 정보 없음'}}
+        </div> -->
 
         <div class="dept-info">
-        📁 {{ data.deptList.join(', ')  || '참여 부서 정보 없음'}}
+          <template v-if="data.deptList?.length">
+            <span style="margin-right: 6px;">📁</span>
+            <v-chip
+              v-for="(dept, index) in data.deptList"
+              :key="index"
+              size="small"
+              class="ma-1"
+              color="indigo lighten-5"
+              text-color="indigo darken-2"
+              variant="tonal"
+              style="font-size: 11px;"
+            >
+              {{ dept }}
+            </v-chip>
+          </template>
+          <template v-else>
+            📁 참여 부서 정보 없음
+          </template>
         </div>
       </div>
       
@@ -442,6 +464,10 @@ onMounted(() => {
           <div :class="['delay-text', delayColor]" style="margin-bottom: 15px; font-size: 25px;">{{ delayText }}</div>
         </div>
       </div>
+            <!-- ⚠️ 지연 위험 표시 -->
+          <div v-if="isWarningActive"  >
+            <v-btn @click="goCreateApproval" class="warning-banner" style="width:100%;">⚠️ 지연 사유서 작성</v-btn>
+          </div>
       <v-btn
         v-if="showFullscreenView"
         icon
@@ -451,7 +477,10 @@ onMounted(() => {
       >
         <v-icon size="20" color="white">mdi-plus</v-icon>
       </v-btn>
+      
     </div>
+
+    
     
   </div>
 
@@ -468,7 +497,7 @@ onMounted(() => {
 }
 .node-card {
   padding: 16px 16px 10px 16px;
-  width: 270px;
+  width: 300px;
 }
 .node-header {
   display: flex;

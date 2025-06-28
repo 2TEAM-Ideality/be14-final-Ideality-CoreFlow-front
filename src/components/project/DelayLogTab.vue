@@ -6,7 +6,7 @@
         message="📄 해당 프로젝트에 대한 지연 사유서가 없습니다."
         subMessage="작성하려면 아래 버튼을 클릭하세요."
         buttonText="지연 사유서 작성"
-        buttonLink="/approval"
+        buttonLink="/approval/create"
       />
 
     </div>

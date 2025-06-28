@@ -137,6 +137,7 @@
 <script>
 import { useUserStore } from "@/stores/userStore";
 import { useTaskStore } from "@/stores/taskStore"; // Pinia store 임포트
+import { useUpdateStore } from '@/stores/updateStore'
 import { useRoute } from "vue-router";
 import api from "@/api";
 import { props } from "@syncfusion/ej2-vue-gantt/src/gantt/gantt.component";
@@ -331,6 +332,8 @@ export default {
     ///////////// 수정하는 모달
     async saveChanges() {
 
+      const updateStore = useUpdateStore()
+
       // `assignees` 배열에서 `userId`가 없는 객체가 있는지 확인
       const hasInvalidAssignees = this.taskDetails.assignees.some(a => !a.hasOwnProperty('userId'));
 
@@ -397,6 +400,8 @@ export default {
           this.$emit('close-modal');
           await this.fetchTaskDetails(this.workId);
           // 완료 후 바로 조회 모달 갱신을 위한 데이터 다시 불러오기
+
+          updateStore.triggerTaskInfoUpdate()  // 태스크 정보 리프레시 트리거
 
           if(this.taskDetails.progressRate>0){
           // 상태가 PENDING일 때, PROGRESS로 상태 변경

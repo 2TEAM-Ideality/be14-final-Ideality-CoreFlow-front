@@ -141,6 +141,8 @@ watch(
   }
 )
 
+
+
 // 워크 데이 기반 소요일
 const workingDuration = computed(() => {
   if (!form.value.startDate || !form.value.endDate) return null;
@@ -306,7 +308,10 @@ const submitForm = async () => {
 
   if (result) {
     // 성공적인 처리 후 추가 동작 (예: 모달 닫기)
+    updateStore.triggerTaskInfoUpdate()  // 태스크 정보 리프레시 트리거
     closeModal();
+    
+
   }
 
   isSubmitting.value = false;
