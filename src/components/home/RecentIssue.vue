@@ -179,8 +179,9 @@
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 import api from '@/api.js'
+import { useNotificationStore } from '@/stores/notificationStore'
 
-
+const notificationStore = useNotificationStore()
 const props = defineProps({
   todayDeptList: {
     type: Array,
@@ -244,6 +245,7 @@ const goToApprovalDetail = async (id, targetId) => {
   try {
     console.log(`✅ 읽음 처리 요청: /api/notifications/${id}/read`)
     await api.patch(`/api/notifications/${id}/read`)
+     notificationStore.markNotificationAsRead(id)  // ✅ 추가
     console.log(`✅ 알림(${id}) 읽음 처리 완료`)
   } catch (err) {
     console.error(`❌ 알림(${id}) 읽음 처리 실패`, err)
