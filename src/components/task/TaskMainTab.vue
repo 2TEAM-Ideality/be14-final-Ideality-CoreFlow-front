@@ -14,10 +14,10 @@
 
     <component 
       :is="selectedComponent"
-      v-bind="selectedTab === 'info' ? { taskData, detailList } : {}"
-      :task-id="taskData.selectTask.taskId" 
-      :work-id="openWorkId"  
-      />
+      v-bind="getTabProps"
+      :task-id="taskData.selectTask.taskId"
+      :work-id="openWorkId"
+    />
 
     <v-dialog v-model="showModal" max-width="700">
       <v-card style="padding: 5%; ">
@@ -485,6 +485,27 @@ onMounted(() => {
   }
 
 })
+
+const getTabProps = computed(() => {
+  if (!props.taskData) return {}  // 안전 장치
+
+  switch (selectedTab.value) {
+    case 'info':
+      return { taskData: props.taskData, detailList: props.detailList }
+    case 'participants':
+      return { taskData: props.taskData }
+    case 'detail':
+      return { taskData: props.taskData, detailList: props.detailList }
+    case 'approval':
+      return { taskData: props.taskData }
+    case 'attachments':
+      return { taskData: props.taskData }
+    default:
+      return {}
+  }
+})
+
+
 </script>
 
 <style scoped>
