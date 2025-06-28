@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd()) // ✅ .env 로드
 
   return {
-    base: '/',
+    base: './',
     plugins: [
       vue(),
       vueDevTools()

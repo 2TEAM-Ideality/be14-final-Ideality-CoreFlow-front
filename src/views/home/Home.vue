@@ -24,6 +24,8 @@
           :todayDeptList="todayDeptList"
           :todayCount="todayCount"
           :warningDeadline="warningDeadline"
+          :approvalData="approvalData"  
+        
         />
       </div>
 
@@ -177,6 +179,18 @@ const fetchWarningDeadline = async () => {
   }
 }
 
+const approvalData = ref([])
+const fetchApprovalData = async () => {
+  try {
+    const res = await api.get('/api/unread-approvals')
+    approvalData.value = res.data.data
+    console.log('✅ 결재 알림 데이터 확인', approvalData.value)
+  } catch (err) {
+    console.error('❌ 결재 알림 조회 실패:', err)
+  }
+}
+
+
 // /mainPage
 
 onMounted(() => {
@@ -186,6 +200,7 @@ onMounted(() => {
   fetchMyProject()  
   fetchWarningDeadline()
   if (userStore.temp) showChangePwdModal.value = true
+  fetchApprovalData()
 })
 
 const goToProject = () => {

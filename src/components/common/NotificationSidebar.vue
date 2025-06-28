@@ -73,34 +73,36 @@ onUnmounted(() => {
 
 // 알림 클릭 시 라우팅과 읽기 처리 함수
 const handleNotificationClick = async (notice) => {
-  // 알림을 읽음 처리
-  const response = await markNotificationAsRead(notice.id);
-  
-  // 읽기 성공시 라우팅
-  if (response.status === 'success') {
-    let targetUrl = '';
-
-    switch (notice.targetType) {
-      case 'WORK':
-        targetUrl = `/task/${notice.targetId}`;
-        break;
-      case 'PROJECT':
-        targetUrl = `/project/${notice.targetId}/overview`;
-        break;
-      case 'APPROVAL':
-        targetUrl = '/approval';
-        break;
-      default:
-        console.error('알 수 없는 targetType:', notice.targetType);
-        return;
+  // READ가 아니면 읽음 처리 시도
+  if (notice.status !== 'READ') {
+    try {
+      await markNotificationAsRead(notice.id);
+    } catch (e) {
+      console.error("알림 읽음 처리 실패(무시하고 이동):", e);
     }
-
-   // 라우팅 처리
-  router.push(targetUrl);
-  } else {
-    console.error("알림 읽기 실패:", response.message || "알 수 없는 오류");
   }
+
+  // 무조건 라우팅
+  let targetUrl = '';
+
+  switch (notice.targetType) {
+    case 'WORK':
+      targetUrl = `/task/${notice.targetId}`;
+      break;
+    case 'PROJECT':
+      targetUrl = `/project/${notice.targetId}/overview`;
+      break;
+    case 'APPROVAL':
+      targetUrl = `/approval/${notice.targetId}`;
+      break;
+    default:
+      console.error('알 수 없는 targetType:', notice.targetType);
+      return;
+  }
+
+  router.push(targetUrl);
 }
+
 
 // 알림을 읽음 처리 API 호출
 const markNotificationAsRead = async (notificationId) => {

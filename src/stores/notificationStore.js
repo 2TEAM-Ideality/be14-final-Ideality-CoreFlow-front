@@ -31,11 +31,25 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   };
 
+  // 특정 알림을 읽음 처리
+const markNotificationAsRead = (notificationId) => {
+  const index = notifications.value.findIndex(notice => notice.id === notificationId)
+  if (index !== -1) {
+    // 객체 자체를 교체 (반응성 보장)
+    notifications.value[index] = {
+      ...notifications.value[index],
+      status: 'READ'
+    }
+  }
+}
+
+
   return {
     lastNotificationId,
     notifications,
     setLastNotificationId,
     addNotification,
-    removeNotificationIfAutoDeleted
+    removeNotificationIfAutoDeleted,
+    markNotificationAsRead
   };
 });
