@@ -14,6 +14,8 @@ const selectedEvent = ref(null)
 const showEventModal = ref(false)
 const selectedDate = ref(null)      // 미니맵에서 선택한 날짜
 
+const isLoading = ref(false)
+
 const scheduleList = ref([])        // 개인 일정 리스트
 const deptScheduleList = ref([])      // 부서 일정 리스트
 
@@ -44,17 +46,21 @@ const newScheduleIsAllDay = ref(true)
 
 
 
-// 오늘의 일정
-const todayList = computed(() => {
-  const today = new Date().toISOString().split('T')[0]
 
-  return mergedEvents.value.filter(event => {
-    const start = event.start
-    const end = event.end ?? event.start
-    return start <= today && today <= end
-  })
-})    
+const filteredScheduleList = computed(() =>
+  scheduleList.value.filter(item => item.status !== 'DELETED')
+)
 
+
+// 프로젝트 체크박스
+const filteredDeptScheduleList = computed(() => {
+  if (selectedProjectIds.value.length === 0) return []
+
+  return deptScheduleList.value.filter(event =>
+    selectedProjectIds.value.includes(event.projectId) &&
+    event.status !== 'DELETED'
+  )
+})
 
 // 개인 일정 불러오기
 async function fetchMonthlySchedule(year, month) {
@@ -72,16 +78,16 @@ async function fetchMonthlySchedule(year, month) {
 
     scheduleList.value = (res.data.data || []).map(item => {
       const start = new Date(item.startAt)
-      const end = new Date(item.endAt)
-      const format = (date) => date.toISOString().split('T')[0]
+      const end   = new Date(item.endAt)
+      const format = d => d.toISOString().slice(0,10)
 
       return {
-        title: item.name,
+        type:    'PERSONAL',            // 개인 일정 타입
+        title:   item.name,
         content: item.content,
-        start: format(start),
-        leftDate: item.leftDateTime,
-        end: format(end),
-        class: 'event-personal',
+        start:   format(start),
+        end:     format(end),
+        class:   'event-personal',
         attributes: {
           title: `${item.name}\n${item.content}`
         }
@@ -119,6 +125,7 @@ async function fetchDeptSchedule () {
       const format = (date) => date.toISOString().split('T')[0]
 
       return {
+        type:      'DEPT_DETAIL',  
         title: item.taskName,
         content: item.taskDescription,
         projectName: item.projectName,
@@ -145,11 +152,39 @@ watch(view, (val) => {
 // 부서 + 개인 일정 조합
 const mergedEvents = computed(() => {
   const events = []
-  if (showPersonal.value) events.push(...filteredScheduleList.value)
-  if (showDepartment.value) events.push(...filteredDeptScheduleList.value)
+  if (showPersonal.value) {
+    events.push(
+      ...filteredScheduleList.value.map(ev => ({
+        ...ev,
+        type: 'PERSONAL'
+      }))
+    )
+  }
+  if (showDepartment.value) {
+    events.push(
+      ...filteredDeptScheduleList.value.map(ev => ({
+        ...ev,
+        type: 'DEPT_DETAIL'
+      }))
+    )
+  }
   return events
 })
+watch(mergedEvents, v => console.log('합쳐진 일정:', v))
 
+// 오늘의 일정
+
+// 오늘의 일정
+// UTC 대신 로컬 시간 기준 문자열 만들기
+const today = new Date().toLocaleDateString('sv') // 'YYYY-MM-DD' 반환
+
+const todayList = computed(() => {
+  return mergedEvents.value.filter(event => {
+    const start = event.start
+    const end   = event.end ?? event.start
+    return start <= today && today <= end
+  })
+})
 
 // 부서별 참여 프로젝트 목록 조회
 async function fetchDeptProject () {
@@ -222,17 +257,19 @@ const onViewChange = ({ startDate }) => {
 
 // ✅ 초기 mount 시 현재 보이는 달로 요청
 onMounted(async () => {
+  isLoading.value = true
   await nextTick()
   showCalendar.value = true
   await nextTick()
-  if (vueCalRef.value) {
-    vueCalRef.value.switchView('month')
-    console.log(vueCalRef.value)
-    const initialDate = new Date(vueCalRef.value.viewStartDate)
-    // fetchMonthlySchedule(initialDate.getFullYear(), initialDate.getMonth() + 1)
-    await fetchDeptSchedule()
-    await fetchDeptProject()
-  }
+  vueCalRef.value?.switchView('month')
+
+  // 🟢 여기서 두 요청을 병렬로 날려서 기다리는 시간을 반으로!
+  await Promise.all([
+    fetchDeptSchedule(),
+    fetchDeptProject()
+  ])
+  isLoading.value = false
+
 })
 
 // 셀 클릭 처리
@@ -291,20 +328,7 @@ const toggleAllProjects = () => {
   }
 }
 
-const filteredScheduleList = computed(() =>
-  scheduleList.value.filter(item => item.status !== 'DELETED')
-)
 
-
-// 프로젝트 체크박스
-const filteredDeptScheduleList = computed(() => {
-  if (selectedProjectIds.value.length === 0) return []
-
-  return deptScheduleList.value.filter(event =>
-    selectedProjectIds.value.includes(event.projectId) &&
-    event.status !== 'DELETED'
-  )
-})
 
 
 function toDateInputString(date) {
@@ -371,16 +395,15 @@ const submitNewSchedule = async () => {
 }
 
 
+watch(selectedEvent, event => {
+  if (!event) return;
+  // event.start, event.end 는 'YYYY-MM-DD' 문자열이므로 Date 생성한 뒤
+  editableStart.value = toLocalDateTimeString(event.start);
+  editableEnd.value   = toLocalDateTimeString(event.end  || event.start);
+  isAllDay.value = event.start === event.end;
+});
 
-watch(selectedEvent, (event) => {
-  if (event) {
-    editableStart.value = toDateInputString(event.start)
-    editableEnd.value = toDateInputString(event.end)
-    if( editableStart.value === editableEnd.value){
-      isAllDay.value = true;
-    }
-  }
-})
+
 function goPrevMonth() {
   vueCalRef.value?.previous()
 }
@@ -447,7 +470,7 @@ watch(selectedEvent, (event) => {
             }"
           />
         </div>
-        <div style="height: 300px;">
+        <div style="height: 300px; text-align: left;">
           <h5
             @click="toggleAllProjects"
             style="display: flex; align-items: center; gap: 6px; font-weight: 600; margin-bottom: 10px; color: #757575; cursor: pointer;"
@@ -502,10 +525,10 @@ watch(selectedEvent, (event) => {
             <v-checkbox v-model="showDepartment" label="🏢 부서일정 보기" hide-details density="compact" />
           </div>
           <div>
+            <v-btn color="black" @click="goToToday" style="width: fit-content" variant="plain">Today</v-btn>
             <v-btn icon variant="text" @click="goPrevMonth">
               <v-icon>mdi-chevron-left</v-icon>
             </v-btn>
-            <v-btn color="black" @click="goToToday" style="width: fit-content" variant="plain">Today</v-btn>
             <v-btn icon variant="text" @click="goNextMonth">
               <v-icon>mdi-chevron-right</v-icon>
             </v-btn>
@@ -568,7 +591,7 @@ watch(selectedEvent, (event) => {
             <div>
               <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
               <span class="mr-3"><strong>시작일</strong></span>
-              <input type="datetime-local" v-model="newScheduleStart" />
+              <input type="datetime-local" v-model="editableStart" readonly />
             </div>
             <div>
               <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
@@ -605,7 +628,7 @@ watch(selectedEvent, (event) => {
           />
           <div class="mt-2" style="display:flex; flex-direction: row; gap: 8px;">
             <span><strong>시작일</strong></span>
-            <input type="date" v-model="newScheduleStart" />
+            <input type="date" v-model="selectedEvent.value.start" />
           </div>
           <div style="display:flex; flex-direction: row; gap: 8px;">
             <span><strong>종료일</strong></span>
@@ -630,23 +653,45 @@ watch(selectedEvent, (event) => {
             <v-icon size="18" icon="mdi-calendar" />
             예정된 이벤트
           </h4>
-          <h4 style="color: #FF4545; margin-bottom: 7px;">{{ todayFormatted }}</h4>
-          <div v-if="todayList.length && !selectedEvent" class="mb-4"> 
-            <ul style="list-style: none; padding-left: 0; ">
-              <li v-for="event in todayList" :key="event.title" style="font-size: 12px; padding: 10px; background-color: #F8F8F7; border-radius: 5px; margin-bottom: 5px; cursor:pointer;">
-                <span style="margin-bottom:20px;">
-                  <strong >{{ event.title }} </strong>
-                </span>
-                <span v-if="event.leftDateTime > 0" style="font-size:  5px; color: #B2B2B2;">
-                  {{ Math.floor(event.leftDateTime / 60) }}시간 {{ event.leftDateTime % 60 }}분 후 시작
-                </span>
-                <span v-else  style="margin-left: 3px; font-size:  10px; color: #B2B2B2;">
-                  진행중
-                </span>
-                <div>{{ event.content }}</div>
-              </li>
-            </ul>
-          </div>
+          <h4 style="color: #FF4545; margin-bottom: 15px; text-align: left;">TODAY. {{ todayFormatted }}</h4>
+
+
+          <!-- 캐러셀 태스트 -->
+            <div v-if="todayList.length && !selectedEvent" class="today-carousel">
+              <v-slide-group
+                show-arrows
+                direction="vertical"
+                style="max-height: 500px; overflow: hidden;"
+                prev-icon="mdi-chevron-up"
+                next-icon="mdi-chevron-down"
+              >
+                <v-slide-item
+                  v-for="(event, idx) in todayList.slice(0, 6)"
+                  :key="idx"
+                >
+                  <v-card flat class="pa-3 mb-2"
+                  :style="{
+                  fontSize:      '12px',
+                  padding:       '10px 15px',
+                  backgroundColor: event.type === 'PERSONAL' ? '#FFF0F8' : '#eef3f9',
+                  borderRadius:  '5px',
+                  marginBottom:  '5px',
+                }"
+                >
+                    <div class="d-flex flex-column">
+                      <strong class="mb-1 truncate">{{event.type==='PERSONAL' ? '⭐' : '👥' }} {{ event.title }}</strong>
+                      <div class="truncate mb-1" style="font-size: 13px; color: #555">
+                        {{ event.content }}
+                      </div>
+                      <div class="today-project-name truncate" style="font-size: 12px; color: #888">
+                        {{ event.projectName }}
+                      </div>
+                    </div>
+                  </v-card>
+                </v-slide-item>
+              </v-slide-group>
+            </div>
+
           <div v-else>
             일정이 없습니다.
           </div>
@@ -743,7 +788,7 @@ watch(selectedEvent, (event) => {
   background-color: #FFF0F8;
 }
 .event-dept {
-  background-color: #D8EDFF;
+  background-color: #eef3f9;
 }
 .event-orange {
   background-color: #ff9800;
@@ -904,4 +949,27 @@ li:hover {
   background-color: #e0e0e0;
   transition: background-color 0.2s;
 }
+
+.today-item{
+  text-align: left;
+}
+.today-project-name {
+  white-space: nowrap;       /* 한 줄로 고정 */
+  overflow: hidden;          /* 넘치는 텍스트 자르기 */
+  text-overflow: ellipsis;   /* 말줄임표 표시 */
+  /* 필요에 따라 너비 지정 */
+  max-width: 200px;
+}
+.today-carousel {
+  margin-top: 16px;
+}
+
+/* 텍스트가 넘치면 … 처리 */
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 </style>
