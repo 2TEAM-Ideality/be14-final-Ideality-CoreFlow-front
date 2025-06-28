@@ -22,14 +22,14 @@
               v-if="item.status === 'PENDING'" 
               @click.stop="confirmAndUpdateStatus(item, 'PROGRESS')" 
               icon  variant="plain"> 
-              <v-icon size="35" color="#307CFF ">mdi-play-circle</v-icon> <!-- 시작 버튼 아이콘 -->
+              <v-icon size="35" color="#B2B2B2">mdi-play-circle</v-icon> <!-- 시작 버튼 아이콘 -->
             </v-btn>
 
             <v-btn 
               v-else-if="item.status === 'PROGRESS'" 
               @click.stop="confirmAndUpdateStatus(item, 'COMPLETED')" 
-              icon variant="plain"> <!-- 회색 진행 버튼 -->
-              <v-icon size="35" color="#B2B2B2">mdi-pause-circle</v-icon> <!-- 진행 중 버튼 아이콘 -->
+              icon variant="plain"> 
+              <v-icon size="35" color="#307CFF">mdi-pause-circle</v-icon> <!-- 진행 중 버튼 아이콘 -->
             </v-btn>
 
             <v-btn 

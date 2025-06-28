@@ -119,8 +119,8 @@ const form = reactive({
 })
 
 const iconMap = {
-  PENDING: 'mdi-pause-circle-outline',
-  PROGRESS: 'mdi-play-circle-outline',
+  PENDING: 'mdi-play-circle-outline',
+  PROGRESS: 'mdi-pause-circle-outline',
   COMPLETED: 'mdi-check-circle-outline',
   DELETED: 'mdi-close-circle-outline',
   WARNING: 'mdi-alert-circle-outline', // 경고 아이콘도 추가
