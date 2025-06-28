@@ -16,21 +16,24 @@
       </v-btn>
     </div>
 
+
+  <!-- 결재 알림 -->
     <div class="issue-item">
       <div class="item-left">
-        <v-btn icon color="info" class="approval-button" @click="goToApproval">
+        <v-btn icon color="info" class="approval-button" @click="openApprovalModal">
           <v-icon>mdi-file-document-alert-outline</v-icon>
         </v-btn>
         <div class="issue-data">
           <div class="issue-title">결재 알림</div>
-          <div class="issue-desc">n개</div>
+          <div class="issue-desc">{{ approvalData?.length || 0 }}개</div>
         </div>
       </div>
-      <v-btn icon variant="plain" class="link-icon" size="small" @click="goToApproval">
+      <v-btn icon variant="plain" class="link-icon" size="small" @click="openApprovalModal">
         <v-icon color="gray">mdi-chevron-right</v-icon>
       </v-btn>
     </div>
    
+
 
     <!-- 결재 알림 -->
     <!-- <div class="issue-item">
@@ -135,13 +138,50 @@
       </v-window>
     </v-card>
   </v-dialog>
+
+
+
+ <!-- 결재 알림 모달 -->
+    <v-dialog v-model="openApprovalAlert" max-width="600px">
+      <v-card style="padding: 5%;">
+        <v-card-title class="text-h6 font-weight-bold" style="display:flex; flex-direction: row; gap: 10px; align-items: center;">
+          결재 알림
+          <v-icon color="info" class="mr-2">mdi-file-document-alert-outline</v-icon>
+        </v-card-title>
+        
+        <!-- 결재 알림 리스트 -->
+        <v-list
+          v-if="approvalData && approvalData.length"
+          style="max-height: 400px; overflow-y: auto; gap: 10px; display: flex; flex-direction: column; padding: 20px 10px;">
+          <v-list-item
+            :key="'approval-' + index"
+            v-for="(item, index) in approvalData"
+            @click="goToApprovalDetail(item.id,item.targetId)"
+            style="cursor: pointer; background-color: #eeee; border-radius:15px; padding: 10px;">
+            <v-list-item-content>
+              <div class="warning-item">
+                <div>{{ item.content }}</div>
+                <div> 🔔</div>
+              </div>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+        
+        <div v-else class="text-grey text-caption" style="height: 400px; padding: 30px 20px;">
+          결재 알림이 없습니다.
+        </div>
+      </v-card>
+    </v-dialog>
+
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
 import { ref } from 'vue'
+import api from '@/api.js'
+import { useNotificationStore } from '@/stores/notificationStore'
 
-
+const notificationStore = useNotificationStore()
 const props = defineProps({
   todayDeptList: {
     type: Array,
@@ -158,6 +198,10 @@ const props = defineProps({
   warningDeadline : {
     type: Object,
     required: true
+  },
+    approvalData: {   // ✅ 이거 추가
+    type: Array,
+    default: () => []
   }
 })
 
@@ -191,10 +235,23 @@ const warningDeadlineTest = {
     // private Long parentTaskId;
     // private String name;
 
+const openApprovalAlert = ref(false)
 
+const openApprovalModal = () => {
+  openApprovalAlert.value = true
+}
 
-const goToApproval = () => {
-  router.push(`/approval`)
+const goToApprovalDetail = async (id, targetId) => {
+  try {
+    console.log(`✅ 읽음 처리 요청: /api/notifications/${id}/read`)
+    await api.patch(`/api/notifications/${id}/read`)
+     notificationStore.markNotificationAsRead(id)  // ✅ 추가
+    console.log(`✅ 알림(${id}) 읽음 처리 완료`)
+  } catch (err) {
+    console.error(`❌ 알림(${id}) 읽음 처리 실패`, err)
+  } finally {
+    router.push(`/approval/${targetId}`)
+  }
 }
 
 const goToCalendar = () => {
