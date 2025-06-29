@@ -117,23 +117,23 @@
              <!-- 템플릿 소요일 항상 표시 -->
              <div class="text-caption d-flex align-center" style="color: #757575;">
                <v-icon start>mdi-calendar-range</v-icon>
-               템플릿 소요일: <strong>{{ selectedTemplate.duration }}일</strong>
+               템플릿 소요일: <strong>{{ criticalDuration }}일</strong>
              </div>
              </div>
 
           <!-- 초과/부족 여부 메시지 -->
           <div v-if="selectedTemplate && workingDuration !== null">
-            <div v-if="selectedTemplate.duration === workingDuration">
+            <div v-if="criticalDuration === workingDuration">
               <v-icon start>mdi-timer</v-icon>
               베이스라인과 딱 맞음
             </div>
-            <div v-else-if="selectedTemplate.duration < workingDuration">
+            <div v-else-if="criticalDuration < workingDuration">
               <v-icon start color="green">mdi-check-circle</v-icon>
-              여유시간 {{ workingDuration - selectedTemplate.duration }}일
+              여유시간 {{ workingDuration - criticalDuration }}일
             </div>
             <div v-else>
               <v-icon start color="red">mdi-alert</v-icon>
-              워크데이가 {{ selectedTemplate.duration - workingDuration }}일 부족합니다
+              워크데이가 {{ criticalDuration - workingDuration }}일 부족합니다
             </div>
           </div>
 
@@ -354,6 +354,53 @@ const nodeTypes = {
 const user = useUserStore();
 const router = useRouter();
 
+const criticalDuration = computed(() => calculateCriticalPathDuration(flowNodes.value, flowEdges.value));
+
+// 소요일 계산
+const calculateCriticalPathDuration = (nodes, edges) => {
+  const taskMap = new Map()
+  nodes.forEach(n => taskMap.set(n.id, n))
+
+  const inDegree = new Map()
+  const graph = new Map()
+  nodes.forEach(n => {
+    inDegree.set(n.id, 0)
+    graph.set(n.id, [])
+  })
+
+  edges.forEach(e => {
+    graph.get(e.source).push(e.target)
+    inDegree.set(e.target, inDegree.get(e.target) + 1)
+  })
+
+  const queue = []
+  const longestPath = new Map()
+
+  inDegree.forEach((deg, id) => {
+    if (deg === 0) {
+      const n = taskMap.get(id)
+      const d = (n.data?.duration || 0) + (n.data?.slackTime || 0)
+      longestPath.set(id, d)
+      queue.push(id)
+    }
+  })
+
+  while (queue.length) {
+    const curr = queue.shift()
+    const currTime = longestPath.get(curr)
+
+    for (const next of graph.get(curr)) {
+      const n = taskMap.get(next)
+      const d = (n.data?.duration || 0) + (n.data?.slackTime || 0)
+      const prevTime = longestPath.get(next) || 0
+      longestPath.set(next, Math.max(prevTime, currTime + d))
+      inDegree.set(next, inDegree.get(next) - 1)
+      if (inDegree.get(next) === 0) queue.push(next)
+    }
+  }
+
+  return Math.max(...longestPath.values())
+}
 
 
 // 프로젝트 작성 정보
