@@ -117,7 +117,7 @@ const convertToFlowData = () => {
     id: edge.id,
     source: edge.source,
     target: edge.target,
-    type: 'bezier',
+    type: 'smoothstep',
     animated: true,
     sourcePosition: Position.Right,
     targetPosition: Position.Left

@@ -441,279 +441,287 @@ watch(selectedEvent, (event) => {
 </script>
 
 <template>
-  <CalendarLayout>
-    <template #left>
-      <div class="left-cal">
-        <div style="height: 250px; font-size: 12px; border: none; width: 100%; margin: 0 auto;">
-          <VueCal
-            class="mini-calendar"
-            ref="miniCalRef"
-            date-picker
-            :views-bar="false"
-            view="month"    
-            :views="['month']"
-            :selected-date="selectedDate"
-            default-view="month"
-            :available-views="['month']"
-            hide-view-selector
-            time="24"
-            @cell-focus="selectedDate = $event"
-            @ready="() => miniCalRef?.switchView('month')"
-            
-            locale="ko"
-            :locales="{
-              ko: {
-                weekdays: ['일', '월', '화', '수', '목', '금', '토'],
-                months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
-                firstDayOfWeek: 0 // 일요일: 0, 월요일: 1
-              }
-            }"
-          />
-        </div>
-        <div style="height: 300px; text-align: left;">
-          <h5
-            @click="toggleAllProjects"
-            style="display: flex; align-items: center; gap: 6px; font-weight: 600; margin-bottom: 10px; color: #757575; cursor: pointer;"
-          >
-            <v-icon size="18" class="me-1" icon="mdi-format-list-bulleted" />
-            부서 프로젝트 목록
-          </h5>
-
-          <v-virtual-scroll
-            :items="deptProjectList"
-            :height="240"
-            item-height="48"
-          >
-            <template #default="{ item: project }">
-              <label class="custom-checkbox">
-                <input
-                  style="margin-left:5px;"
-                  type="checkbox"
-                  :value="project.id"
-                  v-model="selectedProjectIds"
-                />
-                <div class="checkbox-label">
-                  <div class="project-name" :title="project.name">
-                    {{ project.name || '(이름 없음)' }}
-                  </div>
-                  <div class="project-dates">
-                    {{ project.startDate }} → {{ project.endDate?.slice(5) }}
-                  </div>
-                </div>
-              </label>
-            </template>
-          </v-virtual-scroll>
-
-          <p v-if="!deptProjectList.length" style="font-size: 13px;">📭 참여 중인 프로젝트가 없습니다.</p>
-        </div>
-      </div>
-      
-    </template>
-        
-    <template #center>
-      <div style="height: 100%; display: flex; flex-direction: column;">
-
-        <div style="display: flex; flex-direction:row;  gap: 8px; margin-bottom: 12px;">
-          <h2 style="font-weight: normal; margin: 0; cursor:pointer;" @click="switchToYearsView"> {{ currentViewDate.year }}년 </h2>
-          <h2 style="cursor:pointer;" @click="switchToYearView">{{ currentViewDate.month }}월</h2>
-        </div>
-
-
-        <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
-          <div class="d-flex align-center gap-4 mb-2">
-            <v-checkbox v-model="showPersonal" label="👤 개인일정 보기" hide-details density="compact" />
-            <v-checkbox v-model="showDepartment" label="🏢 부서일정 보기" hide-details density="compact" />
-          </div>
-          <div>
-            <v-btn color="black" @click="goToToday" style="width: fit-content" variant="plain">Today</v-btn>
-            <v-btn icon variant="text" @click="goPrevMonth">
-              <v-icon>mdi-chevron-left</v-icon>
-            </v-btn>
-            <v-btn icon variant="text" @click="goNextMonth">
-              <v-icon>mdi-chevron-right</v-icon>
-            </v-btn>
-          </div>
-          
-        </div>
-
-        <div style="flex: 1; overflow: hidden;">
-          <VueCal
-            class="main-cal"
-            v-if="showCalendar"
-            ref="vueCalRef"
-            v-model:view="view"
-            :views="{
-              month: {},
-              year: {},
-              yaers: {}
-            }"
-            :available-views="['month', 'year', 'years']"
-            default-view="month"
-            :events="mergedEvents"
-            :prevent-event-details="true"
-            :disable-views="['day', 'week']"
-            :disable-views-transition="true"
-            :selected-date="selectedDate"
-            events-on-month-view
-            time="24"
-            @cell-focus="selectedDate = $event"
-            @view-change="onViewChange"
-            @cell-click="onCellClick"
-            @cell-dblclick="onCellDblClick"
-            @event-click="onEventClick"
-            style="height: 100%;"
-            locale="ko"
-            :locales="{
-              ko: {
-                weekdays: ['일', '월', '화', '수', '목', '금', '토'],
-                months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
-                firstDayOfWeek: 0
-              }
-            }"
-          />
-
-        </div>
-      </div>
-    </template>
-
-
-    <template #right>
-      <!-- background-color: #f5f5f5;  -->
-      <div style="min-height: 100vh; padding: 15px; font-size: 13px;" ref="eventDetailPanel">
-        <div v-if="selectedEvent"  class="event-detail-panel" @click.stop>
-          <h4>📌 이벤트</h4>
-          <div style="diaplsy: flex; flex-direction: column; background-color: #f5f5f5; padding: 10px;">          
-            
-            <div><strong>{{ selectedEvent?.title }}</strong></div>
-            <div class="content-section">
-              {{ selectedEvent?.content }}
-            </div>
-
-          </div>
-
-
-          <div style="display: flex; flex-direction: column; width: 100%; text-align: left; justify-content: flex-start; gap: 6px;">
-            <div style="display: flex; flex-direction: row; justify-content: space-between;">
-              <span>
-                <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
-                <span class="mr-3"><strong>시작일</strong></span>
-              </span>
-              
-              <span>{{ new Date(selectedEvent?.start).toISOString().slice(0, 10) }}</span>
-              <!-- <input type="datetime-local" v-model="editableStart" readonly /> -->
-            </div>
-            <div style="display: flex; flex-direction: row; justify-content: space-between;">
-              <span>
-                <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
-                <span class="mr-3"><strong>마감일</strong></span>
-              </span>
-              
-              <span>{{ new Date(selectedEvent?.end).toISOString().slice(0, 10) }}</span>
-              <!-- <input type="datetime-local" v-model="editableStart" readonly /> -->
-            </div>
-          </div>
-          <v-switch 
-            label="종일" 
-            readonly="true"
-            v-model="isAllDay"
-            density="compact"
-            hide-details
-            style="height: 20px;"
-            class="small-switch mt-2 custom-switch"
-            color="success" />
-          
-        </div>
-        <div v-else-if="showAddPanel" class="event-detail-panel" @click.stop>
-          <h4>📌 새 일정 생성</h4>
-          <v-text-field
-            v-model="newScheduleTitle"
-            label="제목"
-            dense
-            hide-details
-          />
-          
-          <v-textarea
-            v-model="newScheduleContent"
-            label="내용"
-            rows="2"
-            dense
-            hide-details
-          />
-          <div class="mt-2" style="display:flex; flex-direction: row; gap: 8px;">
-            <span><strong>시작일</strong></span>
-            <input type="date" v-model="selectedEvent.value.start" />
-          </div>
-          <div style="display:flex; flex-direction: row; gap: 8px;">
-            <span><strong>종료일</strong></span>
-            <input type="date" v-model="newScheduleEnd" />
-          </div>
-          <v-switch
-            label="종일"
-            v-model="newScheduleIsAllDay"
-            density="compact"
-            hide-details
-            color="success"
-            class="small-switch mt-2 custom-switch"
-          />
-          <div class="mt-4">
-            <v-btn color="primary" @click="submitNewSchedule">생성</v-btn>
-            <v-btn class="ml-2" variant="text" @click="showAddPanel = false">취소</v-btn>
-          </div>
-        </div>
-        
-        <div v-else>
-          <h4 style="color: #818181; display: flex; align-items: center; gap: 6px; margin-bottom: 15px;">
-            <v-icon size="18" icon="mdi-calendar" />
-            예정된 이벤트
-          </h4>
-          <h4 style="color: #FF4545; margin-bottom: 15px; text-align: left;">TODAY. {{ todayFormatted }}</h4>
-
-
-          <!-- 캐러셀 태스트 -->
-            <div v-if="todayList.length && !selectedEvent" class="today-carousel">
-              <v-slide-group
-                show-arrows
-                direction="vertical"
-                style="max-height: 500px; overflow: hidden;"
-                prev-icon="mdi-chevron-up"
-                next-icon="mdi-chevron-down"
-              >
-                <v-slide-item
-                  v-for="(event, idx) in todayList.slice(0, 6)"
-                  :key="idx"
-                >
-                  <v-card flat class="pa-3 mb-2"
-                  :style="{
-                  fontSize:      '12px',
-                  padding:       '10px 15px',
-                  backgroundColor: event.type === 'PERSONAL' ? '#FFF0F8' : '#eef3f9',
-                  borderRadius:  '5px',
-                  marginBottom:  '5px',
+      <CalendarLayout>
+        <v-overlay
+          :model-value="isLoading"
+          class="d-flex justify-center align-center"
+          opacity="0.4"
+          persistent
+        >
+          <v-progress-circular indeterminate size="48" color="primary" />
+        </v-overlay>
+        <template #left>
+          <div class="left-cal">
+            <div style="height: 250px; font-size: 12px; border: none; width: 100%; margin: 0 auto;">
+              <VueCal
+                class="mini-calendar"
+                ref="miniCalRef"
+                date-picker
+                :views-bar="false"
+                view="month"    
+                :views="['month']"
+                :selected-date="selectedDate"
+                default-view="month"
+                :available-views="['month']"
+                hide-view-selector
+                time="24"
+                @cell-focus="selectedDate = $event"
+                @ready="() => miniCalRef?.switchView('month')"
+                
+                locale="ko"
+                :locales="{
+                  ko: {
+                    weekdays: ['일', '월', '화', '수', '목', '금', '토'],
+                    months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                    firstDayOfWeek: 0 // 일요일: 0, 월요일: 1
+                  }
                 }"
-                >
-                    <div class="d-flex flex-column">
-                      <strong class="mb-1 truncate">{{event.type==='PERSONAL' ? '⭐' : '👥' }} {{ event.title }}</strong>
-                      <div class="truncate mb-1" style="font-size: 13px; color: #555">
-                        {{ event.content }}
+              />
+            </div>
+            <div style="height: 300px; text-align: left;">
+              <h5
+                @click="toggleAllProjects"
+                style="display: flex; align-items: center; gap: 6px; font-weight: 600; margin-bottom: 10px; color: #757575; cursor: pointer;"
+              >
+                <v-icon size="18" class="me-1" icon="mdi-format-list-bulleted" />
+                부서 프로젝트 목록
+              </h5>
+
+              <v-virtual-scroll
+                :items="deptProjectList"
+                :height="240"
+                item-height="48"
+              >
+                <template #default="{ item: project }">
+                  <label class="custom-checkbox">
+                    <input
+                      style="margin-left:5px;"
+                      type="checkbox"
+                      :value="project.id"
+                      v-model="selectedProjectIds"
+                    />
+                    <div class="checkbox-label">
+                      <div class="project-name" :title="project.name">
+                        {{ project.name || '(이름 없음)' }}
                       </div>
-                      <div class="today-project-name truncate" style="font-size: 12px; color: #888">
-                        {{ event.projectName }}
+                      <div class="project-dates">
+                        {{ project.startDate }} → {{ project.endDate?.slice(5) }}
                       </div>
                     </div>
-                  </v-card>
-                </v-slide-item>
-              </v-slide-group>
+                  </label>
+                </template>
+              </v-virtual-scroll>
+
+              <p v-if="!deptProjectList.length" style="font-size: 13px;">📭 참여 중인 프로젝트가 없습니다.</p>
+            </div>
+          </div>
+          
+        </template>
+            
+        <template #center>
+          <div style="height: 100%; display: flex; flex-direction: column;">
+
+            <div style="display: flex; flex-direction:row;  gap: 8px; margin-bottom: 12px;">
+              <h2 style="font-weight: normal; margin: 0; cursor:pointer;" @click="switchToYearsView"> {{ currentViewDate.year }}년 </h2>
+              <h2 style="cursor:pointer;" @click="switchToYearView">{{ currentViewDate.month }}월</h2>
             </div>
 
-          <div v-else>
-            일정이 없습니다.
-          </div>
-        </div>
 
-        
-      </div>
-    </template>
-  </CalendarLayout>
+            <div style="display: flex; flex-direction: row; align-items:center; justify-content: space-between;">
+              <div class="d-flex align-center gap-4 mb-2">
+                <v-checkbox v-model="showPersonal" label="👤 개인일정 보기" hide-details density="compact" />
+                <v-checkbox v-model="showDepartment" label="🏢 부서일정 보기" hide-details density="compact" />
+              </div>
+              <div>
+                <v-btn color="black" @click="goToToday" style="width: fit-content" variant="plain">Today</v-btn>
+                <v-btn icon variant="text" @click="goPrevMonth">
+                  <v-icon>mdi-chevron-left</v-icon>
+                </v-btn>
+                <v-btn icon variant="text" @click="goNextMonth">
+                  <v-icon>mdi-chevron-right</v-icon>
+                </v-btn>
+              </div>
+              
+            </div>
+
+            <div style="flex: 1; overflow: hidden;">
+              <VueCal
+                class="main-cal"
+                v-if="showCalendar"
+                ref="vueCalRef"
+                v-model:view="view"
+                :views="{
+                  month: {},
+                  year: {},
+                  yaers: {}
+                }"
+                :available-views="['month', 'year', 'years']"
+                default-view="month"
+                :events="mergedEvents"
+                :prevent-event-details="true"
+                :disable-views="['day', 'week']"
+                :disable-views-transition="true"
+                :selected-date="selectedDate"
+                events-on-month-view
+                time="24"
+                @cell-focus="selectedDate = $event"
+                @view-change="onViewChange"
+                @cell-click="onCellClick"
+                @cell-dblclick="onCellDblClick"
+                @event-click="onEventClick"
+                style="height: 100%;"
+                locale="ko"
+                :locales="{
+                  ko: {
+                    weekdays: ['일', '월', '화', '수', '목', '금', '토'],
+                    months: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                    firstDayOfWeek: 0
+                  }
+                }"
+              />
+
+            </div>
+          </div>
+        </template>
+
+
+        <template #right>
+          <!-- background-color: #f5f5f5;  -->
+          <div style="min-height: 100vh; padding: 15px; font-size: 13px;" ref="eventDetailPanel">
+            <div v-if="selectedEvent"  class="event-detail-panel" @click.stop>
+              <h4>📌 이벤트</h4>
+              <div style="diaplsy: flex; flex-direction: column; background-color: #f5f5f5; padding: 10px;">          
+                
+                <div><strong>{{ selectedEvent?.title }}</strong></div>
+                <div class="content-section">
+                  {{ selectedEvent?.content }}
+                </div>
+
+              </div>
+
+
+              <div style="display: flex; flex-direction: column; width: 100%; text-align: left; justify-content: flex-start; gap: 6px;">
+                <div style="display: flex; flex-direction: row; justify-content: space-between;">
+                  <span>
+                    <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
+                    <span class="mr-3"><strong>시작일</strong></span>
+                  </span>
+                  
+                  <span>{{ new Date(selectedEvent?.start).toISOString().slice(0, 10) }}</span>
+                  <!-- <input type="datetime-local" v-model="editableStart" readonly /> -->
+                </div>
+                <div style="display: flex; flex-direction: row; justify-content: space-between;">
+                  <span>
+                    <v-icon icon="mdi-calendar" size="15" class="mr-1"/>
+                    <span class="mr-3"><strong>마감일</strong></span>
+                  </span>
+                  
+                  <span>{{ new Date(selectedEvent?.end).toISOString().slice(0, 10) }}</span>
+                  <!-- <input type="datetime-local" v-model="editableStart" readonly /> -->
+                </div>
+              </div>
+              <v-switch 
+                label="종일" 
+                readonly="true"
+                v-model="isAllDay"
+                density="compact"
+                hide-details
+                style="height: 20px;"
+                class="small-switch mt-2 custom-switch"
+                color="success" />
+              
+            </div>
+            <div v-else-if="showAddPanel" class="event-detail-panel" @click.stop>
+              <h4>📌 새 일정 생성</h4>
+              <v-text-field
+                v-model="newScheduleTitle"
+                label="제목"
+                dense
+                hide-details
+              />
+              
+              <v-textarea
+                v-model="newScheduleContent"
+                label="내용"
+                rows="2"
+                dense
+                hide-details
+              />
+              <div class="mt-2" style="display:flex; flex-direction: row; gap: 8px;">
+                <span><strong>시작일</strong></span>
+                <input type="date" v-model="selectedEvent.value.start" />
+              </div>
+              <div style="display:flex; flex-direction: row; gap: 8px;">
+                <span><strong>종료일</strong></span>
+                <input type="date" v-model="newScheduleEnd" />
+              </div>
+              <v-switch
+                label="종일"
+                v-model="newScheduleIsAllDay"
+                density="compact"
+                hide-details
+                color="success"
+                class="small-switch mt-2 custom-switch"
+              />
+              <div class="mt-4">
+                <v-btn color="primary" @click="submitNewSchedule">생성</v-btn>
+                <v-btn class="ml-2" variant="text" @click="showAddPanel = false">취소</v-btn>
+              </div>
+            </div>
+            
+            <div v-else>
+              <h4 style="color: #818181; display: flex; align-items: center; gap: 6px; margin-bottom: 15px;">
+                <v-icon size="18" icon="mdi-calendar" />
+                예정된 이벤트
+              </h4>
+              <h4 style="color: #FF4545; margin-bottom: 15px; text-align: left;">TODAY. {{ todayFormatted }}</h4>
+
+
+              <!-- 캐러셀 태스트 -->
+                <div v-if="todayList.length && !selectedEvent" class="today-carousel">
+                  <v-slide-group
+                    show-arrows
+                    direction="vertical"
+                    style="max-height: 500px; overflow: hidden;"
+                    prev-icon="mdi-chevron-up"
+                    next-icon="mdi-chevron-down"
+                  >
+                    <v-slide-item
+                      v-for="(event, idx) in todayList.slice(0, 6)"
+                      :key="idx"
+                    >
+                      <v-card flat class="pa-3 mb-2"
+                      :style="{
+                      fontSize:      '12px',
+                      padding:       '10px 15px',
+                      backgroundColor: event.type === 'PERSONAL' ? '#FFF0F8' : '#eef3f9',
+                      borderRadius:  '5px',
+                      marginBottom:  '5px',
+                    }"
+                    >
+                        <div class="d-flex flex-column">
+                          <strong class="mb-1 truncate">{{event.type==='PERSONAL' ? '⭐' : '👥' }} {{ event.title }}</strong>
+                          <div class="truncate mb-1" style="font-size: 13px; color: #555">
+                            {{ event.content }}
+                          </div>
+                          <div class="today-project-name truncate" style="font-size: 12px; color: #888">
+                            {{ event.projectName }}
+                          </div>
+                        </div>
+                      </v-card>
+                    </v-slide-item>
+                  </v-slide-group>
+                </div>
+
+              <div v-else>
+                일정이 없습니다.
+              </div>
+            </div>
+
+            
+          </div>
+        </template>
+      </CalendarLayout>
 </template>
 
 <style>
@@ -812,8 +820,8 @@ watch(selectedEvent, (event) => {
 
 /* 클릭한 날짜에 대한 효과 */
 .vuecal__cell--selected {
-  background-color: #cce5ff !important; /* 연파랑 배경 */
-  border: 2px solid #3399ff !important; /* 파란 테두리 */
+  background-color: #dedfff !important; /* 연파랑 배경 */
+  border: 2px solid #7578ee !important; /* 파란 테두리 */
   border-radius: 6px;
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }

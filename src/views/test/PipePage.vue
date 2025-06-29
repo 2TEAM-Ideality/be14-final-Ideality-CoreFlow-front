@@ -52,7 +52,7 @@ const fetchDeptList = async () => {
 function onConnect({ source, target }) {
   if (!source || !target) return
   const id = `e-${source}-${target}-${Date.now()}`
-  localEdges.value.push({ id, source, target, type: 'default' })
+  localEdges.value.push({ id, source, target, type: 'bezier' })
 }
 
 async function layoutGraph(direction) {
@@ -98,15 +98,29 @@ function onAddNode(parentId) {
   const parent = localNodes.value.find(n => n.id === parentId)
   if (!parent) return
   const newId = nanoid(6)
+
   const newNode = {
     id: newId,
     type: 'custom',
     position: { x: parent.position.x + 250, y: parent.position.y + 100 },
-    data: { label: '새 태스크', description: '', deptList: [], duration: null, slackTime: null }
+    data: {
+      label: '새 태스크',
+      description: '',
+      deptList: [],
+      duration: null,
+      slackTime: null
+    }
   }
-  localNodes.value.push(newNode)
-  localEdges.value.push({ id: `e-${parentId}-${newId}`, source: parentId, target: newId, type: 'default' })
+
+  localNodes.value = [...localNodes.value, newNode] // ✅ 강제 반응형
+  localEdges.value = [...localEdges.value, {
+    id: `e-${parentId}-${newId}`,
+    source: parentId,
+    target: newId,
+    type: 'bezier'
+  }]
 }
+
 
 function onCreateNewNode() {
   const newId = nanoid(6)
@@ -132,9 +146,20 @@ function saveNodeDataFromChild(updatedNode) {
   if (index !== -1) {
     const updatedData = { ...updatedNode.data }
     delete updatedData.deptListString
-    const newNode = { ...localNodes.value[index], data: { ...updatedData } }
-    localNodes.value.splice(index, 1, newNode)
+
+    const newNode = {
+      ...localNodes.value[index],
+      data: updatedData
+    }
+
+    // 배열 전체를 새로 만들어서 VueFlow에게 알리기
+    localNodes.value = [
+      ...localNodes.value.slice(0, index),
+      newNode,
+      ...localNodes.value.slice(index + 1)
+    ]
   }
+
   showModal.value = false
 }
 
