@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import BasicLayout from '@/components/layout/BasicLayout.vue';
 import api from '@/api'
 import { ref, onMounted, watch, nextTick, computed } from 'vue'
@@ -26,8 +26,8 @@ const nodeTypes = {
 const user = useUserStore() 
 const router = useRouter();
 
-const formatDate = (date: Date) => {
-  const pad = (n: number) => n.toString().padStart(2, '0')
+const formatDate = (date) => {
+  const pad = (n) => n.toString().padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
@@ -95,6 +95,52 @@ const closeModal = () => {
   showModal.value = false
 }
 
+// 소요일 계산
+const calculateCriticalPathDuration = (nodes, edges) => {
+  const taskMap = new Map()
+  nodes.forEach(n => taskMap.set(n.id, n))
+
+  const inDegree = new Map()
+  const graph = new Map()
+  nodes.forEach(n => {
+    inDegree.set(n.id, 0)
+    graph.set(n.id, [])
+  })
+
+  edges.forEach(e => {
+    graph.get(e.source).push(e.target)
+    inDegree.set(e.target, inDegree.get(e.target) + 1)
+  })
+
+  const queue = []
+  const longestPath = new Map()
+
+  inDegree.forEach((deg, id) => {
+    if (deg === 0) {
+      const n = taskMap.get(id)
+      const d = (n.data?.duration || 0) + (n.data?.slackTime || 0)
+      longestPath.set(id, d)
+      queue.push(id)
+    }
+  })
+
+  while (queue.length) {
+    const curr = queue.shift()
+    const currTime = longestPath.get(curr)
+
+    for (const next of graph.get(curr)) {
+      const n = taskMap.get(next)
+      const d = (n.data?.duration || 0) + (n.data?.slackTime || 0)
+      const prevTime = longestPath.get(next) || 0
+      longestPath.set(next, Math.max(prevTime, currTime + d))
+      inDegree.set(next, inDegree.get(next) - 1)
+      if (inDegree.get(next) === 0) queue.push(next)
+    }
+  }
+
+  return Math.max(...longestPath.values())
+}
+
 const generateLayoutedFlowData = (nodesRaw, edgesRaw) => {
   const g = new dagre.graphlib.Graph()
   g.setGraph({ rankdir: 'LR', nodesep: 50, ranksep: 100 })
@@ -127,7 +173,7 @@ const generateLayoutedFlowData = (nodesRaw, edgesRaw) => {
 }
 
 // 선택한 프로젝트 정보 가져와서 노드 리스트로 변환
-const handleSelectProject = async (project: any) => {
+const handleSelectProject = async (project) => {
   try {
     const res = await api.get(`/api/projects/${project?.id}/pipeline`);
     selectedProject.value = res.data.data;
@@ -144,7 +190,7 @@ const handleSelectProject = async (project: any) => {
       return total + (node.duration || 0) + (node.slackTime || 0);
     }, 0);
 
-    const rawNodes = nodeList.map((node: any) => ({
+    const rawNodes = nodeList.map((node) => ({
       id: node.id.toString(),
       type: 'custom',
       data: {
@@ -158,7 +204,7 @@ const handleSelectProject = async (project: any) => {
       }
     }));
 
-    const rawEdges = selectedProject.value.edgeList.map((edge: any) => ({
+    const rawEdges = selectedProject.value.edgeList.map((edge) => ({
       id: edge.id,
       source: edge.source.toString(),
       target: edge.target.toString(),
@@ -168,6 +214,7 @@ const handleSelectProject = async (project: any) => {
 
     flowNodes.value = generateLayoutedFlowData(rawNodes, rawEdges);
     flowEdges.value = rawEdges;
+    duration.value = calculateCriticalPathDuration(flowNodes.value, flowEdges.value);
 
   } catch (err) {
     console.error('프로젝트 상세 조회 실패 ❌', err);
@@ -179,7 +226,7 @@ const fitToView = () => {
   if (!flowNodes.value.length) return
 
   // 현재 flowNodes를 기반으로 rawNodes/Edges 추출
-  const rawNodes = flowNodes.value.map((node: any) => ({
+  const rawNodes = flowNodes.value.map((node) => ({
     ...node,
     position: { x: 0, y: 0 } // 초기화하여 재정렬
   }))
@@ -249,7 +296,8 @@ const createNewTemplate = async () => {
       }
     }
   })
-
+  duration.value = calculateCriticalPathDuration(flowNodes.value, flowEdges.value)
+  console.log("템플릿 소요일 계산")
   const payload = {
     name: templateName.value,
     description: templateDescription.value,
@@ -274,7 +322,8 @@ const createNewTemplate = async () => {
 const onEditTemplateTaskSave = (payload) => {
   flowNodes.value = payload.nodeList
   flowEdges.value = payload.edgeList
-  duration.value = payload.duration
+  // duration.value = payload.duration
+  duration.value = calculateCriticalPathDuration(flowNodes.value, flowEdges.value) 
   taskCount.value = payload.taskCount
   showFullScreen.value = false
 }
