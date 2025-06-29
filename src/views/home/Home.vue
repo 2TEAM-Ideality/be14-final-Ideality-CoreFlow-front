@@ -39,16 +39,6 @@
         </div>
         <RecentProjectList  :projectList = "myProject"/>
       </div>
-
-      <!-- <div class="content-item" >
-        <div class="d-flex align-center"   >
-          <v-icon @click="goToProject" class="me-2" color="#73726E">mdi-view-list</v-icon>
-          <span class="text-subtitle-1 font-weight-medium" style="color: #73726E;">
-            예정된 이벤트
-          </span>
-        </div>
-        <TodaySchedule />
-      </div> -->
     </div>
   </div>
   <ChangePwdModal v-if="showChangePwdModal" @close="showChangePwdModal = false"/>

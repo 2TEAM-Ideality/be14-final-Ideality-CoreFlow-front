@@ -117,20 +117,26 @@
              <!-- 템플릿 소요일 항상 표시 -->
              <div class="text-caption d-flex align-center" style="color: #757575;">
                <v-icon start>mdi-calendar-range</v-icon>
-               템플릿 소요일: <strong>{{ templateDuration }}일</strong>
+               템플릿 소요일: <strong>{{ criticalDuration }}일</strong>
              </div>
              </div>
 
           <!-- 초과/부족 여부 메시지 -->
-          <div v-if="durationDifference !== null" class="text-caption d-flex align-center"
-              :style="{ color: durationDifference < 0 ? 'red' : durationDifference > 0 ? 'green' : '#000' }">
-            <v-icon start>
-              {{ durationDifference < 0 ? 'mdi-alert' : durationDifference > 0 ? 'mdi-check-circle' : 'mdi-timer' }}
-            </v-icon>
-            <span v-if="durationDifference < 0">워크데이보다 {{ Math.abs(durationDifference) }}일 초과됨</span>
-            <span v-else-if="durationDifference > 0">여유 워크데이 {{ durationDifference }}일</span>
-            <span v-else>베이스라인과 딱 맞음</span>
+          <div v-if="selectedTemplate && workingDuration !== null">
+            <div v-if="criticalDuration === workingDuration">
+              <v-icon start>mdi-timer</v-icon>
+              베이스라인과 딱 맞음
+            </div>
+            <div v-else-if="criticalDuration < workingDuration">
+              <v-icon start color="green">mdi-check-circle</v-icon>
+              여유시간 {{ workingDuration - criticalDuration }}일
+            </div>
+            <div v-else>
+              <v-icon start color="red">mdi-alert</v-icon>
+              워크데이가 {{ criticalDuration - workingDuration }}일 부족합니다
+            </div>
           </div>
+
         </div>
 
       
@@ -153,15 +159,15 @@
         </VueFlow>
     
 
-        <!-- 팀장 초대 -->
-        <div class="section-label" style="margin-top: 40px;">부서별 책임자 초대</div>
+        <!-- 부서별 담당자 초대 -->
+        <div class="section-label" style="margin-top: 40px;">부서별 담당자 초대</div>
         <div style="justify-content: flex-start; width: 100%; display :flex; flex-direction: row; margin-bottom: 20px; align-items: center; gap: 15px;">
         <v-btn 
         @click="openLeaderModal('project')" 
         size="small" style="width:fit-content; " variant="tonal" color="#7578ee"
         >
           구성원 조회</v-btn>
-        <span style="font-size: 13px; color: gray;">부서별 책임자를 초대해주세요.</span>
+        <span style="font-size: 13px; color: gray;">부서 담당자를 선택해주세요.</span>
         </div>
         
         <div v-for="(users, dept) in groupedLeaders" :key="dept" class="mb-3" style="padding: 10px 20px; border: 1px solid #D9D9D9; border-radius: 5px; width :100%; height: fit-content;">
@@ -348,6 +354,53 @@ const nodeTypes = {
 const user = useUserStore();
 const router = useRouter();
 
+const criticalDuration = computed(() => calculateCriticalPathDuration(flowNodes.value, flowEdges.value));
+
+// 소요일 계산
+const calculateCriticalPathDuration = (nodes, edges) => {
+  const taskMap = new Map()
+  nodes.forEach(n => taskMap.set(n.id, n))
+
+  const inDegree = new Map()
+  const graph = new Map()
+  nodes.forEach(n => {
+    inDegree.set(n.id, 0)
+    graph.set(n.id, [])
+  })
+
+  edges.forEach(e => {
+    graph.get(e.source).push(e.target)
+    inDegree.set(e.target, inDegree.get(e.target) + 1)
+  })
+
+  const queue = []
+  const longestPath = new Map()
+
+  inDegree.forEach((deg, id) => {
+    if (deg === 0) {
+      const n = taskMap.get(id)
+      const d = (n.data?.duration || 0) + (n.data?.slackTime || 0)
+      longestPath.set(id, d)
+      queue.push(id)
+    }
+  })
+
+  while (queue.length) {
+    const curr = queue.shift()
+    const currTime = longestPath.get(curr)
+
+    for (const next of graph.get(curr)) {
+      const n = taskMap.get(next)
+      const d = (n.data?.duration || 0) + (n.data?.slackTime || 0)
+      const prevTime = longestPath.get(next) || 0
+      longestPath.set(next, Math.max(prevTime, currTime + d))
+      inDegree.set(next, inDegree.get(next) - 1)
+      if (inDegree.get(next) === 0) queue.push(next)
+    }
+  }
+
+  return Math.max(...longestPath.values())
+}
 
 
 // 프로젝트 작성 정보
@@ -366,9 +419,11 @@ const baseLineDuration = computed(() => {
 });
 
 const durationDifference = computed(() => {
-  if (!workingDuration.value || !duration.value) return null;
-  return workingDuration.value - duration.value;
-});
+  const d1 = Number(selectedTemplate.value?.duration)
+  const d2 = Number(workingDuration.value)
+  if (isNaN(d1) || isNaN(d2)) return null
+  return d2 - d1  // ✅ (+면 여유, 0이면 딱맞음, -면 부족)
+})
 
 const formatDate = (date) => {
   const pad = (n) => n.toString().padStart(2, '0')
@@ -713,7 +768,7 @@ const checkSaveProject = async () => {
 
     // -- 3) 빠진 부서가 있는지 확인
     const missing = Array.from(requiredDeptNames)
-                         .filter(name => !selectedDeptNames.has(name));
+                        .filter(name => !selectedDeptNames.has(name));
 
     if (missing.length > 0) {
       alert(`다음 부서에 팀장을 선택해주세요: ${missing.join(', ')}`);
@@ -947,6 +1002,7 @@ const saveProject = async () => {
 
   try {
     const res = await api.post('/api/projects', payload);
+    console.log('✅ 프로젝트 생성 요청', payload)
     console.log('✅ 프로젝트 생성 성공:', res.data);
     alert('프로젝트가 성공적으로 생성되었습니다!');
     router.push('/project/list'); // 또는 다른 이동 경로
