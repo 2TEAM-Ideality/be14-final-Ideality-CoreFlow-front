@@ -119,11 +119,11 @@ export const useUserStore = defineStore('user', () => {
     async function tryReissueToken() {
         const savedUserId = localStorage.getItem('userId')
         const schemaName = localStorage.getItem('schemaName')
-        
+
         if (!savedUserId) return
 
         try {
-            const response = await api.post('/api/auth/reissue', {
+            const response = await axios.post('https://api.core-flow.site/api/auth/reissue', {
                 userId: savedUserId,
                 companySchema: schemaName
             })
