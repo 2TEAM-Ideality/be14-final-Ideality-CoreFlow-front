@@ -93,15 +93,16 @@ const fetchAttachment = async () => {
         console.log(res);
         originItems.value = res.data.data;
 
-        fileItems.value = originItems.value.map(item => ({
-            name: item.originName,
-            type: mapFileType(item.fileType),
-            author: `${item.deptName} ${item.userName}`,
-            date: formatDate(item.uploadAt),
-            link: item.url,
-            attachmentId: item.attachmentId, // 화면에는 안 보여도 보관
-            userId: item.userId
-        }))
+        // fileItems.value = originItems.value.map(item => ({
+        //     name: item.originName,
+        //     type: mapFileType(item.fileType),
+        //     author: `${item.deptName} ${item.userName}`,
+        //     date: formatDate(item.uploadAt),
+        //     link: item.url,
+        //     attachmentId: item.attachmentId, // 화면에는 안 보여도 보관
+        //     userId: item.userId
+        // }))
+        applyFilters();
     } catch (error) {
         console.log(error);
     }
