@@ -31,9 +31,12 @@ onNodesChange(async (changes) => {
 
   for (const change of changes) {
     if (change.type === 'remove') {
-      console.log('REMOVE')
-
       const confirmed = confirm(`노드 ${change.id} 삭제할까요?`)
+      if (confirmed) {
+        // 사용자가 확인한 경우에만 삭제 적용
+        nextChanges.push(change)
+        await handleDeleteTask(change.id) // 실제 삭제 요청도 보냄
+      }
     } else {
       nextChanges.push(change)
     }
@@ -41,6 +44,7 @@ onNodesChange(async (changes) => {
 
   applyNodeChanges(nextChanges)
 })
+
 
 // 엣지 삭제 시점에 모달 띄우기  
 onEdgesChange(async (changes) => {
@@ -199,7 +203,7 @@ async function fetchPipeline() {
     // const data = pipelineData.data
 
     console.log('✅ 파이프라인 데이터 조회', data)
-   
+
     projectName.value = data.name
     projectStatus.value = data.status
     
@@ -223,7 +227,7 @@ async function fetchPipeline() {
     }, {})
 
     // 기존 projectInfo에 상태별 개수까지 포함해서 저장
-     projectInfo.value = {
+    projectInfo.value = {
       ...data,
       statusCounts
     }
@@ -243,6 +247,7 @@ async function fetchPipeline() {
       position: { x: 0, y: 0 },
       data: {
         label: node.name,
+        taskId: node.id,    
         description: node.description,
         startBase: node.startBase,
         endBase: node.endBase,
@@ -461,8 +466,12 @@ function onEditNode(nodeId) {
 async function handleDeleteTask(nodeId) {
   console.log("✅ 태스크 삭제 요청")
   try {
-    // 서버에 삭제 요청 (실제로는 soft-delete 처리)
-    await api.patch(`/api/task/delete/${nodeId}`)
+    const node = nodes.value.find(n => n.id === nodeId)
+
+    if (node?.data?.taskId) {
+      // 🔥 실제 task가 존재 → 하드 딜리트 API 호출
+      await api.delete(`/api/task/${node.data.taskId}`)
+    }
 
     // 성공 시: 로컬 노드/엣지에서 제거
     nodes.value = nodes.value.filter(n => n.id !== nodeId)
@@ -471,9 +480,11 @@ async function handleDeleteTask(nodeId) {
     console.log(`태스크 ${nodeId} 삭제 완료`)
   } catch (err) {
     console.error('태스크 삭제 실패:', err)
-    alert('태스크 삭제에 실패했습니다.')
+    const errorMessage = err?.response?.data?.message || '태스크 삭제에 실패했습니다.'
+    alert(errorMessage)
   }
 }
+
 
 // 태스크 정보 수정
 async function handleUpdateTask(updatedData) {

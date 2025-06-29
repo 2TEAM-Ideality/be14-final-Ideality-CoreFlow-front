@@ -73,7 +73,7 @@
             :templates="templateList"
             @close="closeModal"
             @select="handleSelectTemplate"
-         />
+        />
 
       <!-- 템플릿 적용 -->
         <div class="section-label" style="margin-top: 40px;">템플릿 적용</div>
@@ -154,14 +154,14 @@
     
 
         <!-- 팀장 초대 -->
-        <div class="section-label" style="margin-top: 40px;">프로젝트 팀장 초대</div>
+        <div class="section-label" style="margin-top: 40px;">부서별 책임자 초대</div>
         <div style="justify-content: flex-start; width: 100%; display :flex; flex-direction: row; margin-bottom: 20px; align-items: center; gap: 15px;">
         <v-btn 
         @click="openLeaderModal('project')" 
         size="small" style="width:fit-content; " variant="tonal" color="#7578ee"
         >
           구성원 조회</v-btn>
-        <span style="font-size: 13px; color: gray;">프로젝트에 참여할 팀장을 선택해주세요.</span>
+        <span style="font-size: 13px; color: gray;">부서별 책임자를 초대해주세요.</span>
         </div>
         
         <div v-for="(users, dept) in groupedLeaders" :key="dept" class="mb-3" style="padding: 10px 20px; border: 1px solid #D9D9D9; border-radius: 5px; width :100%; height: fit-content;">
