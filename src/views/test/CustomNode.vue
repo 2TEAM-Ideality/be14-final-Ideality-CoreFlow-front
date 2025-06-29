@@ -1,10 +1,15 @@
 <script setup>
+import { watch } from 'vue'
 import { Handle, Position } from '@vue-flow/core'
 const props = defineProps(['data', 'id'])
 const emit = defineEmits(['addNode', 'click'])
 
 const handleAdd = () => emit('addNode', props.id)
 const handleSelect = () => emit('click', props.id)
+
+watch(() => props.data, (newData) => {
+  console.log('📌 노드 데이터 변경됨:', newData)
+})
 </script>
 
 <template>
@@ -40,7 +45,7 @@ const handleSelect = () => emit('click', props.id)
     <!-- + 버튼 클릭 시 addNode 이벤트만 발생 -->
     <button class="add-btn" @click.stop="handleAdd">+</button>
 
-    
+
 
   </div>
 </template>
