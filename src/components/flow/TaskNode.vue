@@ -159,8 +159,8 @@ const confirmAction = async () => {
   if (action === '완전 삭제') {
     try {
       // ❌ 여기서 직접 delete API 호출 안 함
-      emit('delete', props.data)  // 그냥 부모에게 요청
-      alert('태스크가 완전히 삭제 되었습니다.')
+       emit('delete', props.id)  // 이거로 꼭 바꿔야 함!  // 그냥 부모에게 요청
+      //alert('태스크가 완전히 삭제 되었습니다.')
     } catch (e) {
       alert(e.response?.data?.message || '완전 삭제 중 오류 발생')
     }

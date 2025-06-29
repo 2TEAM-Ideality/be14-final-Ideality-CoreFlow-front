@@ -294,7 +294,7 @@ async function fetchPipeline() {
 
     // 위치 반영
     nodes.value = convertedNodes
-    // .filter(n => n.data.status?.toLowerCase() !== 'deleted')
+    .filter(n => n.data.status?.toLowerCase() !== 'deleted')
     .map(n => {
       const pos = g.node(n.id)
       return {
