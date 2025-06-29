@@ -86,7 +86,6 @@ const selectedMembers = ref([])
 
 const customHeaders = [
     { title: '부서', key: 'deptName' },
-    { title: '직책', key: 'jobRoleName' },
     { title: '직급', key: 'jobRankName' },
     { title: '역할', key: 'roleId' },
     { title: '이름', key: 'name' }    
@@ -119,7 +118,6 @@ const memberItems = computed(() => {
   return filtered.map(member => ({
     name: member.name,
     deptName: member.deptName,
-    jobRoleName: member.jobRoleName,
     jobRankName: member.jobRankName,
     roleId: member.roleId,
     selected: false
@@ -129,7 +127,7 @@ const memberItems = computed(() => {
 const fetchParticipants = async () => {
   try {
 
-    const res = await  api.get(`/api/projects/${projectId}/participants`)
+    const res = await api.get(`/api/projects/${projectId}/participants`)
     participantList.value = res.data.data.participants
 
     // 부서 목록 중복 제거 및 deptId 부여

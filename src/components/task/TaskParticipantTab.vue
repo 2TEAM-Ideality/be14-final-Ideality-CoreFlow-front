@@ -24,6 +24,7 @@
         :type="inviteType"
         :user-list="inviteList"
         :selected-approver="[]"
+        :project-id="props.taskData.selectTask.projectId"
         :selectedMembers="selectedMembers"
         @close="showInviteModal = false"
         @select="handleUserSelect"
@@ -41,11 +42,20 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 
+
+const props = defineProps({
+    taskData: {
+        type: Object,
+        required: true
+    }
+})
+
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-const projectId = route.params.id
+const projectId = props.taskData.selectTask.projectId;
+console.log(projectId);
 const participantList = ref([])
 const deptList = ref([])
 
@@ -61,18 +71,10 @@ const selectedMembers = ref([])
 
 const customHeaders = [
 { title: '부서', key: 'deptName' },
-{ title: '직책', key: 'jobRoleName' },
 { title: '직급', key: 'jobRankName' },
 { title: '역할', key: 'roleId' },
 { title: '이름', key: 'name' }
 ]
-
-const props = defineProps({
-    taskData: {
-        type: Object,
-        required: true
-    }
-})
 
 console.log(props.taskData);
 const memberItems = computed(() => {
@@ -140,14 +142,21 @@ const fetchInvitableMembers = async () => {
         const allowedDeptNames = props.taskData.deptNames?.map(d => d.trim().toLowerCase()) ?? []
 
         // 조건에 따라 필터링
-        inviteList.value = allUsers.filter(user => {
-        const dept = user.deptName?.trim().toLowerCase() || ''
-        const isNotTaskMember = !taskParticipants.includes(user.userId)
-        const isNotLeaderOrDirector = user.roleId !== '팀장' && user.roleId !== '디렉터'
-        const isInAllowedDept = allowedDeptNames.includes(dept)
+        inviteList.value = Array.from(
+            new Map(
+                allUsers
+                .filter(user => {
+                    const dept = user.deptName?.trim().toLowerCase() || ''
+                    const isNotTaskMember = !taskParticipants.includes(user.userId)
+                    const isNotLeaderOrDirector = user.roleId !== '팀장' && user.roleId !== '디렉터'
+                    const isInAllowedDept = allowedDeptNames.includes(dept)
 
-        return isNotTaskMember && isNotLeaderOrDirector && isInAllowedDept
-        })
+                    return isNotTaskMember && isNotLeaderOrDirector && isInAllowedDept
+                })
+                .map(user => [user.userId, user]) // ✅ userId 기준으로 중복 제거
+            ).values()
+        )
+
 
         console.log('✅ 초대 가능한 팀원 목록:', inviteList.value)
     } catch (err) {
@@ -165,10 +174,10 @@ try {
     userId: user.userId ?? user.id,
     deptName: user.deptName
     }))
-    await api.post(`/api/projects/${projectId}/participants/team-member`, payload)
+    await api.post(`/api/task/${props.taskData.selectTask.taskId}/participants/team-member`, payload)
     alert('팀원 초대가 완료되었습니다.')
     await fetchParticipants()
-    await fetchInviteLeaderList()
+    await fetchInvitableMembers()
 } catch (error) {
     console.error('❌ 팀원 초대 실패', error)
     alert('팀원 초대에 실패했습니다.')
@@ -226,4 +235,3 @@ font-size: 16px;
 display: none !important;
 }
 </style>
-  
