@@ -419,7 +419,7 @@ onMounted(async () => {
     }
   }
 
-  
+  fetchWarningDate()
 
   // ✅ type 파라미터에 따라 결재 제목 + 유형 자동 설정
   if (type === 'delay') {
@@ -437,6 +437,16 @@ onMounted(async () => {
   console.log('✅ 자동 선택된 프로젝트:', selectedProjectId.value)
 })
 
+async function fetchWarningDate() {
+  try {
+    const res = await api.get(`/api/task/${selectedTaskId.value}/warningDate`)
+    const expectDelay = res.data.data
+    console.log("지연 예상일", expectDelay)
+    delayDays.value = expectDelay
+  } catch(e) {
+
+  }
+}
 
 // 결재 요청 확인
 const checkCreateApproval = async () => {
