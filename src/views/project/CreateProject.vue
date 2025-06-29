@@ -117,23 +117,23 @@
              <!-- 템플릿 소요일 항상 표시 -->
              <div class="text-caption d-flex align-center" style="color: #757575;">
                <v-icon start>mdi-calendar-range</v-icon>
-               템플릿 소요일: <strong>{{ selectedTemplate.duration }}일</strong>
+               템플릿 소요일: <strong>{{ criticalDuration }}일</strong>
              </div>
              </div>
 
           <!-- 초과/부족 여부 메시지 -->
           <div v-if="selectedTemplate && workingDuration !== null">
-            <div v-if="selectedTemplate.duration === workingDuration">
+            <div v-if="criticalDuration === workingDuration">
               <v-icon start>mdi-timer</v-icon>
               베이스라인과 딱 맞음
             </div>
-            <div v-else-if="selectedTemplate.duration < workingDuration">
+            <div v-else-if="criticalDuration< workingDuration">
               <v-icon start color="green">mdi-check-circle</v-icon>
-              여유시간 {{ workingDuration - selectedTemplate.duration }}일
+              여유시간 {{ workingDuration - criticalDuration }}일
             </div>
             <div v-else>
               <v-icon start color="red">mdi-alert</v-icon>
-              워크데이가 {{ selectedTemplate.duration - workingDuration }}일 부족합니다
+              워크데이가 {{ criticalDuration - workingDuration }}일 부족합니다
             </div>
           </div>
 
@@ -193,7 +193,7 @@
             <v-icon icon="mdi-delete-outline" class="mr-1" />
             생성 취소
           </v-btn>
-          <v-btn size="small" class="color-button"  elevation="0" @click="checkSaveProject" :disabled="selectedTemplate && durationDifference < 0">
+          <v-btn size="small" class="color-button"  elevation="0" @click="checkSaveProject" :disabled="selectedTemplate && durationDifference <= 0">
             <v-icon icon="mdi-pencil-outline" class="mr-1" />
             프로젝트 생성
           </v-btn>
@@ -835,6 +835,86 @@ const convertToFlowData = () => {
     targetPosition: Position.Left
   }))
 }
+
+const computeCriticalPathDuration = () => {
+  const graph = {};             // { nodeId: [childIds] }
+  const indegree = {};          // { nodeId: number }
+  const durationMap = {};       // { nodeId: number }
+  const longestTime = {};       // { nodeId: number }
+  const fromNode = {};          // 경로 추적용
+
+  // 💡 복사본 기준으로 처리
+  const nodes = [...flowNodes.value];
+  const edges = [...flowEdges.value];
+
+  // 노드 초기화 (복사본 사용)
+  nodes.forEach(node => {
+    const id = node.id;
+    const duration = (node.data?.duration || 0) + (node.data?.slackTime || 0);
+    durationMap[id] = duration;
+    graph[id] = [];
+    indegree[id] = 0;
+  });
+
+  // 엣지 초기화 (복사본 사용)
+  edges.forEach(edge => {
+    graph[edge.source].push(edge.target);
+    indegree[edge.target] = (indegree[edge.target] || 0) + 1;
+  });
+
+  // 진입 차수 0인 노드 → 시작점
+  const queue = [];
+  Object.keys(indegree).forEach(id => {
+    if (indegree[id] === 0) {
+      queue.push(id);
+      longestTime[id] = durationMap[id];
+    }
+  });
+
+  // 위상 정렬 기반 Critical Path 탐색
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const currentTime = longestTime[current];
+
+    for (const next of graph[current]) {
+      const proposed = currentTime + durationMap[next];
+      if (!longestTime[next] || proposed > longestTime[next]) {
+        longestTime[next] = proposed;
+        fromNode[next] = current;
+      }
+      indegree[next] -= 1;
+      if (indegree[next] === 0) {
+        queue.push(next);
+      }
+    }
+  }
+
+  // 가장 긴 경로의 끝 노드 찾기
+  let endNode = null;
+  let maxDuration = 0;
+  for (const [id, time] of Object.entries(longestTime)) {
+    if (time > maxDuration) {
+      maxDuration = time;
+      endNode = id;
+    }
+  }
+
+  // 역추적으로 경로 복원
+  const criticalPath = [];
+  let current = endNode;
+  while (current) {
+    criticalPath.unshift(current);
+    current = fromNode[current];
+  }
+
+  console.log("🟥 Critical Path Node IDs:", criticalPath);
+  console.log("🟨 총 소요일 (Critical Duration):", maxDuration);
+
+  return maxDuration;
+};
+
+// 사용 예시
+const criticalDuration = computed(() => computeCriticalPathDuration());
 
 // 
 // 날짜 유틸
