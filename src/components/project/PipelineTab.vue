@@ -31,6 +31,7 @@ onNodesChange(async (changes) => {
 
   for (const change of changes) {
     if (change.type === 'remove') {
+      console.log("🧪 onNodesChange 트리거 발생:", changes)
       const confirmed = confirm(`노드 ${change.id} 삭제할까요?`)
       if (confirmed) {
         // 사용자가 확인한 경우에만 삭제 적용
@@ -293,7 +294,7 @@ async function fetchPipeline() {
 
     // 위치 반영
     nodes.value = convertedNodes
-    .filter(n => n.data.status?.toLowerCase() !== 'deleted')
+    // .filter(n => n.data.status?.toLowerCase() !== 'deleted')
     .map(n => {
       const pos = g.node(n.id)
       return {
@@ -467,10 +468,11 @@ async function handleDeleteTask(nodeId) {
   console.log("✅ 태스크 삭제 요청")
   try {
     const node = nodes.value.find(n => n.id === nodeId)
-
+    console.log(node);
     if (node?.data?.taskId) {
       // 🔥 실제 task가 존재 → 하드 딜리트 API 호출
-      await api.delete(`/api/task/${node.data.taskId}`)
+      const res = await api.delete(`/api/task/${node.data.taskId}`)
+      alert(res.data.message);
     }
 
     // 성공 시: 로컬 노드/엣지에서 제거
@@ -478,6 +480,10 @@ async function handleDeleteTask(nodeId) {
     edges.value = edges.value.filter(e => e.source !== nodeId && e.target !== nodeId)
 
     console.log(`태스크 ${nodeId} 삭제 완료`)
+
+    
+    // ✅ 여기 추가!
+    await fetchPipeline()
   } catch (err) {
     console.error('태스크 삭제 실패:', err)
     const errorMessage = err?.response?.data?.message || '태스크 삭제에 실패했습니다.'
@@ -845,6 +851,7 @@ function handleCloseModal() {
       :default-edge-options="{ type: 'smoothstep', animated: true }"
       @connect="onConnect"
       @nodes-initialized="handleNodesInitialized"
+      @nodes-change="onNodesChange"
       @nodes-delete="handleNodesDelete"
       @edges-delete="handleEdgesDelete"
     >
@@ -931,6 +938,7 @@ function handleCloseModal() {
         fit-view
         style="height: calc(100vh - 100px);"
         @nodes-initialized="handleNodesInitialized"
+        @nodes-change="onNodesChange"
         @nodes-delete="handleNodesDelete"
         @edges-delete="handleEdgesDelete"
         @selection-change="(s) => console.log('선택 변경:', s)"
