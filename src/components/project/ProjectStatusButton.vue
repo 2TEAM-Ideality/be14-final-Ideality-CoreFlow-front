@@ -30,6 +30,8 @@ const menuOpen = ref(false)
 const showCompleteModal = ref(false)
 
 
+
+
 // 프로젝트 상태에 따른 버튼 아이콘
 const statusIcon = computed(() => {
   switch (props.status) {
@@ -65,6 +67,15 @@ const statusIcon = computed(() => {
 
 */
 
+const checkProjectComplete = () => {
+  if (props.allTaskList.length !== props.completedTaskList.length) {
+    // 전체 태스크 개수와 완료된 태스크 개수가 다를 경우
+    alert("전체 태스크가 완료 처리 되어야 프로젝트를 완료하실 수 있습니다.")
+  }else{
+    showCompleteModal.value = true
+  }
+}
+
 </script>
 
 <template>
@@ -94,7 +105,7 @@ const statusIcon = computed(() => {
 
       <!-- PROGRESS 상태일 때 -->
       <template v-else-if="status === 'PROGRESS'">
-        <v-list-item @click="showCompleteModal = true">
+        <v-list-item @click="checkProjectComplete">
           <v-list-item-title>프로젝트 완료</v-list-item-title>
         </v-list-item>
         <v-list-item @click="emit('deleted')">
@@ -146,6 +157,9 @@ const statusIcon = computed(() => {
     }"
     @close="showCompleteModal = false"
   />
+  <v-dialog>
+    
+  </v-dialog>
 </template>
 
 <style scoped>

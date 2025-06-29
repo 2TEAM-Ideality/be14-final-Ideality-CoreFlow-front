@@ -189,6 +189,7 @@ const completeProject = () => {
     ...localProjectInfo,
     completeDate: completeDate.value
   })
+  
 }
 
 // 마감 베이스라인, 실제 마감일 비교

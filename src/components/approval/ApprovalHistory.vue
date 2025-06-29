@@ -74,10 +74,11 @@
         <v-table>
         <thead style="background-color: #F8F8F8; height: 20px;text-align:center; ">
           <tr style="padding-left: 20px;">
+            <th class="text-left">기안일시</th>
             <th class="text-left">결재 유형</th>
             <th class="text-left">{{ currentTab === 'received' ? '보낸 사람' : '받는 사람' }}</th>
             <th class="text-left">제목</th>
-            <th class="text-left">기안일시</th>
+            
             <th class="text-left">대상 프로젝트</th>
             <th class="text-left">상태</th>
             </tr>
@@ -89,6 +90,7 @@
             :key="item.id"
             @click.stop="selectApproval(item.id)"
             >
+            <td>{{ item.createdAt.split('T')[0] }}</td>  
             <td>
               <v-chip
                 :color="typeChipColor(item.approvalType)"
@@ -96,25 +98,25 @@
                 variant="flat"
                 size="small"
                 class="font-weight-medium"
+                style="text-align: center;"
               >
                 {{ convertedType(item.approvalType) }}
               </v-chip>
             </td>
             <td>{{ currentTab === 'received' ? item.requesterName : item.approverName }}</td>
             <td>{{ item.title }}</td>
-            <td>{{ item.createdAt.split('T')[0] }}</td>  
             <td>{{ item.projectName }}</td>
              <td class="status-cell">
                 <v-chip
-                :color="chipColor(item.approvalStatus)"
-                :text-color="chipTextColor(item.approvalStatus)"
-                variant="elevated"
-                size="small"
-                style="text-align: center;"
-                class="font-weight-medium approval-chip"
-                >
-                {{ koreanStatus(item.approvalStatus) }}
-                </v-chip>
+                   :color="displayChipColor(item)"
+                   :text-color="displayChipTextColor(item)"
+                   variant="elevated"
+                   size="small"
+                   class="font-weight-medium approval-chip d-flex justify-center align-center"
+                   :class="{ 'white--text': isOverdue(item) }"
+                 >
+                   {{ displayStatus(item) }}
+                 </v-chip>
             </td>
             </tr>
         </tbody>
@@ -137,6 +139,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import api from '@/api'
 import { useRouter } from 'vue-router'
+import dayjs from 'dayjs'
+
 
 const emit = defineEmits(['select-approval', 'select-tab'])
 
@@ -167,10 +171,32 @@ const searchFieldLabel = computed(() => {
 
 
 // 상태 필터
-// 상태 필터
 const selectedStatus = ref('ALL') // 기본값
+
+// 7일 이상 지난 PENDING 건인지
+const isOverdue = (item) => {
+  return item.approvalStatus === 'PENDING'
+    && dayjs().diff(dayjs(item.createdAt), 'day') >= 7
+}
+
+// 실제 화면에 보여줄 텍스트
+const displayStatus = (item) => {
+  if (isOverdue(item)) return '승인 지연'
+  return koreanStatus(item.approvalStatus)
+}
+// 오렌지 색상 (예: #FFA726) 으로 변경
+const displayChipColor = (item) => {
+  if (isOverdue(item)) return '#ff9090'
+  return chipColor(item.approvalStatus)
+}
+const displayChipTextColor = (item) => {
+  if (isOverdue(item)) return '#FFFFFF'
+  return chipTextColor(item.approvalStatus)
+}
+
+
 const statusFilterOptions = [
-  { value: 'ALL', label: '전체' },
+  { value: 'ALL', label: '전체 상태' },
   { value: 'APPROVED', label: '승인' },
   { value: 'PENDING', label: '대기' },
   { value: 'REJECTED', label: '반려' }
@@ -179,6 +205,7 @@ const statusFilterLabel = computed(() => {
   return statusFilterOptions.find(opt => opt.value === selectedStatus.value)?.label ?? ''
 })
 
+// 결재 유형
 const convertedType = (type) => {
   if(type === 'GENERAL'){
     return '일반'
@@ -351,14 +378,16 @@ const pageSize = 7
 const targetPage=ref(1)
 
 const paginatedApprovals = computed(() => {
-    if (!displayedList.value || displayedList.value.length === 0) return []
-    const start = (currentPage.value - 1) * pageSize
-    return displayedList.value.slice(start, start + pageSize)
+  if (!displayedList.value) return []
+  const start = (currentPage.value - 1) * pageSize
+  return displayedList.value.slice(start, start + pageSize)
 })
 
+
+// 2) 전체 페이지 수 (displayedList.length 기준)
 const totalPages = computed(() => {
-    if (!displayedList.value || displayedList.value.length === 0) return 1
-    return Math.ceil(paginatedApprovals.value.length / pageSize)
+  const len = displayedList.value?.length || 0
+  return Math.max(1, Math.ceil(len / pageSize))
 })
 
 function goToPage(page) {
@@ -484,10 +513,14 @@ watch(currentPage, (newVal) => {
 .status-cell {
   vertical-align: middle;
 }
-    .approval-chip {
-        text-align: center;
-        min-width: 70px;
-    }
+.approval-chip {
+  width:  70px;
+  min-width: 50px;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center;
+}
 
 /* 커스텀 검색창 */
 .search-new {
@@ -512,5 +545,12 @@ watch(currentPage, (newVal) => {
   color: #767676;
 }
 
-
+.font-weight-medium {
+  width:  60px;
+  min-width: 50px;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center;
+}
 </style>

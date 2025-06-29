@@ -2,12 +2,18 @@
     <div v-if="fileItems.length === 0" class="empty-message">
         <!-- 📄 해당 프로젝트에 대한 산출물이 없습니다. -->
          <EmptyState
-          icon="mdi-file-document-outline"
-          message="📄 해당 프로젝트에 대한 산출물이 없습니다."
-          subMessage="작성하려면 아래 버튼을 클릭하세요."
-          buttonText="산출물 업로드"
-          buttonLink="/approval"
-        />
+            icon="mdi-file-document-outline"
+            message="📄 해당 프로젝트에 대한 산출물이 없습니다."
+            subMessage="작성하려면 아래 버튼을 클릭하세요."
+            buttonText="산출물 업로드"
+            :buttonLink="{
+              path: '/approval/create',
+              query: {
+                  taskId: taskId,     // ← 실제 값
+                  type: 'output'
+                }
+            }"
+          />
     </div>
     <div v-else class="list-container">
         <SearchBar

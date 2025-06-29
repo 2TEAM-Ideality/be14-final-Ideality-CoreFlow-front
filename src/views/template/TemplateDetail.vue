@@ -110,8 +110,6 @@
               </v-btn>
             </div>
           </div>
-            <!-- :nodes="filteredFlowNodes" -->
-            <!-- :nodes="flowNodes" -->
           <VueFlow
             :nodes="flowNodes"
             :edges="flowEdges"
@@ -120,32 +118,6 @@
             style="height: calc(100vh - 100px)"
           >
           <Background />
-          <!-- 템플릿 정보 패널 -->
-          <!-- <Panel class="template-info-panel" position="top-right">
-            <div class="template-panel-content">
-              <h3 class="panel-title">📋 템플릿 정보</h3>
-              <div class="info-field"><strong>작성자:</strong> {{ templateInfo?.createdBy }}</div>
-              <div class="info-field"><strong>생성일:</strong> {{ templateInfo?.createdAt?.split('T')[0] }}</div>
-              <div class="info-field"><strong>총 소요 기간:</strong> {{ templateInfo?.duration }}일</div>
-              <div class="info-field"><strong>전체 태스크 수:</strong> {{ templateInfo?.taskCount }}개</div>
-
-              <div class="info-field">
-                <strong>참여 부서:</strong>
-                <div class="chip-container">
-                  <v-chip
-                    v-for="dept in templateInfo?.deptList || []"
-                    :key="dept.id"
-                    size="x-small"
-                    color="primary"
-                    variant="tonal"
-                  >
-                    {{ dept.name }}
-                  </v-chip>
-                </div>
-              </div>
-            </div>
-          </Panel> -->
-
           <Controls />
           </VueFlow>
         </v-card>
@@ -307,7 +279,7 @@ const convertToFlowData = () => {
     source: edge.source,
     target: edge.target,
     // type: 'default',
-    type: 'smoothstep',
+    type: 'bezier',
     animated: true,
     sourcePosition: Position.Right,
     targetPosition: Position.Left

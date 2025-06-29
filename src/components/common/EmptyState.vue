@@ -20,6 +20,11 @@
 </template>
 
 <script setup>
+
+import { useRoute } from 'vue-router'
+const route = useRoute()
+
+
 defineProps({
   icon: {
     type: String,
@@ -42,7 +47,7 @@ defineProps({
     default: ''
   },
   buttonLink: {
-    type: String,
+    type: [String, Object],
     default: ''
   }
 })

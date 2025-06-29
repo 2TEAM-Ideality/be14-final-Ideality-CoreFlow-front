@@ -92,14 +92,23 @@ if (route.params.id) {
     }
 
 
+const fetchProjectInfo = async () => {
+    // 프로젝트 정보 가져오기 
+    try {
+      const res = await api.get(`/api/projects/${projectId}`)
+      projectName.value = res.data.data.name
+      projectInfo.value = res.data.data
+      projectStatus.value = res.data.data.status
+      console.log("✅ 프로젝트 정보 확인", projectInfo)
+    } catch (err){
+      console.error(err)
+    }
+}
+
+
 onMounted(async () => {
   try {
-    // 프로젝트 정보 가져오기 
-    const res = await api.get(`/api/projects/${projectId}`)
-    projectName.value = res.data.data.name
-    projectInfo.value = res.data.data
-    projectStatus.value = res.data.data.status
-    console.log("✅ 프로젝트 정보 확인", projectInfo)
+    await fetchProjectInfo();
 
     if(projectInfo.value.director.userId === userStore.id){
       isDirector.value = true
@@ -170,6 +179,7 @@ const markAsCompleted = async () => {
     projectStatus.value = 'COMPLETED'
     alert('프로젝트가 성공적으로 완료 처리되었습니다!')
     console.log("✅ 프로젝트 완료 처리 성공")
+    await fetchProjectInfo()
   } catch (err) {
     console.error('프로젝트 완료 처리 실패:', err)
     alert('완료 처리에 실패했습니다.')
@@ -222,7 +232,7 @@ const downloadReport = async () => {
     console.log('all headers ▶', response.headers)
 
     // Content-Disposition 헤더에서 filename 파싱
-    const contentDisposition = response.headers.get('content-disposition') || ''
+    const contentDisposition = response.headers['content-disposition'] || ''
     let filename = 'project-report.pdf'
     const match = contentDisposition.match(
       /filename\*?=(?:UTF-8'')?["']?([^;"']+)["']?/
