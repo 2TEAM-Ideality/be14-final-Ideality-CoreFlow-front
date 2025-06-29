@@ -27,6 +27,11 @@ const props = defineProps({
   mustSelectDept: {
     type: Array,
     default: () => []
+  },
+  projectId: { // ✅ 추가
+    type: [String, Number],
+    required: false,
+    default: null
   }
 })
 
@@ -34,7 +39,19 @@ const route = useRoute()
 const router = useRouter()
 const emit = defineEmits(['close', 'select'])
 
-const projectId = route.params.id
+//const projectId = route.params.id
+
+// ✅ 안전한 최종 projectId 계산
+const finalProjectId = computed(() => {
+  const propId = props.projectId
+  const routeId = route.params.id
+  const isValid = (v) => typeof v === 'string' || typeof v === 'number'
+
+  if (isValid(propId)) return propId
+  if (isValid(routeId)) return routeId
+  return null
+})
+
 
 const dialog = ref(true)
 const search = ref('')
@@ -162,9 +179,15 @@ function confirmSelection() {
 
 // 탭 이동
 function goToCreateTask() {
+  if (!finalProjectId.value) {
+    console.warn('❌ projectId 없음. URL 이동 생략')
+    return
+  }
+
   dialog.value = false
-  router.push(`/project/${projectId}/pipeline`)
+  router.push(`/project/${finalProjectId.value}/pipeline`)
 }
+
 
 function handleCancel() {
   dialog.value = false    // 내부 다이얼로그 상태를 닫고

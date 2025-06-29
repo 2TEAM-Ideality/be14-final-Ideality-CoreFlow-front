@@ -86,7 +86,6 @@ const selectedMembers = ref([])
 
 const customHeaders = [
     { title: '부서', key: 'deptName' },
-    { title: '직책', key: 'jobRoleName' },
     { title: '직급', key: 'jobRankName' },
     { title: '역할', key: 'roleId' },
     { title: '이름', key: 'name' }    
@@ -119,7 +118,6 @@ const memberItems = computed(() => {
   return filtered.map(member => ({
     name: member.name,
     deptName: member.deptName,
-    jobRoleName: member.jobRoleName,
     jobRankName: member.jobRankName,
     roleId: member.roleId,
     selected: false
@@ -129,7 +127,7 @@ const memberItems = computed(() => {
 const fetchParticipants = async () => {
   try {
 
-    const res = await  api.get(`/api/projects/${projectId}/participants`)
+    const res = await api.get(`/api/projects/${projectId}/participants`)
     participantList.value = res.data.data.participants
 
     // 부서 목록 중복 제거 및 deptId 부여
@@ -189,8 +187,11 @@ async function handleUserSelect(selectedUsers) {
       await fetchInviteLeaderList() // 초대 후 초대 대상 새로고침
 
     } catch (error) {
-      console.error('❌ 팀장 초대 실패', error)
-      alert('팀장 초대에 실패했습니다.')
+      if (error.response.status === 403) {
+        alert(error.response.data?.message || '접근 권한이 없습니다.')
+      } else {
+        alert('팀원 초대에 실패했습니다.')
+      }
     }
 
   } else {
@@ -210,8 +211,12 @@ async function handleUserSelect(selectedUsers) {
       await fetchInviteLeaderList() // 초대 후 초대 대상 새로고침
 
     } catch (error) {
-      console.error('❌ 팀원 초대 실패', error)
-      alert('팀원 초대에 실패했습니다.')
+      if (error.response.status === 403) {
+        alert(error.response.data?.message || '접근 권한이 없습니다.')
+      } else {
+        alert('팀원 초대에 실패했습니다.')
+      }
+
     }
   }
 
