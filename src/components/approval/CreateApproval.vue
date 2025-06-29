@@ -439,12 +439,12 @@ onMounted(async () => {
 
 
 // 결재 요청 확인
-const checkCreateApproval = () => {
+const checkCreateApproval = async () => {
     if (!isFormValid.value) {
         alert('입력하지 않은 영역이 있습니다.')
         return
     }
-    createApproval();
+    await createApproval();
 
     showCreateCheck.value = false;
     router.push('/approval')

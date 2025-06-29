@@ -444,67 +444,18 @@ const userList = ref([])    // 초대 가능 유저
    return Array.from(deptMap.values());
  });
 
-// const usedDeptList = computed(() => {
-//   const deptMap = new Map();
-
-//   // ✅ 1. 템플릿 노드에 있는 부서 먼저 추가 (우선순위 높음)
-//   const templateDeptIds = new Set();
-
-//   const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : [];
-//   nodes.flatMap(node => node.data?.deptList || []).forEach(d => {
-//     const id = d.id ?? d.deptId ?? d;
-//     const name = d.name ?? d.deptName ?? d;
-//     if (id && !deptMap.has(id)) {
-//       deptMap.set(id, { id, name });
-//       templateDeptIds.add(id); // 템플릿 부서로 등록
-//     }
-//   });
-
-//   // ✅ 2. 팀장 초대에서 템플릿에 없는 부서만 추가
-//   selectedLeaders.value.forEach(user => {
-//     const id = user.deptId ?? user.deptName;
-//     const name = user.deptName;
-//     if (id && !templateDeptIds.has(id) && !deptMap.has(id)) {
-//       deptMap.set(id, { id, name });
-//     }
-//   });
-
-//   return Array.from(deptMap.values());
-// });
-
-
 console.log('참여 부서', usedDeptList)
 // 참여 팀장 삭제
 function removeLeader(id) {
   selectedLeaders.value = selectedLeaders.value.filter(user => user.id !== id)
 }
 
-// 템플릿선택 시 팀 자동 선택
-const autoSelectLeadersFromTemplate = () => {
-  // 현재 템플릿에 포함된 부서 목록
-  const deptIds = new Set();
-  const nodes = Array.isArray(flowNodes.value) ? flowNodes.value : [];
-
-  nodes.flatMap(node => node.data?.deptList || []).forEach(d => {
-    const id = d.id ?? d.deptId;
-    if (id) deptIds.add(id);
-  });
-
-  // 해당 부서 소속 유저 필터링
-  const deptUsers = userList.value.filter(user => deptIds.has(user.deptId));
-  const selectedIds = new Set(selectedLeaders.value.map(user => user.id));
-
-  // 중복되지 않은 유저만 추가
-  const newUsers = deptUsers.filter(user => !selectedIds.has(user.id));
-  selectedLeaders.value.push(...newUsers);
-};
-
-
 //  초대 가능한 유저 목록 가져오기
 const fetchUserList = async () => {
   const res = await api.get(`/api/users/find-all`);
   const allUsers = res.data.data;
 
+  console.log('모든 유저 가져온 것', allUsers)
   // 'admin' 팀은 제외
   const filteredUsers = allUsers.filter(user => user.deptName?.toLowerCase() !== 'admin');
   console.log("초대 가능 유저 (admin 제외):", filteredUsers);
@@ -637,6 +588,7 @@ const availableLeaderCandidates = computed(() => {
 function openLeaderModal(type) {
   // const available = availableLeaderCandidates.value
   const available = userList.value
+  console.log('모달에 전달할 리스트', userList.value)
   if (!available || available.length === 0) {
     alert('초대할 수 있는 팀장이 없습니다.');
     return;
