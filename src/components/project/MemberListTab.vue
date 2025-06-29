@@ -187,8 +187,11 @@ async function handleUserSelect(selectedUsers) {
       await fetchInviteLeaderList() // 초대 후 초대 대상 새로고침
 
     } catch (error) {
-      console.error('❌ 팀장 초대 실패', error)
-      alert('팀장 초대에 실패했습니다.')
+      if (error.response.status === 403) {
+        alert(error.response.data?.message || '접근 권한이 없습니다.')
+      } else {
+        alert('팀원 초대에 실패했습니다.')
+      }
     }
 
   } else {
@@ -208,8 +211,12 @@ async function handleUserSelect(selectedUsers) {
       await fetchInviteLeaderList() // 초대 후 초대 대상 새로고침
 
     } catch (error) {
-      console.error('❌ 팀원 초대 실패', error)
-      alert('팀원 초대에 실패했습니다.')
+      if (error.response.status === 403) {
+        alert(error.response.data?.message || '접근 권한이 없습니다.')
+      } else {
+        alert('팀원 초대에 실패했습니다.')
+      }
+
     }
   }
 
