@@ -19,7 +19,11 @@
         팀원 초대</v-btn>  
     </div>
     
-    <ListForm :headers="customHeaders" :items="memberItems" />
+    <ListForm 
+    :headers="customHeadersWithActions" 
+    :items="memberItems"
+    @delete="handleDeleteParticipant"
+    />
 
     <!-- 팀장 & 팀원 초대 선택 모달 -->
     <ParticipantSelectModal
@@ -84,12 +88,14 @@ const selectedLeaders = ref(null)
 const selectedMembers = ref([])
 
 
-const customHeaders = [
-    { title: '부서', key: 'deptName' },
-    { title: '직급', key: 'jobRankName' },
-    { title: '역할', key: 'roleId' },
-    { title: '이름', key: 'name' }    
+const customHeadersWithActions = [
+  { title: '부서', key: 'deptName' },
+  { title: '직급', key: 'jobRankName' },
+  { title: '역할', key: 'roleId' },
+  { title: '이름', key: 'name' },
+  { title: '관리', key: 'actions', sortable: false }
 ]
+
 
 const memberItems = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase()
@@ -116,6 +122,7 @@ const memberItems = computed(() => {
   })
 
   return filtered.map(member => ({
+    userId: member.userId ?? member.id,   // 삭제 요청 목적
     name: member.name,
     deptName: member.deptName,
     jobRankName: member.jobRankName,
@@ -254,6 +261,25 @@ const toggleSort = () => {
 const handleDeptFilter = (dept) => {
   selectedDept.value = dept
 }
+
+
+// 참여자 삭제 
+const handleDeleteParticipant = async (participant) => {
+  const confirmed = confirm(`${participant.name}  ${participant.userId}님을 삭제하시겠습니까?`)
+  if (!confirmed) return
+
+  try {
+    await api.delete(`/api/projects/${projectId}/participants/${participant.userId}`)
+    alert('삭제가 완료되었습니다.')
+    await fetchParticipants()
+    await fetchInviteLeaderList()
+  } catch (err) {
+    console.error('삭제 실패:', err)
+    alert('삭제 중 오류가 발생했습니다.')
+  }
+}
+
+
 </script>
 
 <style scoped>

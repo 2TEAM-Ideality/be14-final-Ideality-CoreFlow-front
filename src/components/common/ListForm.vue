@@ -28,7 +28,7 @@
             class="small-checkbox"
             />
         </td>
-        <td v-for="header in headers" :key="header.key">
+        <td v-for="header in headers" :key="header.key" :class="{ 'action-cell': header.key === 'actions' }">
           <!-- 파일 다운로드 버튼 -->
           <template v-if="header.key === 'link'">
             <v-btn
@@ -48,6 +48,18 @@
             >
               {{ item[header.key] }}
             </router-link>
+          </template>
+
+           <!-- 삭제 버튼 추가 -->
+          <template v-else-if="header.key === 'actions'">
+            <v-btn
+              icon
+              variant="text"
+              color="red"
+              @click="$emit('delete', item)"
+            >
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
           </template>
 
           <!-- 그 외 일반 텍스트 -->
@@ -144,5 +156,11 @@ watch(currentPage, () => {
 }
 .file-list-container {
   margin-top: 20px;
+}
+.action-cell {
+  width: 40px;
+  min-width: 30px;
+  text-align: center;
+  padding: 0;
 }
 </style>

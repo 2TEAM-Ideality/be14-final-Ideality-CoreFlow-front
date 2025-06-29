@@ -1,18 +1,29 @@
 <template>
-    <div class="modal-overlay">
-        <div class="modal">
-            <h1>마이프로필</h1>
-            {{userStore.name}}
-
-
-            <div class="modal-actions">
-                <button class="option-btn change-btn">변경</button>
-                <button class="option-btn cancel-btn" @click="close">취소</button>
-            </div>
+  <div class="modal-overlay">
+    <div class="modal">
+        <div style="align-self: flex-start ">
+            <h2 >마이프로필</h2>
         </div>
 
+      <div style="display: flex; flex-direction: row; gap: 20px; align-items: center; justify-content: flex-start; width:100%;">
+        <!-- 프로필 이미지 -->
+        <img :src="userStore.profileImage" alt="프로필 이미지" class="profile-img" />
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+        <p class="name">{{ userStore.name }}</p>
+        <div>{{ userStore.deptName }} {{ userStore.jobRankName }} {{ userStore.jobRoleName }}</div>
+        </div>
+      </div>
+    
+
+      <div class="modal-actions">
+        <button class="option-btn change-btn">변경</button>
+        <button class="option-btn cancel-btn" @click="close">취소</button>
+      </div>
     </div>
+  </div>
 </template>
+
 
 
 <script setup>
@@ -48,7 +59,22 @@ const userStore = useUserStore();
         display: flex;
         align-items: center;
         flex-direction: column;
-        border-radius: 20px;
+        border-radius: 5px;
         background-color: white;
+        padding: 3%;
     }
+    .profile-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 16px 0;
+    border: solid 1px lightgray;
+    }
+    .name {
+        font-size: 24px;
+        font-weight: bold;
+
+    }
+    
 </style>
