@@ -73,7 +73,7 @@
             :templates="templateList"
             @close="closeModal"
             @select="handleSelectTemplate"
-         />
+        />
 
       <!-- 템플릿 적용 -->
         <div class="section-label" style="margin-top: 40px;">템플릿 적용</div>
@@ -167,7 +167,7 @@
         size="small" style="width:fit-content; " variant="tonal" color="#7578ee"
         >
           구성원 조회</v-btn>
-        <span style="font-size: 13px; color: gray;">부서 담당자를을 선택해주세요.</span>
+        <span style="font-size: 13px; color: gray;">부서 담당자를 선택해주세요.</span>
         </div>
         
         <div v-for="(users, dept) in groupedLeaders" :key="dept" class="mb-3" style="padding: 10px 20px; border: 1px solid #D9D9D9; border-radius: 5px; width :100%; height: fit-content;">
