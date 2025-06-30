@@ -25,6 +25,11 @@ const onGoToDetail = () => {
 }
 
 const onDelete = async () => {
+
+      // ✅ 확인창 추가
+  const confirmDelete = window.confirm('정말로 이 프로젝트를 삭제하시겠습니까?');
+  if (!confirmDelete) return;
+
   try {
     console.log('삭제 클릭됨', props.project.id);
 
