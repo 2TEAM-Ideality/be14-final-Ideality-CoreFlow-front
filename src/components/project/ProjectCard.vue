@@ -6,6 +6,9 @@ import profileDummy from '@/assets/profileDummy.png'
 import { useRouter } from 'vue-router'
 import api from '@/api'
 
+const emit = defineEmits(['deleted']);
+
+
 const props = defineProps({
     project:{
         type:Object,
@@ -21,13 +24,31 @@ const onGoToDetail = () => {
     router.push(`/project/${props.project.id}`) 
 }
 
-const onEdit = () => {
-    console.log('수정 클릭됨', project.id)
-}
+const onDelete = async () => {
 
-const onDelete = () => {
-    console.log('삭제 클릭됨', project.id)
-}
+      // ✅ 확인창 추가
+  const confirmDelete = window.confirm('정말로 이 프로젝트를 삭제하시겠습니까?');
+  if (!confirmDelete) return;
+
+  try {
+    console.log('삭제 클릭됨', props.project.id);
+
+    const res = await api.patch(`/api/projects/${props.project.id}/status/DELETED`);
+    if (res.status === 200) {
+      console.log('✅ 프로젝트 삭제 요청 완료', res.data.data);
+            emit('deleted', props.project.id); // 부모에게 삭제됨을 알림
+
+      // 프론트 로컬 상태에도 반영
+      props.project.status = 'DELETED';
+    } else {
+      console.warn('❌ 프로젝트 삭제 실패:', res.status);
+    }
+  } catch (err) {
+    console.error('❌ 프로젝트 삭제 중 에러:', err);
+    alert('프로젝트 삭제에 실패했습니다.');
+  }
+};
+
 
 // 프로젝트 분석 리포트 다운로드 
 const onGenerateReport = async () => {
@@ -170,8 +191,7 @@ const delayDays = computed(() => props.project.delayDays || 0)
                     </v-btn>
                 </template>
                 <v-list>
-                    <v-list-item title="프로젝트 수정" />
-                    <v-list-item title="프로젝트 삭제" />
+                    <v-list-item title="프로젝트 삭제" @click="onDelete"/>
                     <v-list-item
                         title="분석 리포트 생성"
                         :disabled="project.status !== 'COMPLETED'"
