@@ -316,7 +316,9 @@
             })
             alert(response.data.message)
             approvalData.status = 'APPROVED'
+            
             emit('remount')
+            fetchApprovalData(); // 다시 fetch
 
             // ✅ 결재 완료 후 목록 페이지로 이동
             router.push('/approval')
@@ -325,8 +327,14 @@
                 alert(error.response.data.message)
             }
         }
+        
     }
 
+    // 결재 처리 후 리마운트    
+    function handleReRender() {
+        fetchApprovalData();
+        // approvalHistoryRender.value++ // 강제 remount
+    }
     async function rejectApproval() {
         const confirmed = confirm('반려하시겠습니까')
         if (!confirmed) return
