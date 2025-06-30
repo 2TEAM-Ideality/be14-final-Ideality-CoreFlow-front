@@ -16,7 +16,11 @@
         </v-btn>  
         </div>
         
-        <ListForm :headers="customHeaders" :items="memberItems" />
+        <ListForm 
+        :headers="customHeaders" 
+        :items="memberItems" 
+        @delete="handleDeleteParticipant"
+        />
 
         <!-- 팀원 초대 선택 모달 -->
         <ParticipantSelectModal
@@ -50,6 +54,7 @@ const props = defineProps({
     }
 })
 
+
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
@@ -73,7 +78,8 @@ const customHeaders = [
 { title: '부서', key: 'deptName' },
 { title: '직급', key: 'jobRankName' },
 { title: '역할', key: 'roleId' },
-{ title: '이름', key: 'name' }
+{ title: '이름', key: 'name' },
+{ title: '관리', key: 'actions', sortable: false }
 ]
 
 console.log(props.taskData);
@@ -107,7 +113,8 @@ return filtered.map(member => ({
     jobRoleName: member.jobRoleName,
     jobRankName: member.jobRankName,
     roleId: member.roleId,
-    selected: false
+    selected: false,
+    userId: member.userId
 }))
 })
 
@@ -191,6 +198,37 @@ try {
 showInviteModal.value = false
 }
 
+
+
+
+// 참여자 삭제 
+const handleDeleteParticipant = async (participant) => {
+    console.log(participant)
+  const payload = {
+    userId: participant.userId,
+    targetId: props.taskData.selectTask.taskId, 
+    targetType: 'TASK'
+  }
+
+  const confirmed = confirm(`${participant.name} (${participant.userId})님을 삭제하시겠습니까?`)
+  if (!confirmed) return
+
+  try {
+    await api.delete('/api/projects/participants/delete', {
+      data: payload
+    })
+    alert('삭제가 완료되었습니다.')
+    await fetchParticipants()
+    await fetchInvitableMembers()
+  } catch (err) {
+    console.error('삭제 실패:', err)
+    alert('삭제 중 오류가 발생했습니다.')
+  }
+}
+
+
+
+
 onMounted(async () => {
 if (!userStore.accessToken) {
     router.push('/login')
@@ -198,6 +236,9 @@ if (!userStore.accessToken) {
 }
 await fetchParticipants()           // ⬅ 먼저 태스크 참여자 로드
 await fetchInvitableMembers()      // ⬅ 그 후 전체 중에서 초대 대상 필터링
+
+
+console.log('멤버 형식', memberItems)
 })
 
 const clickInviteModal = () => {
