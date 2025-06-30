@@ -96,10 +96,12 @@ const applyFilter = ()=> {
   // if()
 }
 
+
 const removeProjectFromList = (deletedId) => {
   projectList.value = projectList.value.filter(p => p.id !== deletedId);
   fullProjectList.value = fullProjectList.value.filter(p => p.id !== deletedId);
 };
+
 
 </script>
 
