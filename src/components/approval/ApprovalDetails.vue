@@ -313,14 +313,21 @@
             })
             alert(response.data.message)
             approvalData.status = 'APPROVED'
-            emit('remount')
+            
+            handleReRender()
         } catch (error) {
             if (error.response) {
                 alert(error.response.data.message)
             }
         }
+        
     }
 
+    // 결재 처리 후 리마운트    
+    function handleReRender() {
+        fetchApprovalData();
+        // approvalHistoryRender.value++ // 강제 remount
+    }
     async function rejectApproval() {
         const confirmed = confirm('반려하시겠습니까')
         if (!confirmed) return
