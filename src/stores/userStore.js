@@ -118,25 +118,23 @@ export const useUserStore = defineStore('user', () => {
 
     async function tryReissueToken() {
         const savedUserId = localStorage.getItem('userId')
-        const schemaName = localStorage.getItem('schemaName')
-        
+        const savedSchemaName = localStorage.getItem('schemaName') // ✅ 이름 변경
+
         if (!savedUserId) return
 
         try {
-            const response = await api.post('/api/auth/reissue', {
+            const response = await axios.post('https://api.core-flow.site/api/auth/reissue', {
                 userId: savedUserId,
-                companySchema: schemaName
+                companySchema: savedSchemaName // ✅ ref가 아닌 string
             })
 
             const reissueResponse = response.data.data
             accessToken.value = reissueResponse.accessToken
-            schemaName.value = reissueResponse.schemaName
+            schemaName.value = reissueResponse.schemaName // ✅ ref에 대입
 
-            // 최신 정보로 업데이트
             setUserData(reissueResponse)
 
             sessionStorage.setItem('accessToken', accessToken.value)
-
             localStorage.setItem('schemaName', schemaName.value)
             localStorage.setItem('user', JSON.stringify({
                 id: id.value,
@@ -156,10 +154,10 @@ export const useUserStore = defineStore('user', () => {
             return true
         } catch (e) {
             forceLogout()
-
             return false
         }
     }
+
 
     function setAccessToken(token) {
         accessToken.value = token;

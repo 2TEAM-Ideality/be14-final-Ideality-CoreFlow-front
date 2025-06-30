@@ -122,7 +122,7 @@ async function login() {
 
     // 로그인 요청
     try {
-        const response = await axios.post('/api/auth/login', {
+        const response = await axios.post('https://api.core-flow.site/api/auth/login', {
             companyCode: companyCode.value,
             identifier: identifier.value,
             password: password.value

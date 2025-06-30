@@ -112,7 +112,7 @@
 
         isLoading.value = true
         try {
-            await api.post('/auth/reset-password/request', {
+            await axios.post('https://api.core-flow.site/auth/reset-password/request', {
                 companyCode: companyCode.value,
                 employeeNum: employeeNum.value,
                 name: name.value,
@@ -136,7 +136,7 @@
 
         isLoading.value = true
         try {
-            await api.post('/api/auth/reset-password/verify', {
+            await axios.post('https://api.core-flow.site/api/auth/reset-password/verify', {
                 companyCode: companyCode.value,
                 email: email.value,
                 verificationCode: verificationCode.value

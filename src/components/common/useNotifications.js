@@ -1,6 +1,6 @@
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useUserStore } from '@/stores/userStore'
-import { ref,watch } from 'vue';
+import { ref, watch } from 'vue';
 
 export function useNotifications() {
   const store = useNotificationStore();  // Pinia store 사용
@@ -30,7 +30,7 @@ export function useNotifications() {
         newNotifications.forEach((notification) => {
           if (!notification.isAutoDelete && notification.id > lastStoredId) {
             store.addNotification(notification);  // Pinia store에 알림 추가
-            
+
             store.setLastNotificationId(notification.id);  // 최신 ID로 갱신
           }
         });
@@ -46,6 +46,7 @@ export function useNotifications() {
     eventSource.onerror = (error) => {
       console.error('SSE 연결 오류:', error);
       eventSource.close();
+      eventSource = null
 
       setTimeout(() => {
         console.info('SSE 재연결 시도...');
@@ -53,14 +54,18 @@ export function useNotifications() {
       }, 5000);  // 재연결 지연 시간 (5초)
     };
   };
-  
-  // `lastNotificationId`가 변경될 때마다 connectToSSE 호출
-  watch(() => store.lastNotificationId, (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-      console.log('lastNotificationId가 변경되었습니다. 새로 연결을 시도합니다.');
-      connectToSSE(token); // 실제 토큰을 전달
-    }
-  });
+
+  // ✅ accessToken 이 바뀔 때마다 자동 연결
+  watch(
+    () => userStore.accessToken,
+    (newToken, oldToken) => {
+      if (newToken && newToken !== oldToken) {
+        console.log('🔄 accessToken 변경 감지 → SSE 재연결')
+        connectToSSE(newToken)
+      }
+    },
+    { immediate: true } // 초기 로그인 시에도 바로 연결
+  )
 
   return {
     connectToSSE,
