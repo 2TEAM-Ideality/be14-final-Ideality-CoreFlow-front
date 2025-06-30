@@ -471,7 +471,7 @@ async function handleDeleteTask(nodeId) {
     console.log(node);
     if (node?.data?.taskId) {
       // 🔥 실제 task가 존재 → 하드 딜리트 API 호출
-      const res = await api.delete(`/api/task/${node.data.taskId}`)
+      const res = await api.patch(`/api/task/deleted/${node.data.taskId}`)
       alert(res.data.message);
     }
 
