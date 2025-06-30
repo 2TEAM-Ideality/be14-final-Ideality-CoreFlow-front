@@ -152,6 +152,7 @@ const confirmAction = async () => {
     '태스크 중단': 'cancelled',
     '태스크 삭제': 'deleted',
     '복원 요청': 'pending',
+    '다시 요청': 'progress',
     // '완전 삭제': 'deleted', // 별도 처리 가능
     '결과 확인': 'completed'
   }
