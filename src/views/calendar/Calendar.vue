@@ -6,7 +6,9 @@ import VueCal from 'vue-cal'
 import { useUserStore } from '@/stores/userStore'
 import 'vue-cal/dist/vuecal.css'
 import api from '@/api'
+import { useRouter } from 'vue-router'
 
+const router = useRouter(); 
 const userStore = useUserStore()
 const miniCalRef = ref(null)
 const vueCalRef = ref(null)
@@ -54,6 +56,22 @@ const todayList = computed(() => {
     return start <= today && today <= end
   })
 })    
+
+// 오늘의 일정> 아이템 클릭 시 
+const handleClickItem = (item) => {
+  console.log(item)
+  if(item.type === 'PERSONAL'){
+    console.log("개인 일정이라 토글될 게 없음")
+  }else{
+    router.push({
+      path: `/task/${Number(item.taskId)}`,
+      query: {
+        taskName: item.taskName 
+      }
+    })
+  }
+}
+
 
 
 // 개인 일정 불러오기
@@ -125,6 +143,7 @@ async function fetchDeptSchedule () {
         start: format(start),
         end: format(end),
         projectId: item.projectId, 
+        taskId: item.taskId,
         class: 'event-dept',
         attributes: {
           title: `[${item.projectName}] ${item.taskName}\n${item.taskDescription}`
@@ -683,6 +702,7 @@ watch(selectedEvent, (event) => {
                   'event-dept': event.type === 'DEPT'
                 }"
                 style="font-size: 12px; padding: 10px; border-radius: 5px; margin-bottom: 5px; cursor:pointer;"
+                @click="handleClickItem(event)"
               >
                 <span style="margin-bottom:20px;">
                   <strong>{{ event.type === 'PERSONAL' ? '⭐' : '👥' }} {{ event.title }}</strong>
@@ -694,6 +714,9 @@ watch(selectedEvent, (event) => {
                   진행중
                 </span>
                 <div>{{ event.content }}</div>
+                <div style="font-size :10px; color: gray;">
+                {{ event?.projectName || "" }}
+                </div>
               </li>
               
             
