@@ -316,15 +316,12 @@
             })
             alert(response.data.message)
             approvalData.status = 'APPROVED'
-<<<<<<< HEAD
             
-            handleReRender()
-=======
             emit('remount')
+            fetchApprovalData(); // 다시 fetch
 
             // ✅ 결재 완료 후 목록 페이지로 이동
             router.push('/approval')
->>>>>>> 4a0cd4b9b4d0e11f4aa5627d2d68e6d6b2805b00
         } catch (error) {
             if (error.response) {
                 alert(error.response.data.message)
