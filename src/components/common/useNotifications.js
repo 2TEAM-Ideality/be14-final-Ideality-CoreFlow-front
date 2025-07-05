@@ -17,7 +17,8 @@ export function useNotifications() {
     const lastStoredId = store.lastNotificationId; // Pinia에서 lastNotificationId 가져오기
     console.log("백엔드에 보내는 알림 id : " + lastStoredId);
 
-    const eventSource = new EventSource(`/api/notifications/stream?token=${token}&lastNotificationId=${lastStoredId}`);
+    // 쿠키 기반 인증으로 바뀌었으므로, 쿼리에서 token 제거
+    const eventSource = new EventSource(`/api/notifications/stream?&lastNotificationId=${lastStoredId}`);
 
     eventSource.addEventListener("open", () => {
       console.log("✅ SSE 연결 성공");
