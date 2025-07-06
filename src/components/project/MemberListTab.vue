@@ -262,14 +262,28 @@ const handleDeptFilter = (dept) => {
   selectedDept.value = dept
 }
 
+// @Getter
+// public class RequestDeleteParticipant {
+//     Long userId;
+//     Long targetId; // taskId or projectId
+//     TargetType targetType;
+// }
 
 // 참여자 삭제 
 const handleDeleteParticipant = async (participant) => {
-  const confirmed = confirm(`${participant.name}  ${participant.userId}님을 삭제하시겠습니까?`)
+  const payload = {
+    userId: participant.userId,
+    targetId: projectId,
+    targetType: 'PROJECT'
+  }
+
+  const confirmed = confirm(`${participant.name} (${participant.userId})님을 삭제하시겠습니까?`)
   if (!confirmed) return
 
   try {
-    await api.delete(`/api/projects/${projectId}/participants/${participant.userId}`)
+    await api.delete('/api/projects/participants/delete', {
+      data: payload
+    })
     alert('삭제가 완료되었습니다.')
     await fetchParticipants()
     await fetchInviteLeaderList()

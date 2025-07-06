@@ -101,6 +101,7 @@
           <div class="d-flex align-center mb-1">
             <span class="text-subtitle-2 font-weight-bold">지연일</span>
             <span class="not-null">*</span>
+            <div v-if="delayDays" style="font-size: 12px;">변경 예상 마감일: {{ addWorkingDays(selectTask?.endExpect, delayDays) }}</div>
           </div>
           <v-text-field density="compact" v-model="delayDays" type="number" variant="outlined" />
         </v-col>
@@ -209,7 +210,7 @@
             참조자: 품질관리팀, 영업팀
             구분: {{approvalType}}
             지연 사유: 외주사 테스트 지연
-            지연일: 2일
+            지연일: {{ delayDays }}
             조치 내용: {{ content }}
 
           </div>
@@ -243,6 +244,9 @@ const route = useRoute()
 
 const createApprovalTitle = ref(null)
 
+const selectTask = computed(() => {
+    return filteredTaskList.value.find(t => t.id === selectedTaskId?.value)
+})
 
 const router = useRouter(); 
 const user = useUserStore();
@@ -254,7 +258,7 @@ const delayResons = ref([])
 const projectList = ref([])
 const taskList = ref([])
 const filteredTaskList = computed(() => {
-    return taskList.value[selectedProjectId.value]
+    return taskList.value[selectedProjectId.value] || []
 })
 const approvalTypeList = [ '일반', '산출물', '지연' ]
 const projectIds = ref([])
@@ -298,9 +302,45 @@ const modalType = ref('') // 'approver','viewer'
 const selectedApprover = ref(null)
 const selectedViewers = ref([])
 
+const holidaySet = ref(new Set()); 
 
+const addWorkingDays = (startDate, daysToAdd) => {
+  if (!startDate) return
+  const start = new Date(startDate);
+  let addedDays = 0;
+  console.log('expectEnd', selectTask.value?.expectEnd)
 
+  const date = new Date(start)
+  const holidays = holidaySet.value;
+  while (addedDays < daysToAdd) {
+    date.setDate(date.getDate() + 1)
+    const iso = date.toISOString().slice(0, 10);
+    const day = date.getDay(); // 일(0), 토(6)
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidays.has(iso);
+    
+    if (!isWeekend && !isHoliday) {
+      addedDays++;
+    }
+  }
 
+  return date.toISOString().slice(0, 10);
+}
+
+// 전체 휴일 정보 가져오기 
+const fetchAllHolidays = async () => {
+  try {
+    console.log("📡 공휴일 요청 시작");
+    const res = await api.get('/api/holidays');
+
+    const list = res.data?.data?.holidays || [];  // ✅ 핵심 수정
+    holidaySet.value = new Set(list.map(h => h.date)); // ✅ date만 추출해서 Set으로
+
+    console.log("✅ 공휴일 로딩 완료:", holidaySet.value);
+  } catch (err) {
+    console.error('❌ 공휴일 로딩 실패:', err);
+  }
+};
 
 watch(selectedApprover, (newApprover) => {
     if (!newApprover) return
@@ -419,7 +459,10 @@ onMounted(async () => {
     }
   }
 
-  fetchWarningDate()
+  if (selectedTaskId.value !== null && type === 'delay') {
+    fetchWarningDate()
+  }
+  fetchAllHolidays()
 
   // ✅ type 파라미터에 따라 결재 제목 + 유형 자동 설정
   if (type === 'delay') {
@@ -457,10 +500,14 @@ const checkCreateApproval = async () => {
     await createApproval();
 
     showCreateCheck.value = false;
-    router.push('/approval')
+    // router.push('/approval')
 }
 
 async function createApproval() {
+
+  const confirmed = confirm('결재를 상신하시겠습니까')
+
+  if (!confirmed) return
     
     const formData = new FormData();
 
@@ -503,7 +550,6 @@ async function createApproval() {
         alert(error.response.data.message)
       }
     }
-
 }
 
 // 입력창 모두 리셋

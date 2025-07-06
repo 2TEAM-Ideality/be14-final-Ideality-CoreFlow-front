@@ -152,9 +152,25 @@ const confirmAction = async () => {
     '태스크 중단': 'cancelled',
     '태스크 삭제': 'deleted',
     '복원 요청': 'pending',
-    '완전 삭제': 'deleted', // 별도 처리 가능
+    '다시 요청': 'progress',
+    // '완전 삭제': 'deleted', // 별도 처리 가능
     '결과 확인': 'completed'
   }
+
+  if (action === '완전 삭제') {
+    try {
+      // ❌ 여기서 직접 delete API 호출 안 함
+       emit('delete', props.id)  // 이거로 꼭 바꿔야 함!  // 그냥 부모에게 요청
+      //alert('태스크가 완전히 삭제 되었습니다.')
+    } catch (e) {
+      alert(e.response?.data?.message || '완전 삭제 중 오류 발생')
+    }
+
+    confirmDialog.value = false
+    selectedAction.value = ''
+    return
+  }
+
 
   target = map[action]
 

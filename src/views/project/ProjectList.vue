@@ -28,8 +28,13 @@ const userStore = useUserStore()
 onMounted(async () => {
   try {
     const res = await api.get('/api/projects/list');
-    projectList.value = res.data.data;
-    fullProjectList.value = res.data.data;
+    const fetched = res.data.data;
+
+    // DELETED 상태 제거
+    const filtered = fetched.filter(p => p.status !== 'DELETED');
+
+    projectList.value = filtered;
+    fullProjectList.value = filtered;
   } catch(err){
     console.error('프로젝트 목록 조회 실패', err);
   }
@@ -91,6 +96,13 @@ const applyFilter = ()=> {
   // if()
 }
 
+
+const removeProjectFromList = (deletedId) => {
+  projectList.value = projectList.value.filter(p => p.id !== deletedId);
+  fullProjectList.value = fullProjectList.value.filter(p => p.id !== deletedId);
+};
+
+
 </script>
 
 <template>
@@ -148,7 +160,8 @@ const applyFilter = ()=> {
         <ProjectCard
         v-for="project in paginatedProjects"
         :key="project.id"
-        :project="project"/>
+        :project="project"
+          @deleted="removeProjectFromList"/>
       </div>
 
       <div class="d-flex justify-center mt-4">
